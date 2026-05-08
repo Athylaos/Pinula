@@ -9,6 +9,9 @@ namespace Pinula.Shared.Interface
         public Task<List<UnitPreviewDto>> GetAllServingUnitsAsync();
         public Task<List<UnitPreviewDto>> GetIngredientUnitsAsync(Guid ingredientId);
 
+        public Task<bool> CreateUnitAsync(Unit unit);
+        public Task<bool> DeleteUnitAsync(Guid unitId);
+
 
     }
 }

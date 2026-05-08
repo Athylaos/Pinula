@@ -83,6 +83,22 @@ namespace Pinula.Shared.Services
             throw new NotImplementedException();
         }
 
+        public async Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(string searchTerm, int? amount)
+        {
+            var encodedSearch = Uri.EscapeDataString(searchTerm ?? string.Empty);
 
+            var url = $"{BaseUrl}/getFilteredPreviews?searchTerm={encodedSearch}&amount={amount}";
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<IngredientPreview>>(url);
+                return response ?? new List<IngredientPreview>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching ingredients: {ex.Message}");
+                return new List<IngredientPreview>();
+            }
+        }
     }
 }

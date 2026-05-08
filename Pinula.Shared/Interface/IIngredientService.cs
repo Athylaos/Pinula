@@ -12,5 +12,6 @@ namespace Pinula.Shared.Interface
         public Task UpdateIngredientAsync(Ingredient ingredient);
 
         public Task<List<IngredientPreview>> GetIngredientPreviewsAsync(int amount);
+        public Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(string searchTerm, int? amount);
     }
 }

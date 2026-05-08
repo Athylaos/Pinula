@@ -39,6 +39,39 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(await query.ToListAsync());
             });
 
+            //---------------------------------------------------------------Get filtered previews
+            group.MapGet("/getFilteredPreviews", async (string searchTerm, int? amount, CookRecipesDbContext db) =>
+            {
+                var query = db.Ingredients
+                    .AsNoTracking()
+                    .Where(i => i.Name.ToLower().Contains(searchTerm.ToLower()))
+                    .Select(i => new IngredientPreview
+                    {
+                        Id = i.Id,
+                        Name = i.Name,
+                        DefaultUnit = i.DefaultUnitNavigation,
+
+                        IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
+                        {
+                            Id = iu.UnitId,
+                            Name = iu.Unit.Name,
+                            ConversionFactor = iu.ToDefaultUnit
+                        }).ToList()
+                    });
+
+                if (!query.Any())
+                {
+
+                }
+
+                if (amount.HasValue && amount > 0)
+                {
+                    query = query.Take(amount.Value);
+                }
+
+                return Results.Ok(await query.ToListAsync());
+            });
+
 
             //---------------------------------------------------------------Create ingredient
             group.MapPost("/create", async (IngredientCreateDto dto, ClaimsPrincipal user, CookRecipesDbContext db) =>

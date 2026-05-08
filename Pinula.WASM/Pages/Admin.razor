@@ -1,0 +1,39 @@
+﻿@page "/admin"
+@using Pinula.WASM.Components
+
+<div class="container mt-4" style="background:LightGrey">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <ul class="nav nav-tabs mb-4">
+        <li>
+            <button class="nav-link @(activeTab == "categories" ? "active" : "")" 
+                    @onclick='() => activeTab = "categories"'>Categories</button>
+        </li>
+        <li>
+            <button class="nav-link @(activeTab == "units" ? "active" : "")" 
+                    @onclick='() => activeTab = "units"'>Units</button>
+        </li>
+        <li>
+            <button class="nav-link disabled">Users (Coming soon)</button>
+        </li>
+    </ul>
+
+    <div class="card p-3 shadow-sm">
+        @if (activeTab == "units")
+        {
+            <UnitManager/>
+        }
+        else if (activeTab == "categories")
+        {
+            <div class="alert alert-info">Zatím neimplementováno.</div>
+        }
+        else
+        {
+            <p>Vyberte sekci z horního menu.</p>
+        }
+    </div>
+</div>
+
+@code {
+    private string activeTab = "units";
+}

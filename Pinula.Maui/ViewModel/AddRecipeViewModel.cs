@@ -256,7 +256,6 @@ namespace Pinula.ViewModel
                 CategoriesIds = Categories.Where(c => c.IsSelected).Select(c => c.Category.Id).ToList(),
                 RecipeIngredients = Ingredients.ToList(),
                 RecipeSteps = RecipeSteps.ToList(),
-                //PhotoUrl = PhotoPath,
 
             };
 

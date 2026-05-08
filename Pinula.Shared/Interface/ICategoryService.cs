@@ -1,4 +1,5 @@
-﻿using Pinula.Shared.Models;
+﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.Models;
 
 namespace Pinula.Shared.Interface
 {
@@ -13,5 +14,9 @@ namespace Pinula.Shared.Interface
         public Task<List<Category>> GetMainCategoriesAsync();
 
         public Task<List<Category>> GetChildCategoriesAsync(Guid parentId);
+
+        public Task<Guid?> SaveCategoryAsync(CategoryCreateDto dto, Stream? photoStream, string? photoName, string? contentType);
+
+        public Task<bool> DeleteCategoryAsync(Guid categoryId);
     }
 }

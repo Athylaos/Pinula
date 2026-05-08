@@ -55,14 +55,14 @@ public partial class CookRecipesDbContext : DbContext
                 .HasColumnName("picture_url");
             entity.Property(e => e.SortOrder).HasColumnName("sort_order");
 
-            entity.HasOne(d => d.ParentCategoryNavigation).WithMany(p => p.InverseParentCategoryNavigation)
+            entity.HasOne(d => d.ParentCategoryNavigation).WithMany(p => p.ChildCategories)
                 .HasForeignKey(d => d.ParentCategory)
                 .HasConstraintName("categories_parent_category_fkey");
         });
 
         modelBuilder.Entity<Comment>(entity =>
         {
-            entity.HasKey(e => new { e.RecipeId, e.UserId }).HasName("comments_pkey");
+            entity.HasKey(e => e.Id).HasName("comments_pkey");
 
             entity.ToTable("comments");
 
@@ -74,6 +74,12 @@ public partial class CookRecipesDbContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.Text).HasColumnName("text");
+
+            entity.HasOne(d => d.ParentComment)
+                .WithMany(p => p.Replies)
+                .HasForeignKey(d => d.ParentCommentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("comments_parent_fkey");
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.RecipeId)

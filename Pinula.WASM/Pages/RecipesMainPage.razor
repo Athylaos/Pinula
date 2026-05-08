@@ -393,17 +393,32 @@
 
             await Task.WhenAll(categoriesTask, userTask, favouriteTask, latestTask, fastTask, bestTask, mineTask);
 
-            categories = categoriesTask.Result.ToList();
-            currentUser = userTask.Result;
-            recipeOfTheDay = recipeTask.Result.First();
 
-            favouriteRecipes = favouriteTask.Result;
-            latestRecipes = latestTask.Result;
-            fastRecipes = fastTask.Result;
-            bestRecipes = bestTask.Result;
-            mineRecipes = mineTask.Result;
+            var categoriesData = categoriesTask.Result;
+            var userData = userTask.Result;
+            var recipesData = recipeTask.Result;
+            var favData = favouriteTask.Result;
+            var latestData = latestTask.Result;
+            var fastData = fastTask.Result;
+            var bestData = bestTask.Result;
+            var mineData = mineTask.Result;
+
+            categories = categoriesData?.ToList() ?? new List<Category>();
+            currentUser = userData;
+
+            recipeOfTheDay = recipesData != null && recipesData.Any()? recipesData.First(): new RecipePreviewDto();
+
+            favouriteRecipes = favData?.ToList() ?? new List<RecipePreviewDto>();
+            latestRecipes = latestData?.ToList() ?? new List<RecipePreviewDto>();
+            fastRecipes = fastData?.ToList() ?? new List<RecipePreviewDto>();
+            bestRecipes = bestData?.ToList() ?? new List<RecipePreviewDto>();
+            mineRecipes = mineData?.ToList() ?? new List<RecipePreviewDto>();
 
             if (favouriteRecipes.Count < _favouriteFilter.Amount) moreFavouriteToLoad = false;
+            if (latestRecipes.Count < _latestFilter.Amount) moreLatestToLoad = false;
+            if (fastRecipes.Count < _fastFilter.Amount) moreFastToLoad = false;
+            if (bestRecipes.Count < _bestFilter.Amount) moreBestToLoad = false;
+            if (mineRecipes.Count < _mineFilter.Amount) moreMineToLoad = false;
 
 
 
@@ -488,7 +503,7 @@
         isActuallySearching = false;
     }
 
-    private void AddRecipe() => NavManager.NavigateTo("/recipe/add");
+    private void AddRecipe() => NavManager.NavigateTo("/add-recipe");
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
     private void CategoryClicked(Category c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
 }
