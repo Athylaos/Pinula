@@ -1,16 +1,16 @@
 ﻿@inject NavigationManager NavManager
 
 <div class="bottom-nav-container ">
-    
+    @*
     <div class="nav-item @GetActiveClass("/fridge")" @onclick="@(() => NavManager.NavigateTo("/fridge"))">
         <img src="images/icons/fridge.png" alt="Fridge" />
     </div>
-
+    *@
     <div class="nav-item @GetActiveClass("/recipes")" @onclick="@(() => NavManager.NavigateTo("/recipes"))">
         <img src="images/icons/book.png" alt="Recipes" />
     </div>
 
-    <div class="nav-item @GetActiveClass("/")" @onclick="@(() => NavManager.NavigateTo("/"))">
+    <div class="nav-item @GetActiveClass("/profile")" @onclick="@(() => NavManager.NavigateTo("/profile"))">
         <img src="images/icons/home.png" alt="Home" />
     </div>
     @*

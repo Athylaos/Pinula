@@ -1,0 +1,323 @@
+﻿@page "/profile"
+@using Pinula.Shared.Interface
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Models
+@using Pinula.WASM.Components
+@inject IUserService userService
+@inject IRecipeService recipeService
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Pinula - @(userProfile?.Name ?? "My Profile")</PageTitle>
+
+<div class="pf-page-wrapper">
+    <LoadingView IsLoading="@isLoading" Text="Loading your profile" IsFullScreen="true">
+        
+        <div class="pf-main-header">
+            <div class="pf-user-meta">
+                <div class="pf-avatar-frame">
+                    <img src="@(string.IsNullOrEmpty(userProfile?.AvatarUrl) ? "images/default-avatar.png" : userProfile.AvatarUrl)" alt="Avatar" class="pf-display-avatar" />
+                </div>
+                <div class="pf-user-identity">
+                    <h2 class="pf-user-fullname">@userProfile?.Name @userProfile?.Surname</h2>
+                    <span class="pf-user-email-sub">@userProfile?.Email</span>
+                </div>
+            </div>
+            
+            <div class="pf-header-actions">
+                <button class="pf-icon-action-btn pf-logout-accent" @onclick="HandleLogout" title="Log Out">
+                    <i class="bi bi-box-arrow-right"></i> Log Out
+                </button>
+            </div>
+        </div>
+
+        <div class="pf-stats-container-grid">
+            <div class="pf-stat-metric-card">
+                <div class="pf-metric-icon">
+                    <img src="images/icons/spoon_fork.png" class="pf-metric-img" />
+                </div>
+                <div class="pf-metric-details">
+                    <span class="pf-metric-value">@userProfile?.PostedRecipes</span>
+                    <span class="pf-metric-label">Recipes Posted</span>
+                </div>
+            </div>
+
+            <div class="pf-stat-metric-card">
+                <div class="pf-metric-icon pf-icon-star">
+                    <img src="images/icons/favorite_full.png" class="pf-metric-img" />
+                </div>
+                <div class="pf-metric-details">
+                    <span class="pf-metric-value">@(userProfile?.AvgRating.ToString("0.0") ?? "0.0")</span>
+                    <span class="pf-metric-label">Avg Rating</span>
+                </div>
+            </div>
+
+            <div class="pf-stat-metric-card">
+                <div class="pf-metric-icon pf-icon-comment">
+                    <img src="images/icons/chat.png" class="pf-metric-img" />
+                </div>
+                <div class="pf-metric-details">
+                    <span class="pf-metric-value">@userProfile?.PostedComments</span>
+                    <span class="pf-metric-label">Comments</span>
+                </div>
+            </div>
+
+            <div class="pf-stat-metric-card">
+                <div class="pf-metric-icon pf-icon-calendar">
+                    <img src="images/icons/calendar.png" class="pf-metric-img" />
+                </div>
+                <div class="pf-metric-details">
+                    <span class="pf-metric-value">@userProfile?.UserCreated.ToString("MMM yyyy")</span>
+                    <span class="pf-metric-label">Member Since</span>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <div class="pf-alert-toast pf-animate-slide" style="border-left: 4px solid var(--pine-teal);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@statusMessage</span>
+                    <button class="pf-btn-dismiss" @onclick="() => statusMessage = string.Empty">Dismiss</button>
+                </div>
+            </div>
+        }
+
+        <div class="pf-mid-layout-grid">
+            
+            <div class="pf-content-card">
+                <div class="pf-card-header-block">
+                    <h4>Account Information</h4>
+                </div>
+                
+                @if (isEditing)
+                {
+                    <EditForm Model="@updateModel" OnValidSubmit="HandleUpdateProfile" class="pf-animate-slide">
+                        <div class="pf-form-group mb-3">
+                            <label class="pf-field-caption">First Name</label>
+                            <InputText @bind-Value="@updateModel.Name" class="pf-text-field" />
+                        </div>
+                        <div class="pf-form-group mb-3">
+                            <label class="pf-field-caption">Last Name</label>
+                            <InputText @bind-Value="@updateModel.Surname" class="pf-text-field" />
+                        </div>
+                        
+                        <div class="pf-form-group mb-4">
+                            <label class="pf-field-caption">Avatar Photo</label>
+                            <div class="pf-upload-zone">
+                                <InputFile OnChange="HandleFileSelected" class="pf-text-field pf-file-picker" accept="image/*" />
+                                @if (selectedFile != null)
+                                {
+                                    <span class="pf-upload-indicator pf-animate-slide">📸 Ready: @selectedFile.Name</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="pf-form-actions-row">
+                            <button type="button" class="pf-btn-dismiss" @onclick="ToggleEdit">Cancel</button>
+                            <button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
+                                @(isSaving ? "Saving..." : "Save Changes")
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <div class="pf-static-view pf-animate-slide">
+                        <div class="pf-info-row">
+                            <span class="pf-info-title">First Name:</span>
+                            <span class="pf-info-data">@userProfile?.Name</span>
+                        </div>
+                        <div class="pf-info-row">
+                            <span class="pf-info-title">Last Name:</span>
+                            <span class="pf-info-data">@userProfile?.Surname</span>
+                        </div>
+                        <div class="pf-info-row">
+                            <span class="pf-info-title">Email:</span>
+                            <span class="pf-info-data">@userProfile?.Email</span>
+                        </div>
+                        
+                        <div class="pf-form-actions-row mt-4">
+                            <button type="button" class="pf-btn-submit-action" @onclick="ToggleEdit">
+                                <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="pf-content-card">
+                <div class="pf-card-header-block">
+                    <h4>Calendar & Invitations</h4>
+                </div>
+                <div class="pf-invites-empty-state">
+                    <h5>No active invitations</h5>
+                    <p class="pf-field-caption text-center">Shared cooking calendars and plan requests from other chefs will appear right here.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="pf-bottom-fullwidth-section">
+            <h3 class="pf-section-heading">My Tweak & Creations</h3>
+            
+            @if (myRecipes != null && myRecipes.Any())
+            {
+                <RecipeGridVertical HasMoreToLoad="@moreRecipesToLoad" 
+                                   IsLoading="@isRecipesLoading" 
+                                   OnLoadMore="LoadMoreMyRecipes" 
+                                   OnRecipeSelected="RecipeClicked" 
+                                   Recipes="myRecipes">
+                </RecipeGridVertical>
+            }
+            else
+            {
+                <div class="pf-empty-recipes-fallback">
+                    <p>Your cooking journal is empty. You haven't submitted any recipes yet.</p>
+                </div>
+            }
+        </div>
+
+    </LoadingView>
+</div>
+
+@code {
+    private UserDisplayDto? userProfile;
+    private UserUpdateDto updateModel = new();
+    private List<RecipePreviewDto> myRecipes = new();
+    
+    private bool isLoading = true;
+    private bool isRecipesLoading = false;
+    private bool moreRecipesToLoad = true;
+    private bool isSaving = false;
+    private bool isEditing = false;
+    
+    private string statusMessage = string.Empty;
+    private readonly RecipeFilterParameters _mineFilter = new() { OnlyMine = true, Amount = 6 };
+
+    private IBrowserFile? selectedFile;
+    private long maxFileSize = 1024 * 1024 * 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfileData();
+    }
+
+    private async Task LoadProfileData()
+    {
+        isLoading = true;
+        try
+        {
+            userProfile = await userService.GetCurrentUserAsync();
+            
+            if (userProfile == null)
+            {
+                NavManager.NavigateTo("/login");
+                return;
+            }
+
+            updateModel.Name = userProfile.Name;
+            updateModel.Surname = userProfile.Surname;
+
+            var recipesResult = await recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
+            myRecipes = recipesResult?.ToList() ?? new();
+
+            if (myRecipes.Count < _mineFilter.Amount)
+            {
+                moreRecipesToLoad = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadMoreMyRecipes()
+    {
+        isRecipesLoading = true;
+        _mineFilter.Skip = myRecipes.Count;
+        
+        var results = await recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
+        var newList = results?.ToList() ?? new List<RecipePreviewDto>();
+
+        if (!newList.Any() || newList.Count < _mineFilter.Amount)
+        {
+            moreRecipesToLoad = false;
+        }
+
+        myRecipes.AddRange(newList);
+        isRecipesLoading = false;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private void ToggleEdit()
+    {
+        isEditing = !isEditing;
+        if (!isEditing && userProfile != null)
+        {
+            updateModel.Name = userProfile.Name;
+            updateModel.Surname = userProfile.Surname;
+            selectedFile = null;
+        }
+    }
+
+    private async Task HandleUpdateProfile()
+    {
+        isSaving = true;
+        statusMessage = string.Empty;
+        Stream? stream = null;
+
+        try
+        {
+            if (selectedFile != null)
+            {
+                stream = selectedFile.OpenReadStream(maxFileSize);
+            }
+
+            var success = await userService.UpdateUserAsync(
+                updateModel, 
+                stream, 
+                selectedFile?.Name ?? string.Empty, 
+                selectedFile?.ContentType ?? string.Empty
+            );
+
+            if (success)
+            {
+                statusMessage = "Profile updated successfully.";
+                isEditing = false;
+                selectedFile = null;
+                await LoadProfileData();
+            }
+            else
+            {
+                statusMessage = "Server rejected profile update configuration.";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Processing failed: {ex.Message}";
+        }
+        finally
+        {
+            if (stream != null) await stream.DisposeAsync();
+            isSaving = false;
+        }
+    }
+
+    private void HandleLogout()
+    {
+        userService.Logout();
+        NavManager.NavigateTo("/recipes", forceLoad: true);
+    }
+
+    private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
+}

@@ -231,6 +231,7 @@
     {
         newComment.RecipeId = recipe.Id;
         newComment.ParentCommentId = null;
+        
         var response = await RecipeService.PostCommentAsync(newComment);
 
         if (response != null)

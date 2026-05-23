@@ -1989,6 +1989,7 @@ select.custom-select {
     font-size: 1.2rem;
     background: var(--pine-teal);
     color: #63f0bd;
+    padding:5px
 }
 
     .details-info-icon.rating {
@@ -2042,8 +2043,8 @@ select.custom-select {
 
 /* #endregion */
 
-/*---------- Recipe details page ----------*/
-/* #region Recipe details page */
+/*---------- Category page ----------*/
+/* #region Category page */
 .category-hero-container {
     width: 100%;
     border-radius: 24px;
@@ -2109,4 +2110,375 @@ select.custom-select {
     font-weight: 700;
     letter-spacing: 1px;
 }
+/* #endregion*/
+
+/*---------- Profile page ----------*/
+/* #region Profile page */
+.pf-page-wrapper {
+    color: var(--text-porcelain);
+    min-height: 100vh;
+    padding-bottom: 60px;
+    font-family: Nunito, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.pf-main-header {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 30px auto 25px auto;
+    max-width: 1200px;
+    width: 90%;
+}
+
+.pf-user-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.pf-display-avatar {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--pine-teal);
+}
+
+.pf-user-identity {
+    display: flex;
+    flex-direction: column;
+}
+
+.pf-user-fullname {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.pf-user-email-sub {
+    font-size: 1rem;
+    color: #aaa;
+}
+
+.pf-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pf-icon-action-btn {
+    background-color: transparent;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .pf-icon-action-btn:hover {
+        scale: 1.05;
+        background-color: rgba(255,255,255,0.03);
+    }
+
+.pf-logout-accent:hover {
+    color: #ff4757;
+}
+
+.pf-stats-container-grid {
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+    width: 90%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 992px) {
+    .pf-stats-container-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.pf-stat-metric-card {
+    background: var(--bg-card);
+    padding: 18px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.pf-metric-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pine-teal);
+    flex-shrink: 0;
+}
+
+
+.pf-metric-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+
+.pf-metric-icon.pf-icon-star {
+    background: rgba(255, 193, 7, 0.5);
+}
+
+.pf-metric-icon.pf-icon-comment {
+    background: rgba(52, 152, 219, 0.5);
+}
+
+.pf-metric-icon.pf-icon-calendar {
+    background: rgba(230, 126, 34, 0.5);
+}
+
+.pf-metric-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.pf-metric-value {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--text-porcelain);
+}
+
+.pf-metric-label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pf-mid-layout-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 90%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 768px) {
+    .pf-mid-layout-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.pf-content-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.pf-card-header-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+    .pf-card-header-block h4 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-family: Alegreya, serif;
+    }
+.pf-field-caption {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.pf-text-field {
+    width: 100%;
+    min-height: 45px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 15px;
+    color: white;
+    transition: border-color 0.2s;
+}
+
+    .pf-text-field:focus {
+        border-color: var(--pine-teal);
+        outline: none;
+    }
+
+.pf-file-picker {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.pf-upload-indicator {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #63f0bd;
+    font-weight: 600;
+}
+
+.pf-static-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pf-info-row {
+    font-size: 1.05rem;
+}
+
+.pf-info-title {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-right: 6px;
+}
+
+.pf-info-data {
+    color: var(--text-porcelain);
+    font-weight: 600;
+}
+
+.pf-form-actions-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pf-btn-submit-action {
+    background: #1D4934;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+    .pf-btn-submit-action:hover {
+        transform: scale(1.03);
+    }
+
+.pf-btn-dismiss {
+    background: transparent;
+    color: #888;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+    .pf-btn-dismiss:hover {
+        color: #ccc;
+    }
+
+.pf-alert-toast {
+    max-width: 1200px;
+    margin: 15px auto;
+    width: 90%;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 15px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pf-invites-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 10px;
+    text-align: center;
+}
+
+.pf-empty-state-glyph {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.pf-invites-empty-state h5 {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.pf-bottom-fullwidth-section {
+    max-width: 1200px;
+    margin: 45px auto 0 auto;
+    width: 90%;
+}
+
+.pf-section-heading {
+    font-size: 1.9rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    font-family: Alegreya, serif;
+}
+
+.pf-empty-recipes-fallback {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #888;
+    font-style: italic;
+}
+
+.pf-animate-slide {
+    animation: pfSlideDown 0.25s ease-out;
+}
+
+@keyframes pfSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@media (max-width: 768px) {
+    .pf-main-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .pf-user-meta {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pf-header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* #endregion*/
