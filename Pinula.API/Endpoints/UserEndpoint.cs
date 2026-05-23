@@ -13,6 +13,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Pinula.API.Endpoints
 {
@@ -196,6 +197,41 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
                 return Results.Ok();
             }).DisableAntiforgery();
+
+
+            //---------------------------------------------------------------Get all users
+            group.MapGet("/all", async (HttpRequest request, CookRecipesDbContext db) =>
+            {
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/avatars/";
+                var defaultImage = "default_avatar.png";
+
+                var users = await db.Users.ToListAsync();
+
+                foreach(var user in users)
+                {
+                    user.AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(user.AvatarUrl) ? defaultImage : user.AvatarUrl)}";
+                }
+
+                return users;
+
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Get all users
+            group.MapPost("/admin-change-password", async (ClaimsPrincipal user, AdminPasswordChangeDto dto, CookRecipesDbContext db) =>
+            {
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == dto.UserId);
+                if (userDb is null) return Results.NotFound();
+
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+                userDb.PasswordHash = passwordHash;
+                db.SaveChanges();
+
+                return Results.Ok();
+
+
+            }).RequireAuthorization("AdminOnly");
+
         }
 
         

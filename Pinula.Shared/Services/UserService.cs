@@ -173,5 +173,34 @@ namespace Pinula.Shared.Services
             }
         }
 
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<User>>($"{BaseUrl}/all");
+                return response ?? new List<User>();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Error while getting users: {ex.Message}");
+                return new List<User>();
+            }
+        }
+
+        public async Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword)
+        {
+            try
+            {
+                var dto = new AdminPasswordChangeDto { UserId = userId, NewPassword = newPassword };
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/admin-change-password", dto);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while changing user psswd: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }

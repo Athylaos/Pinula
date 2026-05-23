@@ -16,7 +16,8 @@
                     @onclick='() => activeTab = "units"'>Units</button>
         </li>
         <li>
-            <button class="nav-link disabled">Users (Coming soon)</button>
+            <button class="nav-link @(activeTab == "users" ? "active" : "")"
+                    @onclick='() => activeTab = "users"'>Users</button>
         </li>
     </ul>
 
@@ -29,6 +30,10 @@
         {
             <CategoryManager/>
         }
+        else if(activeTab == "users")
+        {
+            <UserManager/>
+        }
         else
         {
             <p>Select tab</p>
@@ -37,5 +42,5 @@
 </div>
 
 @code {
-    private string activeTab = "units";
+    private string activeTab = "";
 }

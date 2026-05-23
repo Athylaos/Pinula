@@ -19,7 +19,7 @@ namespace Pinula.Shared.Interface
 
         Task<bool> IsEmailRegistredAsync(string email);
 
-        Task<IEnumerable<UserDisplayDto>> GetAllUsersAsync();
+        Task<List<User>> GetAllUsersAsync();
         Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword);
     }
 }
