@@ -136,17 +136,20 @@
                 else
                 {
                     <div class="comment-input-card">
-                        <div class="rating-selector">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                int starIndex = i;
-                                <img src="@(newComment.Rating >= starIndex ? "images/icons/favorite_full.png" : "images/icons/favorite.png")"
-                                     class="star-icon"
-                                     @onclick="() => SetRating(starIndex)"
-                                     alt="Star rating" />
-                            }
-                            <span class="rating-label">@GetRatingLabel()</span>
-                        </div>
+                        @if (!alreadyRated)
+                        {
+                            <div class="rating-selector">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    int starIndex = i;
+                                    <img src="@(newComment.Rating >= starIndex ? "images/icons/favorite_full.png" : "images/icons/favorite.png")"
+                                         class="star-icon"
+                                         @onclick="() => SetRating(starIndex)"
+                                         alt="Star rating" />
+                                }
+                                <span class="rating-label">@GetRatingLabel()</span>
+                            </div>
+                        }
 
                         <textarea @bind="newComment.Text" @bind:event="oninput"
                                   placeholder="Share your thoughts or rate this recipe..."
@@ -192,6 +195,8 @@
     private Guid? activeReplyCommentId = null;
     private string replyText = "";
 
+    private bool alreadyRated = false;
+
     private UserDisplayDto? userDto;
 
     protected override async Task OnInitializedAsync()
@@ -212,6 +217,7 @@
         {
             isLoading = false;
         }
+        alreadyRated = recipe.Comments.Any(c => c.Rating.HasValue);
     }
 
     private void GoBack()
@@ -263,7 +269,8 @@
     {
         newComment.RecipeId = recipe.Id;
         newComment.ParentCommentId = null;
-        
+        newComment.IsApproved = true;
+
         var response = await RecipeService.PostCommentAsync(newComment);
 
         if (response != null)
@@ -271,7 +278,7 @@
             recipe.Rating = response.NewAverageRating;
             recipe.UsersRated = response.NewUsersRatedCount;
             recipe.Comments.Add(response.NewComment);
-
+            alreadyRated = response.NewComment.Rating.HasValue;
             ResetForm();
             StateHasChanged();
         }
@@ -299,7 +306,7 @@
         foreach (var comment in comments)
         {
             if (comment.Id == id) return comment;
-        
+
             var foundInReplies = FindCommentRecursive(comment.Replies, id);
             if (foundInReplies != null) return foundInReplies;
         }
@@ -321,12 +328,11 @@
         if (response != null)
         {
             var parentComment = FindCommentRecursive(recipe.Comments, parentId);
-        
+
             if (parentComment != null)
             {
                 parentComment.Replies.Add(response.NewComment);
             }
-        
             CancelReply();
             StateHasChanged();
         }

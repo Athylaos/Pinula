@@ -23,6 +23,8 @@ namespace Pinula.Shared.Interface
         public Task<DeleteCommentResponse?> DeleteRecipeCommentAsync(Guid recipeId, Guid? userId); // userId as an prep for future admin functions ??
 
         Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
+        Task<List<AdminCommentDto>> GetAdminCommentsAsync();
+        Task<bool> AdminToggleCommentApprovalAsync(Guid commentId);
 
     }
 }

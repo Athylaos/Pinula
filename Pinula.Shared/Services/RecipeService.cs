@@ -6,6 +6,7 @@ using Pinula.Shared.Models;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Runtime.InteropServices;
 
 namespace Pinula.Shared.Services
 {
@@ -223,6 +224,20 @@ namespace Pinula.Shared.Services
             var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleApproval/{recipeId}", null);
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<List<AdminCommentDto>> GetAdminCommentsAsync()
+        {
+            var comments =  await _httpClient.GetFromJsonAsync<List<AdminCommentDto>>($"{BaseUrl}/admin/allComments");
+            return comments ?? new();
+        }
+
+        public async Task<bool> AdminToggleCommentApprovalAsync(Guid commentId)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentApproval/{commentId}", null);
+            return response.IsSuccessStatusCode;
+        }
+
+
 
         public class FavoriteResponse
         {

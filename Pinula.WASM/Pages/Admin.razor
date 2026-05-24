@@ -23,6 +23,10 @@
             <button class="nav-link @(activeTab == "recipes" ? "active" : "")"
                     @onclick='() => activeTab = "recipes"'>Recipes</button>
         </li>
+        <li>
+            <button class="nav-link @(activeTab == "comments" ? "active" : "")"
+                    @onclick='() => activeTab = "comments"'>Comments</button>
+        </li>
     </ul>
 
     <div class="card p-3 shadow-sm">
@@ -41,6 +45,10 @@
         else if (activeTab == "recipes")
         {
             <RecipeManager/>
+        }
+        else if (activeTab == "comments")
+        {
+            <CommentManager />
         }
         else
         {

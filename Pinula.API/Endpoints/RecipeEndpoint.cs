@@ -255,10 +255,7 @@ namespace Pinula.API.Endpoints
                     }
                 }
 
-                foreach(var rc in rootComments)
-                {
-                    if (!rc.Replies.Any() && !rc.IsApproved) rootComments.Remove(rc);
-                }
+                //rootComments.RemoveAll(rc => !rc.Replies.Any() && !rc.IsApproved);
 
                 recipe.Comments = rootComments;
 
@@ -478,7 +475,8 @@ namespace Pinula.API.Endpoints
                         UserName = userProfile?.Name ?? "User",
                         UserSurname = userProfile?.Surname ?? "",
                         ParentCommentId = comment.ParentCommentId,
-                        Replies = new List<CommentPreview>()
+                        Replies = new List<CommentPreview>(),
+                        IsApproved = true
                     }
                 };
 
@@ -548,7 +546,7 @@ namespace Pinula.API.Endpoints
 
             }).RequireAuthorization();
 
-
+            //---------------------------------------------------------------Toggle recipe approval
             group.MapPost("/admin/toggleApproval/{recipeId:guid}", async (Guid recipeId, CookRecipesDbContext db) =>
             {
                 var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == recipeId);
@@ -559,6 +557,41 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { isApproved = recipe.IsApproved });
 
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Get all comments
+            group.MapGet("/admin/allComments", async (CookRecipesDbContext db) =>
+            {
+                var comments = await db.Comments
+                    .Include(c => c.Recipe)
+                    .Include(c => c.User)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Select(c => new AdminCommentDto
+                    {
+                        Id = c.Id,
+                        Text = c.Text,
+                        UserName = c.User.Name,
+                        UserSurname = c.User.Surname,
+                        CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
+                        IsApproved = c.IsApproved,
+                        RecipeId = c.RecipeId,
+                        RecipeName = c.Recipe.Title
+                    })
+                    .ToListAsync();
+
+                return Results.Ok(comments);
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Toggle comment approval
+            group.MapPost("/admin/toggleCommentApproval/{commentId:guid}", async (Guid commentId, CookRecipesDbContext db) =>
+            {
+                var comment = await db.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
+                if (comment is null) return Results.NotFound("Comment not found.");
+
+                comment.IsApproved = !comment.IsApproved;
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new { isApproved = comment.IsApproved });
             }).RequireAuthorization("AdminOnly");
 
 
