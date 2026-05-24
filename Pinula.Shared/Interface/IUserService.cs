@@ -21,5 +21,7 @@ namespace Pinula.Shared.Interface
 
         Task<List<User>> GetAllUsersAsync();
         Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword);
+        Task<bool> AdminToggleCommentPermissionAsync(Guid userId);
+        Task<bool> AdminToggleRecipePermissionAsync(Guid userId);
     }
 }

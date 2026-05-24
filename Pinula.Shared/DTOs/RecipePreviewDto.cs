@@ -17,5 +17,6 @@ namespace Pinula.Shared.DTOs
         public decimal? Calories { get; set; }
 
         public bool IsFavorite { get; set; } = false;
+        public bool IsApproved { get; set; } = true;
     }
 }

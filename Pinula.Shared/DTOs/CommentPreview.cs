@@ -14,6 +14,7 @@ namespace Pinula.Shared.DTOs
         public DateTime CreatedAt { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string UserSurname { get; set; } = string.Empty;
+        public bool IsApproved { get; set; }
         public Guid? ParentCommentId { get; set; }
         public virtual ICollection<CommentPreview> Replies { get; set; } = new List<CommentPreview>();
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Pinula.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace Pinula.API.Context;
 
@@ -74,6 +75,7 @@ public partial class CookRecipesDbContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.Text).HasColumnName("text");
+            entity.Property(e => e.IsApproved).HasDefaultValue(true).HasColumnName("is_approved");
 
             entity.HasOne(d => d.ParentComment)
                 .WithMany(p => p.Replies)
@@ -189,6 +191,7 @@ public partial class CookRecipesDbContext : DbContext
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.UsersRated).HasColumnName("users_rated");
+            entity.Property(e => e.IsApproved).HasDefaultValue(true).HasColumnName("is_approved");
 
             entity.HasOne(d => d.ServingUnitNavigation).WithMany(p => p.Recipes)
                 .HasForeignKey(d => d.ServingUnit)
@@ -334,6 +337,8 @@ public partial class CookRecipesDbContext : DbContext
                 .HasPrecision(0)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("user_created");
+            entity.Property(e => e.CanComment).HasDefaultValue(true).HasColumnName("can_comment");
+            entity.Property(e => e.CanCreateRecipes).HasDefaultValue(true).HasColumnName("can_create_recipes");
         });
 
         OnModelCreatingPartial(modelBuilder);

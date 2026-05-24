@@ -3,17 +3,31 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @using Pinula.WASM.Components
+@inject IUserService UserService
 @inject IRecipeService RecipeService
 @inject ICategoryService CategoryService
 @inject IUnitService UnitService
 @inject IIngredientService IngredientService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
-    <div class="header">
-        <img src="images/icons/back.png" class="back-btn" @onclick="GoBack" />
-        <h1>Add Recipe</h1>
+<div class="header">
+    <img src="images/icons/back.png" class="back-btn" @onclick="GoBack" />
+    <h1>Add Recipe</h1>
+</div>
+@if(userDto is null)
+{
+    <p>You need to login</p> @*Is handled by automatic redirection*@
+}
+else if(!userDto.CanCreateRecipes){
+    <div class="comment-input-card">
+        <div class="prompt-content">
+            <h5>You have been banned</h5>
+            <p>Your right to post recipes has been revoked by the administrator. You can appeal this decision through our support team.</p>
+        </div>
     </div>
-
+}
+else
+{
     <div class="form-grid">
         <div class="add-recipe-card basic-info">
             <div class="input-group">
@@ -34,12 +48,12 @@
                 </div>
             </div>
 
-        <div class="custom-file-upload">
-            <label for="file-upload" class="btn-apply">
-                Select image
-            </label>
-            <InputFile id="file-upload" OnChange="LoadPhoto" />
-        </div>
+            <div class="custom-file-upload">
+                <label for="file-upload" class="btn-apply">
+                    Select image
+                </label>
+                <InputFile id="file-upload" OnChange="LoadPhoto" />
+            </div>
 
             <div class="stats-row">
                 <div class="input-group">
@@ -47,7 +61,7 @@
                     <input type="number" min="1" class="custom-input" @bind="Time" />
 
                 </div>
-                
+
                 <div class="input-group">
                     <label>Servings</label>
                     <div class="flex-row">
@@ -74,21 +88,21 @@
         </div>
 
 
-    <div class="add-recipe-card">
-        <label class="section-title">Categories</label>
-    
-        <div class="category-root-container">
-            @foreach (var root in Categories.Where(c => c.Category.ParentCategory == null || c.Category.ParentCategory == Guid.Empty))
-            {
-                @RenderCategoryTree(root)
-            }
+        <div class="add-recipe-card">
+            <label class="section-title">Categories</label>
+
+            <div class="category-root-container">
+                @foreach (var root in Categories.Where(c => c.Category.ParentCategory == null || c.Category.ParentCategory == Guid.Empty))
+                {
+                    @RenderCategoryTree(root)
+                }
+            </div>
         </div>
-    </div>
 
 
-        <AddIngredientPopup 
-            IsVisible="showIngredientPopup" 
-            OnIngredientAdded="HandleNewIngredient" 
+        <AddIngredientPopup
+            IsVisible="showIngredientPopup"
+            OnIngredientAdded="HandleNewIngredient"
             OnClose="() => showIngredientPopup = false" />
 
         <div class="add-recipe-card ingredients">
@@ -96,7 +110,7 @@
                 <label>Ingredients</label>
                 <button type="button" class="btn-primary" @onclick="TogglePopup">+ Add</button>
             </div>
-            
+
             <div class="ingredients-list">
                 @foreach (var ing in Ingredients)
                 {
@@ -139,6 +153,8 @@
     <div class="actions">
         <button type="button" class="btn-apply" @onclick="FinishRecipe">Finish recipe</button>
     </div>
+}
+
 
 @code {
     private string Title { get; set; } = string.Empty;
@@ -162,8 +178,17 @@
     private bool WarningEnabled { get; set; }
     private string WarningText { get; set; } = string.Empty;
 
+    UserDisplayDto? userDto;
+
     protected override async Task OnInitializedAsync()
     {
+        userDto = await UserService.GetCurrentUserAsync();
+
+        if(userDto is null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+
         ServingUnits = await UnitService.GetAllServingUnitsAsync();
         if (ServingUnits.Any()) SelectedServingUnitId = ServingUnits.First().Id;
 

@@ -177,7 +177,7 @@ namespace Pinula.Shared.Services
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<User>>($"{BaseUrl}/all");
+                var response = await _httpClient.GetFromJsonAsync<List<User>>($"{BaseUrl}/admin/all");
                 return response ?? new List<User>();
             }
             catch(Exception ex)
@@ -192,7 +192,7 @@ namespace Pinula.Shared.Services
             try
             {
                 var dto = new AdminPasswordChangeDto { UserId = userId, NewPassword = newPassword };
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/admin-change-password", dto);
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/admin/changePassword", dto);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -200,6 +200,18 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error while changing user psswd: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task<bool> AdminToggleCommentPermissionAsync(Guid userId)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentPermission/{userId}", null);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> AdminToggleRecipePermissionAsync(Guid userId)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleRecipePermission/{userId}", null);
+            return response.IsSuccessStatusCode;
         }
 
     }

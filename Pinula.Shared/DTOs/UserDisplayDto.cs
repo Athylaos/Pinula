@@ -15,5 +15,7 @@ namespace Pinula.Shared.DTOs
         public int PostedRecipes { get; set; }
         public int PostedComments { get; set; }
         public decimal AvgRating { get; set; }
+        public bool CanComment { get; set; }
+        public bool CanCreateRecipes { get; set; }
     }
 }

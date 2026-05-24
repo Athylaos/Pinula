@@ -37,6 +37,8 @@ public partial class Recipe
 
     public int? UsersRated { get; set; }
 
+    public bool IsApproved { get; set; } = true;
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();

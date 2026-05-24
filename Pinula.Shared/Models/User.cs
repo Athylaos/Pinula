@@ -21,6 +21,10 @@ public partial class User
     public string? AvatarUrl { get; set; }
 
     public string PasswordHash { get; set; } = null!;
+
+    public bool CanComment { get; set; } = true;
+
+    public bool CanCreateRecipes { get; set; } = true;
     [JsonIgnore]
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     [JsonIgnore]

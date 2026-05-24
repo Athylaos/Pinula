@@ -19,6 +19,8 @@ public partial class Comment
 
     public Guid? ParentCommentId { get; set; }
 
+    public bool IsApproved { get; set; } = true;
+
     public virtual ICollection<Comment> Replies { get; set; } = new List<Comment>();
     [JsonIgnore]
     public virtual Comment? ParentComment { get; set; }

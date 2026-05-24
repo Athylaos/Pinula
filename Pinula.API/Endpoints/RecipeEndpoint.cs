@@ -72,8 +72,18 @@ namespace Pinula.API.Endpoints
                 var defaultImage = "default_recipe.png";
 
                 Guid? currentUserId = user.GetUserId();
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
                 var query = db.Recipes.AsNoTracking().AsQueryable();
+
+                if (userDb is not null && userDb.Role == "admin" && filter.IncludeUnapproved)
+                {
+
+                }
+                else
+                {
+                    query = query.Where(r => r.IsApproved);
+                }
 
                 if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
                     query = query.Where(r => r.Title.ToLower().Contains(filter.SearchTerm.ToLower()));
@@ -137,7 +147,8 @@ namespace Pinula.API.Endpoints
                         UserName = r.User.Name,
                         Calories = r.Calories,
                         ServingsAmount = r.ServingsAmount,
-                        IsFavorite = currentUserId != null && r.RecipesUsers.Any(ru => ru.UsersId == currentUserId && ru.IsFavorite)
+                        IsFavorite = currentUserId != null && r.RecipesUsers.Any(ru => ru.UsersId == currentUserId && ru.IsFavorite),
+                        IsApproved = r.IsApproved
                     })
                     .ToListAsync();
 
@@ -148,7 +159,11 @@ namespace Pinula.API.Endpoints
             group.MapPost("/toggleFavorite/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, CookRecipesDbContext db) =>
             {
                 var userId = user.GetUserId();
-
+                var recipeExists = await db.Recipes.AnyAsync(r => r.Id == recipeId);
+                if (!recipeExists)
+                {
+                    return Results.NotFound(new { message = "Recipe does not exist" });
+                }
                 var favorite = await db.RecipesUsers.FirstOrDefaultAsync(ru => ru.RecipesId == recipeId && ru.UsersId == userId);
 
                 if (favorite == null)
@@ -164,10 +179,9 @@ namespace Pinula.API.Endpoints
                 }
                 else
                 {
-                    favorite.IsFavorite = false;
-                    db.RecipesUsers.Update(favorite);
+                    favorite.IsFavorite = !favorite.IsFavorite;
                     await db.SaveChangesAsync();
-                    return Results.Ok(new { isFavorite = false });
+                    return Results.Ok(new { isFavorite = favorite.IsFavorite });
                 }
             }).RequireAuthorization();
 
@@ -221,6 +235,7 @@ namespace Pinula.API.Endpoints
                     CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
                     UserName = c.User.Name,
                     UserSurname = c.User.Surname,
+                    IsApproved = c.IsApproved,
                     ParentCommentId = c.ParentCommentId,
                     Replies = new List<CommentPreview>()
                 }).OrderByDescending(c => c.CreatedAt).ToListAsync();
@@ -240,6 +255,11 @@ namespace Pinula.API.Endpoints
                     }
                 }
 
+                foreach(var rc in rootComments)
+                {
+                    if (!rc.Replies.Any() && !rc.IsApproved) rootComments.Remove(rc);
+                }
+
                 recipe.Comments = rootComments;
 
                 return Results.Ok(recipe);
@@ -250,6 +270,13 @@ namespace Pinula.API.Endpoints
             group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, CookRecipesDbContext db, IWebHostEnvironment env) =>
             {
                 var userId = user.GetUserId();
+
+                var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (dbUser is null) return Results.NotFound("User not found.");
+                if (!dbUser.CanCreateRecipes)
+                {
+                    return Results.Forbid();
+                }
 
                 var form = await request.ReadFormAsync();
 
@@ -384,6 +411,12 @@ namespace Pinula.API.Endpoints
             group.MapPost("/postComment", async (Comment comment, ClaimsPrincipal user, CookRecipesDbContext db) =>
             {
                 var userId = user.GetUserId();
+                var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (dbUser is null) return Results.NotFound("User not found.");
+                if (!dbUser.CanComment)
+                {
+                    return Results.Forbid();
+                }
 
                 var exists = await db.Recipes.AnyAsync(r => r.Id == comment.RecipeId);
                 bool isNewRating = comment.Rating.HasValue;
@@ -402,6 +435,7 @@ namespace Pinula.API.Endpoints
 
                 comment.UserId = userId;
                 comment.CreatedAt = DateTime.UtcNow;
+                comment.IsApproved = true;
                 db.Comments.Add(comment);
                 await db.SaveChangesAsync();
 
@@ -513,6 +547,19 @@ namespace Pinula.API.Endpoints
                 });
 
             }).RequireAuthorization();
+
+
+            group.MapPost("/admin/toggleApproval/{recipeId:guid}", async (Guid recipeId, CookRecipesDbContext db) =>
+            {
+                var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == recipeId);
+                if (recipe is null) return Results.NotFound("Recipe not found");
+
+                recipe.IsApproved = !recipe.IsApproved;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { isApproved = recipe.IsApproved });
+
+            }).RequireAuthorization("AdminOnly");
 
 
         }

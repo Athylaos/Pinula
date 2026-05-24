@@ -15,12 +15,14 @@ namespace Pinula.Shared.Interface
         public Task<List<RecipePreviewDto>> GetRecipePreviewsAsync(int amount);
         public Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filterParametrs, CancellationToken? ct);
 
-        public Task<bool?> ChangeFavoriteAsync(Guid recipeId, Guid userId);
+        public Task<bool?> ChangeFavoriteAsync(Guid recipeId);
         public Task<bool> IsFavoriteAsync(Guid recipeId, Guid userId);
 
         public Task<PostCommentResponse?> PostCommentAsync(Comment comment);
         public Task<PostCommentResponse?> GetRecipeCommentAsync(Guid recipeId, Guid? userId); // userId as an prep for future admin functions ??
         public Task<DeleteCommentResponse?> DeleteRecipeCommentAsync(Guid recipeId, Guid? userId); // userId as an prep for future admin functions ??
+
+        Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
 
     }
 }

@@ -95,6 +95,8 @@ namespace Pinula.API.Endpoints
                     Email = u.Email,
                     AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(u.AvatarUrl) ? defaultImage : u.AvatarUrl)}",
                     UserCreated = u.UserCreated,
+                    CanComment = u.CanComment,
+                    CanCreateRecipes = u.CanCreateRecipes
                 }).FirstOrDefaultAsync();
 
                 if (userData == null) return Results.NotFound("User not found");
@@ -129,7 +131,9 @@ namespace Pinula.API.Endpoints
                     Name = u.Name,
                     Surname = u.Surname,
                     AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(u.AvatarUrl) ? defaultImage : u.AvatarUrl)}",
-                    UserCreated = u.UserCreated
+                    UserCreated = u.UserCreated,
+                    CanComment = u.CanComment,
+                    CanCreateRecipes = u.CanCreateRecipes,
                 }).FirstOrDefaultAsync();
 
                 return Results.Ok(userData);
@@ -200,7 +204,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Get all users
-            group.MapGet("/all", async (HttpRequest request, CookRecipesDbContext db) =>
+            group.MapGet("/admin/all", async (HttpRequest request, CookRecipesDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/avatars/";
                 var defaultImage = "default_avatar.png";
@@ -216,8 +220,8 @@ namespace Pinula.API.Endpoints
 
             }).RequireAuthorization("AdminOnly");
 
-            //---------------------------------------------------------------Get all users
-            group.MapPost("/admin-change-password", async (ClaimsPrincipal user, AdminPasswordChangeDto dto, CookRecipesDbContext db) =>
+            //---------------------------------------------------------------Admin change password
+            group.MapPost("/admin/changePassword", async (ClaimsPrincipal user, AdminPasswordChangeDto dto, CookRecipesDbContext db) =>
             {
                 var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == dto.UserId);
                 if (userDb is null) return Results.NotFound();
@@ -230,6 +234,30 @@ namespace Pinula.API.Endpoints
                 return Results.Ok();
 
 
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Admin change comment permission
+            group.MapPost("/admin/toggleCommentPermission/{userId:guid}", async (Guid userId, CookRecipesDbContext db) =>
+            {
+                var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user is null) return Results.NotFound("User not found.");
+
+                user.CanComment = !user.CanComment;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { canComment = user.CanComment });
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Admin change recipe creation permission
+            group.MapPost("/admin/toggleRecipePermission/{userId:guid}", async (Guid userId, CookRecipesDbContext db) =>
+            {
+                var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user is null) return Results.NotFound("User not found.");
+
+                user.CanCreateRecipes = !user.CanCreateRecipes;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { canCreateRecipes = user.CanCreateRecipes });
             }).RequireAuthorization("AdminOnly");
 
         }

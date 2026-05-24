@@ -22,7 +22,7 @@ namespace Pinula.Shared.Services
         }
 
 
-        public async Task<bool?> ChangeFavoriteAsync(Guid recipeId, Guid userId)
+        public async Task<bool?> ChangeFavoriteAsync(Guid recipeId)
         {
             try
             {
@@ -144,7 +144,8 @@ namespace Pinula.Shared.Services
                           $"&onlyFavorites={filter.OnlyFavorites.ToString().ToLower()}" +
                           $"&onlyMine={filter.OnlyMine.ToString().ToLower()}" +
                           $"&sort={(int)filter.Sort}" +
-                          $"&sortDescending={filter.SortDescending.ToString().ToLower()}";
+                          $"&sortDescending={filter.SortDescending.ToString().ToLower()}" +
+                          $"&includeUnapproved={filter.IncludeUnapproved.ToString().ToLower()}";
 
                 if (!string.IsNullOrEmpty(filter.SearchTerm))
                     url += $"&searchTerm={Uri.EscapeDataString(filter.SearchTerm)}";
@@ -215,6 +216,12 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error while removing comment: {ex.Message}");
                 return null;
             }
+        }
+
+        public async Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleApproval/{recipeId}", null);
+            return response.IsSuccessStatusCode;
         }
 
         public class FavoriteResponse

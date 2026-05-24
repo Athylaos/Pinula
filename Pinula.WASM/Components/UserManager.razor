@@ -27,6 +27,8 @@ else
                 <th>Email</th>
                 <th>Role</th>
                 <th>Registered</th>
+                <th>Commenting</th>
+                <th>Posting Recipes</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
@@ -39,6 +41,20 @@ else
                     <td>@user.Email</td>
                     <td style="@((user.Role == "admin") ? "color:red; font-weight:bold;" : "")">@user.Role</td>
                     <td>@user.UserCreated.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <button class="btn btn-sm @(user.CanComment ? "btn-outline-success" : "btn-danger")"
+                                @onclick="() => ToggleComment(user)">
+                            <i class="bi @(user.CanComment ? "bi-chat-left-text" : "bi-chat-left-x-fill")"></i>
+                            @(user.CanComment ? "Allowed" : "Banned")
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm @(user.CanCreateRecipes ? "btn-outline-success" : "btn-danger")"
+                                @onclick="() => ToggleRecipes(user)">
+                            <i class="bi @(user.CanCreateRecipes ? "bi-journal-plus" : "bi-journal-x")"></i>
+                            @(user.CanCreateRecipes ? "Allowed" : "Banned")
+                        </button>
+                    </td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-warning"
                                 @onclick="() => OpenPasswordReset(user)">
@@ -161,6 +177,25 @@ else
         {
             isError = true;
             statusMessage = "Copying failed, copy manually.";
+        }
+    }
+
+    private async Task ToggleComment(User user)
+    {
+        var success = await UserService.AdminToggleCommentPermissionAsync(user.Id);
+        if (success)
+        {
+            user.CanComment = !user.CanComment;
+        }
+    }
+
+    private async Task ToggleRecipes(User user)
+    {
+        var success = await UserService.AdminToggleRecipePermissionAsync(user.Id);
+        if (success)
+        {
+            user.CanCreateRecipes = !user.CanCreateRecipes;
+ 
         }
     }
 }
