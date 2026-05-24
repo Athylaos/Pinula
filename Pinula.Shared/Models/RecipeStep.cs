@@ -9,7 +9,7 @@ public partial class RecipeStep
 
     public Guid RecipeId { get; set; }
 
-    public string Description { get; set; } = null!;
+    public required string Description { get; set; }
 
     public short StepNumber { get; set; }
 

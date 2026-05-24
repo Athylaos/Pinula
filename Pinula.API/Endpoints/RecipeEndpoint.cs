@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text.Json;
+using Pinula.Shared.Enums;
 
 namespace Pinula.API.Endpoints
 {
@@ -21,7 +22,7 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/api/recipes");
 
             //---------------------------------------------------------------Get recipes
-            group.MapGet("/get", async (int? amount, CookRecipesDbContext db) =>
+            group.MapGet("/get", async (int? amount, PinulaDbContext db) =>
             {
                 var query = db.Recipes.Include(r => r.User).OrderByDescending(r => r.RecipeCreated);
 
@@ -34,7 +35,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Get previews
-            group.MapGet("/getPreviews", async (HttpRequest request, int? amount, CookRecipesDbContext db) =>
+            group.MapGet("/getPreviews", async (HttpRequest request, int? amount, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
                 var defaultImage = "default_recipe.png";
@@ -66,7 +67,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Get previews filtered
-            group.MapGet("/getPreviews/filtered", async (HttpRequest request,[AsParameters] RecipeFilterParameters filter, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapGet("/getPreviews/filtered", async (HttpRequest request,[AsParameters] RecipeFilterParameters filter, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
                 var defaultImage = "default_recipe.png";
@@ -106,7 +107,7 @@ namespace Pinula.API.Endpoints
                 if (filter.OnlyFavorites)
                 {
                     if (currentUserId == null) return Results.Unauthorized();
-                    query = query.Where(r => r.RecipesUsers.Any(ru => ru.UsersId == currentUserId && ru.IsFavorite));
+                    query = query.Where(r => r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite));
                 }
                 if (filter.OnlyMine)
                 {
@@ -147,7 +148,7 @@ namespace Pinula.API.Endpoints
                         UserName = r.User.Name,
                         Calories = r.Calories,
                         ServingsAmount = r.ServingsAmount,
-                        IsFavorite = currentUserId != null && r.RecipesUsers.Any(ru => ru.UsersId == currentUserId && ru.IsFavorite),
+                        IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
                         IsApproved = r.IsApproved
                     })
                     .ToListAsync();
@@ -156,7 +157,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Toggle favorite recipe
-            group.MapPost("/toggleFavorite/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapPost("/toggleFavorite/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var recipeExists = await db.Recipes.AnyAsync(r => r.Id == recipeId);
@@ -164,14 +165,14 @@ namespace Pinula.API.Endpoints
                 {
                     return Results.NotFound(new { message = "Recipe does not exist" });
                 }
-                var favorite = await db.RecipesUsers.FirstOrDefaultAsync(ru => ru.RecipesId == recipeId && ru.UsersId == userId);
+                var favorite = await db.RecipeUsers.FirstOrDefaultAsync(ru => ru.RecipeId == recipeId && ru.UserId == userId);
 
                 if (favorite == null)
                 {
-                    db.RecipesUsers.Add(new RecipesUser()
+                    db.RecipeUsers.Add(new RecipeUser()
                     {
-                        RecipesId = recipeId,
-                        UsersId = userId,
+                        RecipeId = recipeId,
+                        UserId = userId,
                         IsFavorite = true
                     });
                     await db.SaveChangesAsync();
@@ -187,7 +188,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Get recipe details
-            group.MapGet("/getRecipeDetails/{recipeId:guid}", async (HttpRequest request, Guid recipeId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapGet("/getRecipeDetails/{recipeId:guid}", async (HttpRequest request, Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
                 var defaultImage = "default_recipe.png";
@@ -217,12 +218,12 @@ namespace Pinula.API.Endpoints
                         UnitName = ri.Unit.Name
                     }).ToList(),
                     RecipeSteps = r.RecipeSteps,
-                    ServingUnit = r.ServingUnitNavigation,
+                    ServingUnit = r.ServingUnit,
                     UserName = r.User.Name,
                     UserSurname = r.User.Surname,
                     Categories = r.Categories,
 
-                    IsFavorite = currentUserId != null && r.RecipesUsers.Any(ru => ru.UsersId == currentUserId && ru.IsFavorite)
+                    IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite)
                 }).FirstOrDefaultAsync();
 
                 if (recipe == null) return Results.NotFound();
@@ -230,7 +231,7 @@ namespace Pinula.API.Endpoints
                 var allComments = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId).Select(c => new CommentPreview
                 {
                     Id = c.Id,
-                    Text = c.Text,
+                    Text = c.Text??string.Empty,
                     Rating = c.Rating,
                     CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
                     UserName = c.User.Name,
@@ -264,7 +265,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Create recipe
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, CookRecipesDbContext db, IWebHostEnvironment env) =>
+            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
             {
                 var userId = user.GetUserId();
 
@@ -280,7 +281,7 @@ namespace Pinula.API.Endpoints
                 var dtoStr = form["recipeData"];
                 if (string.IsNullOrEmpty(dtoStr)) return Results.BadRequest("Missing recipe data.");
 
-                var dto = JsonSerializer.Deserialize<RecipeCreateDto>(dtoStr, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var dto = JsonSerializer.Deserialize<RecipeCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (dto == null) return Results.BadRequest("Invalid recipe data.");
             
                 string finalPhotoUrl = "default_recipe_picture.png";
@@ -337,7 +338,7 @@ namespace Pinula.API.Endpoints
                     PhotoUrl = finalPhotoUrl,
                     CookingTime = dto.CookingTime,
                     ServingsAmount = dto.ServingsAmount,
-                    ServingUnit = dto.ServingUnit,
+                    ServingUnitId = dto.ServingUnit,
                     Difficulty = dto.Difficulty,
                     RecipeCreated = DateTime.UtcNow,
                     Calories = 0,
@@ -405,7 +406,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Post comment
-            group.MapPost("/postComment", async (Comment comment, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapPost("/postComment", async (Comment comment, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -487,7 +488,7 @@ namespace Pinula.API.Endpoints
 
             //---------------------------------------------------------------Get user comment
             /*
-            group.MapGet("/getUserComment/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapGet("/getUserComment/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
 
@@ -510,7 +511,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Remove user comment
-            group.MapDelete("/deleteComment/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapDelete("/deleteComment/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
 
@@ -520,7 +521,7 @@ namespace Pinula.API.Endpoints
                 db.Comments.Remove(comment);
                 await db.SaveChangesAsync();
 
-                var ratings = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId).Select(c => (decimal)c.Rating).ToListAsync();
+                var ratings = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId && c.Rating.HasValue).Select(c => (decimal)c.Rating!).ToListAsync();
 
                 decimal newAvg = 0;
                 int newCount = ratings.Count;
@@ -547,7 +548,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization();
 
             //---------------------------------------------------------------Toggle recipe approval
-            group.MapPost("/admin/toggleApproval/{recipeId:guid}", async (Guid recipeId, CookRecipesDbContext db) =>
+            group.MapPost("/admin/toggleApproval/{recipeId:guid}", async (Guid recipeId, PinulaDbContext db) =>
             {
                 var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == recipeId);
                 if (recipe is null) return Results.NotFound("Recipe not found");
@@ -560,7 +561,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get all comments
-            group.MapGet("/admin/allComments", async (CookRecipesDbContext db) =>
+            group.MapGet("/admin/allComments", async (PinulaDbContext db) =>
             {
                 var comments = await db.Comments
                     .Include(c => c.Recipe)
@@ -569,7 +570,7 @@ namespace Pinula.API.Endpoints
                     .Select(c => new AdminCommentDto
                     {
                         Id = c.Id,
-                        Text = c.Text,
+                        Text = c.Text??string.Empty,
                         UserName = c.User.Name,
                         UserSurname = c.User.Surname,
                         CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
@@ -583,7 +584,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Toggle comment approval
-            group.MapPost("/admin/toggleCommentApproval/{commentId:guid}", async (Guid commentId, CookRecipesDbContext db) =>
+            group.MapPost("/admin/toggleCommentApproval/{commentId:guid}", async (Guid commentId, PinulaDbContext db) =>
             {
                 var comment = await db.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
                 if (comment is null) return Results.NotFound("Comment not found.");

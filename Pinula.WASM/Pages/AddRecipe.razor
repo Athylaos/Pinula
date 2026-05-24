@@ -1,5 +1,6 @@
 ﻿@page "/add-recipe"
 @using Pinula.Shared.Models
+@using Pinula.Shared.Enums
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @using Pinula.WASM.Components
@@ -92,7 +93,7 @@ else
             <label class="section-title">Categories</label>
 
             <div class="category-root-container">
-                @foreach (var root in Categories.Where(c => c.Category.ParentCategory == null || c.Category.ParentCategory == Guid.Empty))
+                @foreach (var root in Categories.Where(c => c.Category.ParentCategoryId == null || c.Category.ParentCategoryId == Guid.Empty))
                 {
                     @RenderCategoryTree(root)
                 }
@@ -202,7 +203,7 @@ else
 
     private void AddStep()
     {
-        RecipeSteps.Add(new RecipeStep { StepNumber = (short)(RecipeSteps.Count + 1) });
+        RecipeSteps.Add(new RecipeStep { StepNumber = (short)(RecipeSteps.Count + 1), Description = string.Empty });
     }
 
     private void RemoveStep()
@@ -334,7 +335,7 @@ else
     {
         cat.IsSelected = !cat.IsSelected;
     
-        bool hasChildren = Categories.Any(c => c.Category.ParentCategory == cat.Category.Id);
+        bool hasChildren = Categories.Any(c => c.Category.ParentCategoryId == cat.Category.Id);
         if (hasChildren)
         {
             cat.IsExpanded = !cat.IsExpanded;
@@ -348,7 +349,7 @@ else
 
     private void DeselectChildrenRecursive(Guid parentId)
     {
-        var children = Categories.Where(c => c.Category.ParentCategory == parentId).ToList();
+        var children = Categories.Where(c => c.Category.ParentCategoryId == parentId).ToList();
         foreach (var child in children)
         {
             child.IsSelected = false;
@@ -358,12 +359,12 @@ else
     }
 
     private IEnumerable<CategorySelectableBlazor> GetChildren(Guid parentId)
-        => Categories.Where(c => c.Category.ParentCategory == parentId);
+        => Categories.Where(c => c.Category.ParentCategoryId == parentId);
 
 
     public class CategorySelectableBlazor
     {
-        public Category Category { get; set; } = new();
+        public Category Category { get; set; }
         public bool IsSelected { get; set; }
         public bool IsExpanded { get; set; }
     }

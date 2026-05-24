@@ -208,7 +208,7 @@
 
             await Task.WhenAll(categoryDetailTask, bestTask, fastTask, allTask);
 
-            currentCategory = categoryDetailTask.Result  ?? new();
+            currentCategory = categoryDetailTask.Result;
             subCategories = currentCategory?.ChildCategories?.ToList() ?? new();
 
             bestInCategoryRecipes = bestTask.Result?.ToList() ?? new();

@@ -13,7 +13,7 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/api/ingredients");
 
             //---------------------------------------------------------------Get previews
-            group.MapGet("/getPreviews", async (int? amount, CookRecipesDbContext db) =>
+            group.MapGet("/getPreviews", async (int? amount, PinulaDbContext db) =>
             {
                 var query = db.Ingredients
                     .AsNoTracking()
@@ -21,7 +21,7 @@ namespace Pinula.API.Endpoints
                     {
                         Id = i.Id,
                         Name = i.Name,
-                        DefaultUnit = i.DefaultUnitNavigation,
+                        DefaultUnit = i.DefaultUnit,
 
                         IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
                         {
@@ -40,7 +40,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Get filtered previews
-            group.MapGet("/getFilteredPreviews", async (string searchTerm, int? amount, CookRecipesDbContext db) =>
+            group.MapGet("/getFilteredPreviews", async (string searchTerm, int? amount, PinulaDbContext db) =>
             {
                 var query = db.Ingredients
                     .AsNoTracking()
@@ -49,7 +49,7 @@ namespace Pinula.API.Endpoints
                     {
                         Id = i.Id,
                         Name = i.Name,
-                        DefaultUnit = i.DefaultUnitNavigation,
+                        DefaultUnit = i.DefaultUnit,
 
                         IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
                         {
@@ -74,7 +74,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Create ingredient
-            group.MapPost("/create", async (IngredientCreateDto dto, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapPost("/create", async (IngredientCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 if (await db.Ingredients.AnyAsync(i => i.Name.ToLower() == dto.Name.ToLower()))
                 {
@@ -86,7 +86,7 @@ namespace Pinula.API.Endpoints
                     var ingredient = new Ingredient {
                         Id = Guid.NewGuid(),
                         Name = dto.Name,
-                        DefaultUnit = dto.DefaultUnitId,
+                        DefaultUnitId = dto.DefaultUnitId,
                         Calories = dto.Calories,
                         Proteins = dto.Proteins,
                         Fats = dto.Fats,
@@ -106,7 +106,7 @@ namespace Pinula.API.Endpoints
                 }
                 catch (Exception ex)
                 {
-                    return Results.Problem("An error occurred while saving the ingredient.");
+                    return Results.Problem($"An error occurred while saving the ingredient. Ex:{ex.Message}");
                 }
 
             }).RequireAuthorization();

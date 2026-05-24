@@ -6,7 +6,7 @@ namespace Pinula.Shared.DTOs
 {
     public class IngredientCreateDto
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public Guid DefaultUnitId { get; set; }
         public decimal Calories { get; set; }
         public decimal Proteins { get; set; }

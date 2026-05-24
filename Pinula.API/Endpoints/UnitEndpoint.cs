@@ -14,7 +14,7 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/api/units");
 
             //---------------------------------------------------------------Get servingUnits
-            group.MapGet("/getServing", async (CookRecipesDbContext db) =>
+            group.MapGet("/getServing", async (PinulaDbContext db) =>
             {
                 var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Name }).ToListAsync();
 
@@ -22,14 +22,14 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Get units
-            group.MapGet("/get", async (CookRecipesDbContext db) =>
+            group.MapGet("/get", async (PinulaDbContext db) =>
             {
                 var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Name }).ToListAsync();
 
                 return Results.Ok(units);
             });
 
-            group.MapGet("/getRecipeUnits/{ingredientId:guid}", async (Guid ingredientId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapGet("/getRecipeUnits/{ingredientId:guid}", async (Guid ingredientId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
 
 
@@ -37,7 +37,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Create unit
-            group.MapPost("/create", async (Unit unit, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapPost("/create", async (Unit unit, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 if (string.IsNullOrWhiteSpace(unit.Name))
                     return Results.BadRequest("Unit name is mandatory");            
@@ -56,7 +56,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete unit
-            group.MapDelete("/{id:guid}", async (Guid id, CookRecipesDbContext db) =>
+            group.MapDelete("/{id:guid}", async (Guid id, PinulaDbContext db) =>
             {
                 var unit = await db.Units.Include(u => u.IngredientUnits).FirstOrDefaultAsync(u => u.Id == id);
 

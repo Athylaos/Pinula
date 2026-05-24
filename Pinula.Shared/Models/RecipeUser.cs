@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Pinula.Shared.Models;
 
-public partial class RecipesUser
+public partial class RecipeUser
 {
-    public Guid RecipesId { get; set; }
+    public Guid RecipeId { get; set; }
 
-    public Guid UsersId { get; set; }
+    public Guid UserId { get; set; }
 
     public bool IsFavorite { get; set; }
 

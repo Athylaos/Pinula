@@ -8,7 +8,7 @@ public partial class Unit
 {
     public Guid Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
 
     public bool IsServingUnit { get; set; }
     [JsonIgnore]

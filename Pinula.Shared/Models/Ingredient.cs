@@ -7,9 +7,9 @@ public partial class Ingredient
 {
     public Guid Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
 
-    public Guid DefaultUnit { get; set; }
+    public Guid DefaultUnitId { get; set; }
 
     public decimal Calories { get; set; }
 
@@ -21,7 +21,7 @@ public partial class Ingredient
 
     public decimal Fiber { get; set; }
 
-    public virtual Unit DefaultUnitNavigation { get; set; } = null!;
+    public virtual Unit DefaultUnit { get; set; } = null!;
 
     public virtual ICollection<IngredientUnit> IngredientUnits { get; set; } = new List<IngredientUnit>();
 

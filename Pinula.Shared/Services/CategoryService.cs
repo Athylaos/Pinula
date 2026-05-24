@@ -45,14 +45,14 @@ namespace Pinula.Shared.Services
                 var response = await _httpClient.GetAsync($"{BaseUrl}/get/{id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<Category>() ?? new();
+                    return await response.Content.ReadFromJsonAsync<Category>();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"error while loading categories: {ex.Message}");
             }
-            return new Category();
+            return null;
         }
 
         public Task<List<Category>> GetChildCategoriesAsync(Guid parentId)

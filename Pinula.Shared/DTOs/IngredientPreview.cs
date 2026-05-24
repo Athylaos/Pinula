@@ -9,11 +9,11 @@ namespace Pinula.Shared.DTOs
     {
         public Guid Id { get; set; }
 
-        public string Name { get; set; } = null!;
+        public string Name { get; set; }
 
         public Unit DefaultUnit { get; set; }
 
-        public UnitPreviewDto SelectedUnit { get; set; }
+        public UnitPreviewDto SelectedUnit { get; set; } = null!;
 
         public List<UnitPreviewDto> IngredientUnits { get; set; } = new List<UnitPreviewDto>();
 

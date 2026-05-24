@@ -130,7 +130,7 @@ else
         categoryLevels.Clear();
 
         var roots = allData
-            .Where(c => c.ParentCategory == null || c.ParentCategory == Guid.Empty)
+            .Where(c => c.ParentCategoryId == null || c.ParentCategoryId == Guid.Empty)
             .OrderBy(c => c.SortOrder)
             .ToList();
 
@@ -149,7 +149,7 @@ else
         resultList.Add(current);
 
         var children = allData
-            .Where(c => c.ParentCategory == current.Id)
+            .Where(c => c.ParentCategoryId == current.Id)
             .OrderBy(c => c.SortOrder)
             .ToList();
 

@@ -11,8 +11,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<CookRecipesDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<PinulaDbContext>(options =>
+    options.UseNpgsql(connectionString).UseUpperSnakeCaseNamingConvention());
 
 builder.Services.AddOpenApi(options =>
 {

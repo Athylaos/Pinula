@@ -17,14 +17,14 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/api/categories");
 
             //---------------------------------------------------------------Get all categories
-            group.MapGet("/getAll", async (HttpRequest request, CookRecipesDbContext db) =>
+            group.MapGet("/getAll", async (HttpRequest request, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
 
                 return await db.Categories.AsNoTracking().Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(c => new Category() { 
                     ChildCategories = c.ChildCategories,
-                    ParentCategory = c.ParentCategory,
+                    ParentCategoryId = c.ParentCategoryId,
                     Id = c.Id,
                     Name = c.Name,
                     PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(c.PictureUrl) ? defaultImage : c.PictureUrl)}",
@@ -34,15 +34,15 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Get main categories
-            group.MapGet("/getMain", async (HttpRequest request, CookRecipesDbContext db) =>
+            group.MapGet("/getMain", async (HttpRequest request, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
 
-                return await db.Categories.AsNoTracking().Where(c => c.ParentCategory == null).Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(c => new Category()
+                return await db.Categories.AsNoTracking().Where(c => c.ParentCategoryId == null).Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(c => new Category()
                 {
                     ChildCategories = c.ChildCategories,
-                    ParentCategory = c.ParentCategory,
+                    ParentCategoryId = c.ParentCategoryId,
                     Id = c.Id,
                     Name = c.Name,
                     PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(c.PictureUrl) ? defaultImage : c.PictureUrl)}",
@@ -51,7 +51,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Get category
-            group.MapGet("/get/{categoryId:guid}", async (HttpRequest request, Guid categoryId, ClaimsPrincipal user, CookRecipesDbContext db) =>
+            group.MapGet("/get/{categoryId:guid}", async (HttpRequest request, Guid categoryId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
@@ -74,14 +74,14 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Create category
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, CookRecipesDbContext db, IWebHostEnvironment env) =>
+            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
             {
                 var form = await request.ReadFormAsync();
                 var dtoStr = form["categoryData"];
 
                 if (string.IsNullOrEmpty(dtoStr)) return Results.BadRequest("Category data missing.");
 
-                var dto = JsonSerializer.Deserialize<CategoryCreateDto>(dtoStr, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var dto = JsonSerializer.Deserialize<CategoryCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (dto == null) return Results.BadRequest("Unvalid category data.");
 
                 string finalPhotoUrl = "default_category_picture.png";
@@ -129,7 +129,7 @@ namespace Pinula.API.Endpoints
                     Id = Guid.NewGuid(),
                     Name = dto.Name,
                     SortOrder = dto.SortOrder,
-                    ParentCategory = dto.ParentCategory,
+                    ParentCategoryId = dto.ParentCategory,
                     PictureUrl = finalPhotoUrl
                 };
 
@@ -140,7 +140,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete category
-            group.MapDelete("/delete/{id:guid}", async (Guid id, CookRecipesDbContext db, IWebHostEnvironment env) =>
+            group.MapDelete("/delete/{id:guid}", async (Guid id, PinulaDbContext db, IWebHostEnvironment env) =>
             {
                 var category = await db.Categories
                     .Include(c => c.ChildCategories)

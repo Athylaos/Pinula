@@ -9,7 +9,7 @@ namespace Pinula.Shared.Services
     public class CreateIngredientResponse
     {
         public bool IsSuccess { get; set; }
-        public string Message { get; set; }
+        public required string Message { get; set; }
     }
 
     public class IngredientService : IIngredientService
