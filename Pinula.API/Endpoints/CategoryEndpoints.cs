@@ -113,7 +113,7 @@ namespace Pinula.API.Endpoints
 
                             await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
                             {
-                                Quality = 75
+                                Quality = 100
                             });
                         }
                         finalPhotoUrl = fileName;

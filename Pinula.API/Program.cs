@@ -12,7 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<PinulaDbContext>(options =>
-    options.UseNpgsql(connectionString).UseUpperSnakeCaseNamingConvention());
+    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
 builder.Services.AddOpenApi(options =>
 {
@@ -78,14 +78,11 @@ app.UseStaticFiles();
 app.UseCors();
 
 app.MapUserEndpoints();
-
 app.MapCategoryEndpoints();
-
 app.MapRecipeEndpoints();
-
 app.MapUnitEndpoints();
-
 app.MapIngredientEndpoints();
+app.MapMealPlanEndpoints();
 
 
 

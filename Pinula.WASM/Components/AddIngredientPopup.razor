@@ -390,11 +390,17 @@
         {
             newIngDto.AdditionalUnits.Add(new() { UnitId = unit.UnitId, ToDefaultUnit = unit.ToDefaultUnit });
         }
-
+        if(additionalUnits.FirstOrDefault(u => u.Unit.Name == "g") is null)
+        {
+            var g = allUnits.FirstOrDefault(u => u.Name == "g");
+            newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
+        }
         var result = await IngredientService.CreateIngredientAsync(newIngDto);
         if (result.IsSuccess)
         {
             newIngDto = new();
+            additionalUnits.Clear();
+            selectedMainUnitId = null;
             await ToggleMode();
         }
         else

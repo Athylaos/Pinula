@@ -24,6 +24,7 @@ builder.Services.AddScoped<IRecipeService>(sp => new RecipeService(sp.GetRequire
 builder.Services.AddScoped<ICategoryService>(sp => new CategoryService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<CategoryService>>()));
 builder.Services.AddScoped<IUserService>(sp => new UserService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ITokenStorage>(), sp.GetRequiredService<ILogger<UserService>>()));
 builder.Services.AddScoped<IUnitService>(sp => new UnitService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<UnitService>>()));
+builder.Services.AddScoped<IMealPlanService>(sp => new MealPlanService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<MealPlanService>>()));
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthenticationStateProvider>());
 
