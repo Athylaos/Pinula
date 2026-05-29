@@ -418,6 +418,7 @@ select:focus {
     right: 12px;
     display: flex;
     justify-content: end;
+    gap:3px;
 }
 
 .badge {
@@ -481,6 +482,24 @@ select:focus {
 .author {
     font-style: italic;
 }
+
+.edit-badge {
+    width:35px;
+    height:35px;
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+    background: rgba(29, 73, 52, 0.85);
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition:0.3s ease;
+    z-index:100;
+}
+    .edit-badge:hover{
+        scale:1.1;
+    }
+
 /* #endregion */
 
 /*---------- Recipe page ----------*/

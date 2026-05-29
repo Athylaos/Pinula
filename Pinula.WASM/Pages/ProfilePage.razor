@@ -216,7 +216,9 @@
                                     IsLoading="@isRecipesLoading"
                                     OnLoadMore="LoadMoreMyRecipes"
                                     OnRecipeSelected="RecipeClicked"
-                                    Recipes="myRecipes">
+                                    Recipes="myRecipes"
+                                    EnableEdit="true"
+                                    OnRecipeEditSelected="RecipeEditClicked">
                 </RecipeGridVertical>
             }
             else
@@ -399,4 +401,5 @@
     }
 
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
+    private void RecipeEditClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/edit/{r.Id}");
 }

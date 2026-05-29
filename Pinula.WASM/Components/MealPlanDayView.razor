@@ -20,7 +20,7 @@
                 <div class="meal-cards-grid">
                     @foreach (var meal in mealsInCategory)
                     {
-                        <div class="meal-card">
+                        <div class="meal-card" @onclick="() => OnMealSelected.InvokeAsync(meal)">
                             <button class="btn-card-edit"
                                     @onclick="() => OnEditMeal.InvokeAsync(meal.Id)"
                                     @onclick:stopPropagation="true"
@@ -61,4 +61,5 @@
     [Parameter] public IEnumerable<MealPlanPreviewDto> DayPlans { get; set; } = new List<MealPlanPreviewDto>();
     [Parameter] public EventCallback<MealType> OnAddMeal { get; set; }
     [Parameter] public EventCallback<Guid> OnEditMeal { get; set; }
+    [Parameter] public EventCallback<MealPlanPreviewDto> OnMealSelected { get; set; }
 }

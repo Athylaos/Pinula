@@ -7,7 +7,7 @@ namespace Pinula.Shared.Interface
     {
         public Task<Guid?> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType);
         public Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid id);
-        public Task UpdateRecipeAsync(Recipe recipe);
+        public Task<Guid?> UpdateRecipeAsync(RecipeCreateDto createDto,Guid recipeId, Stream? photoStream, string? photoName, string? contentType);
         public Task DeleteRecipeAsync(Guid id);
 
         public Task<List<Recipe>> GetRecipesAsync(int amount);

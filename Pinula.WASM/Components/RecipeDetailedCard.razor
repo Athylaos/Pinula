@@ -19,6 +19,12 @@
                 <span>@Recipe.Rating.Value.ToString("0.#")</span>
                 <img src="images/icons/favorite_full.png" class="time-icon" />
             </div>
+            @if (EnableEdit)
+            {
+                <button class="edit-badge" @onclick="() => OnRecipeEditSelected.InvokeAsync(Recipe)" title="Edit recipe">
+                    <img src="images/icons/pencil.png" style="margin-top:-3px" class="time-icon" />
+                </button>
+            }
         </div>
     </div>
 
@@ -77,7 +83,9 @@
 
 @code {
     [Parameter] public RecipePreviewDto Recipe { get; set; } = new();
+    [Parameter] public bool EnableEdit { get; set; } = false;
     [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeEditSelected { get; set; }
 
     private string GetDifficultyText(int diff) => diff switch
     {

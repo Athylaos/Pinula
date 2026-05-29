@@ -1,4 +1,6 @@
-﻿@page "/add-recipe"
+﻿@page "/recipes/add"
+@page "/recipe/edit/{RecipeId:guid}"
+
 @using Pinula.Shared.Models
 @using Pinula.Shared.Enums
 @using Pinula.Shared.DTOs
@@ -11,153 +13,163 @@
 @inject IIngredientService IngredientService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
-<div class="header">
-    <img src="images/icons/back.png" class="back-btn" @onclick="GoBack" />
-    <h1>Add Recipe</h1>
-</div>
-@if(userDto is null)
-{
-    <p>You need to login</p> @*Is handled by automatic redirection*@
-}
-else if(!userDto.CanCreateRecipes){
-    <div class="comment-input-card">
-        <div class="prompt-content">
-            <h5>You have been banned</h5>
-            <p>Your right to post recipes has been revoked by the administrator. You can appeal this decision through our support team.</p>
-        </div>
+
+<LoadingView IsFullScreen="true" Text="Loading data..." IsLoading="isLoading">
+    <div class="header">
+        <img src="images/icons/back.png" class="back-btn" @onclick="GoBack" />
+        <h1>@(IsEditMode ? "Edit Recipe" : "Add Recipe")</h1>
     </div>
-}
-else
-{
-    <div class="form-grid">
-        <div class="add-recipe-card basic-info">
-            <div class="input-group">
-                <label>Recipe name</label>
-                <input type="text" class="custom-input " @bind="Title" placeholder="e.g. Spaghetti Bolognese" />
-            </div>
 
-            <div class="image-upload">
-                <div class="image-preview">
-                    @if (!string.IsNullOrEmpty(SelectedImagePreview))
-                    {
-                        <img src="@SelectedImagePreview" alt="Recipe preview" />
-                    }
-                    else
-                    {
-                        <span>No image selected</span>
-                    }
-                </div>
+    @if (userDto is null)
+    {
+        <p>You need to login</p> @*Is handled by automatic redirection*@
+    }
+    else if (!userDto.CanCreateRecipes)
+    {
+        <div class="comment-input-card">
+            <div class="prompt-content">
+                <h5>You have been banned</h5>
+                <p>Your right to post recipes has been revoked by the administrator. You can appeal this decision through our support team.</p>
             </div>
-
-            <div class="custom-file-upload">
-                <label for="file-upload" class="btn-apply">
-                    Select image
-                </label>
-                <InputFile id="file-upload" OnChange="LoadPhoto" />
-            </div>
-
-            <div class="stats-row">
+        </div>
+    }
+    else
+    {
+        <div class="form-grid">
+            <div class="add-recipe-card basic-info">
                 <div class="input-group">
-                    <label>Time (Minutes)</label>
-                    <input type="number" min="1" class="custom-input" @bind="Time" />
-
+                    <label>Recipe name</label>
+                    <input type="text" class="custom-input " @bind="Title" placeholder="e.g. Spaghetti Bolognese" />
                 </div>
 
-                <div class="input-group">
-                    <label>Servings</label>
-                    <div class="flex-row">
-                        <input type="number" min="1" class="custom-input" @bind="Servings" />
-                        <select class="custom-select" @bind="SelectedServingUnitId">
-                            @foreach (var unit in ServingUnits)
+                <div class="image-upload">
+                    <div class="image-preview">
+                        @if (!string.IsNullOrEmpty(SelectedImagePreview))
+                        {
+                            <img src="@SelectedImagePreview" alt="Recipe preview" />
+                        }
+                        else
+                        {
+                            <span>No image selected</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="custom-file-upload">
+                    <label for="file-upload" class="btn-apply">
+                        Select image
+                    </label>
+                    <InputFile id="file-upload" OnChange="LoadPhoto" />
+                </div>
+
+                <div class="stats-row">
+                    <div class="input-group">
+                        <label>Time (Minutes)</label>
+                        <input type="number" min="1" class="custom-input" @bind="Time" />
+
+                    </div>
+
+                    <div class="input-group">
+                        <label>Servings</label>
+                        <div class="flex-row">
+                            <input type="number" min="1" class="custom-input" @bind="Servings" />
+                            <select class="custom-select" @bind="SelectedServingUnitId">
+                                @foreach (var unit in ServingUnits)
+                                {
+                                    <option value="@unit.Id">@unit.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Difficulty</label>
+                        <select class="custom-select" @bind="Difficulty">
+                            @foreach (var diff in DifficultyOptions)
                             {
-                                <option value="@unit.Id">@unit.Name</option>
+                                <option value="@diff">@diff.ToString()</option>
                             }
                         </select>
                     </div>
                 </div>
+            </div>
 
-                <div class="input-group">
-                    <label>Difficulty</label>
-                    <select class="custom-select" @bind="Difficulty">
-                        @foreach (var diff in DifficultyOptions)
-                        {
-                            <option value="@diff">@diff.ToString()</option>
-                        }
-                    </select>
+
+            <div class="add-recipe-card">
+                <label class="section-title">Categories</label>
+
+                <div class="category-root-container">
+                    @foreach (var root in Categories.Where(c => c.Category.ParentCategoryId == null || c.Category.ParentCategoryId == Guid.Empty))
+                    {
+                        @RenderCategoryTree(root)
+                    }
+                </div>
+            </div>
+
+
+            <AddIngredientPopup IsVisible="showIngredientPopup"
+                                OnIngredientAdded="HandleNewIngredient"
+                                OnClose="() => showIngredientPopup = false" />
+
+            <div class="add-recipe-card ingredients">
+                <div class="section-header">
+                    <label>Ingredients</label>
+                    <button type="button" class="btn-primary" @onclick="TogglePopup">+ Add</button>
+                </div>
+
+                <div class="ingredients-list">
+                    @foreach (var ing in Ingredients)
+                    {
+                        <div class="ingredient-row">
+                            <input type="number" class="custom-input qty" @bind="ing.Quantity" />
+                            <span class="unit">@ing.Unit?.Name</span>
+                            <span class="name">@ing.Ingredient?.Name</span>
+                            <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="add-recipe-card steps">
+                <div class="section-header">
+                    <label>Cooking process</label>
+                    <div class="flex-row">
+                        <button type="button" class="btn-primary" @onclick="RemoveStep">- Remove</button>
+                        <button type="button" class="btn-primary" @onclick="AddStep">+ Add</button>
+                    </div>
+                </div>
+
+                <div class="steps-list">
+                    @foreach (var step in RecipeSteps)
+                    {
+                        <div class="step-row">
+                            <span class="step-number">@step.StepNumber</span>
+                            <textarea class="custom-input" @bind="step.Description" rows="2" placeholder="Describe this step..."></textarea>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
+        @if (WarningEnabled)
+        {
+            <div class="warning-box">@WarningText</div>
+        }
 
-        <div class="add-recipe-card">
-            <label class="section-title">Categories</label>
-
-            <div class="category-root-container">
-                @foreach (var root in Categories.Where(c => c.Category.ParentCategoryId == null || c.Category.ParentCategoryId == Guid.Empty))
-                {
-                    @RenderCategoryTree(root)
-                }
-            </div>
+        <div class="actions">
+            <button type="button" class="btn-apply" @onclick="FinishRecipe">
+                @(IsEditMode ? "Save changes" : "Create recipe")
+            </button>
         </div>
-
-
-        <AddIngredientPopup
-            IsVisible="showIngredientPopup"
-            OnIngredientAdded="HandleNewIngredient"
-            OnClose="() => showIngredientPopup = false" />
-
-        <div class="add-recipe-card ingredients">
-            <div class="section-header">
-                <label>Ingredients</label>
-                <button type="button" class="btn-primary" @onclick="TogglePopup">+ Add</button>
-            </div>
-
-            <div class="ingredients-list">
-                @foreach (var ing in Ingredients)
-                {
-                    <div class="ingredient-row">
-                        <input type="number" class="custom-input qty" @bind="ing.Quantity" />
-                        <span class="unit">@ing.Unit?.Name</span>
-                        <span class="name">@ing.Ingredient?.Name</span>
-                        <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <div class="add-recipe-card steps">
-            <div class="section-header">
-                <label>Cooking process</label>
-                <div class="flex-row">
-                    <button type="button" class="btn-primary" @onclick="RemoveStep">- Remove</button>
-                    <button type="button" class="btn-primary" @onclick="AddStep">+ Add</button>
-                </div>
-            </div>
-
-            <div class="steps-list">
-                @foreach (var step in RecipeSteps)
-                {
-                    <div class="step-row">
-                        <span class="step-number">@step.StepNumber</span>
-                        <textarea class="custom-input" @bind="step.Description" rows="2" placeholder="Describe this step..."></textarea>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    @if (WarningEnabled)
-    {
-        <div class="warning-box">@WarningText</div>
     }
-
-    <div class="actions">
-        <button type="button" class="btn-apply" @onclick="FinishRecipe">Finish recipe</button>
-    </div>
-}
+</LoadingView>
 
 
 @code {
+    [Parameter] public Guid? RecipeId { get; set; }
+    private bool IsEditMode => RecipeId.HasValue && RecipeId.Value != Guid.Empty;
+    private bool isLoading = false;
+
     private string Title { get; set; } = string.Empty;
     private int Time { get; set; }
     private int Servings { get; set; }
@@ -183,23 +195,80 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+
         userDto = await UserService.GetCurrentUserAsync();
 
-        if(userDto is null)
+        if (userDto is null)
         {
             NavManager.NavigateTo("/login");
+            return;
         }
 
         ServingUnits = await UnitService.GetAllServingUnitsAsync();
-        if (ServingUnits.Any()) SelectedServingUnitId = ServingUnits.First().Id;
 
         var cats = await CategoryService.GetAllCategoriesAsync();
         Categories = cats.Select(c => new CategorySelectableBlazor { Category = c, IsSelected = false }).ToList();
 
-        AddStep();
-        AddStep();
+        if (IsEditMode)
+        {
+            var existingRecipe = await RecipeService.GetRecipeDetailsAsync(RecipeId.Value);
+
+            if (existingRecipe != null)
+            {
+                Title = existingRecipe.Title;
+                Time = existingRecipe.CookingTime;
+                Servings = existingRecipe.ServingsAmount;
+                SelectedServingUnitId = existingRecipe.ServingUnit.Id;
+                Difficulty = (DifficultyLevel)existingRecipe.Difficulty;
+
+                SelectedImagePreview = !string.IsNullOrEmpty(existingRecipe.PhotoUrl) ? existingRecipe.PhotoUrl : string.Empty;
+                Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredient
+                {
+                    IngredientId = ingDto.IngredientId,
+                    UnitId = ingDto.UnitId,
+                    Quantity = ingDto.Quantity,
+                    Ingredient = new Ingredient { Name = ingDto.IngredientName },
+                    Unit = new Unit { Name = ingDto.UnitName }
+                }).ToList();
+                RecipeSteps = existingRecipe.RecipeSteps.OrderBy(s => s.StepNumber).ToList();
+
+                var existingCatIds = existingRecipe.Categories.Select(c => c.Id).ToList();
+                foreach (var cat in Categories)
+                {
+                    if (existingCatIds.Contains(cat.Category.Id))
+                    {
+                        cat.IsSelected = true;
+                        ExpandParentRecursive(cat.Category.ParentCategoryId);
+                    }
+                }
+            }
+            else
+            {
+                NavManager.NavigateTo("/recipes");
+            }
+        }
+        else
+        {
+            if (ServingUnits.Any()) SelectedServingUnitId = ServingUnits.First().Id;
+            AddStep();
+            AddStep();
+        }
+
+        isLoading = false;
     }
 
+    private void ExpandParentRecursive(Guid? parentId)
+    {
+        if (parentId == null || parentId == Guid.Empty) return;
+
+        var parent = Categories.FirstOrDefault(c => c.Category.Id == parentId);
+        if (parent != null)
+        {
+            parent.IsExpanded = true;
+            ExpandParentRecursive(parent.Category.ParentCategoryId);
+        }
+    }
 
     private void AddStep()
     {
@@ -239,7 +308,7 @@ else
         var buffer = new byte[_selectedPhoto.Size];
         using var stream = _selectedPhoto.OpenReadStream(maxAllowedSize: 5120000);
         await stream.ReadAsync(buffer);
-    
+
         SelectedImagePreview = $"data:{_selectedPhoto.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
 
@@ -252,11 +321,17 @@ else
         if (Servings <= 0) { ShowWarning("Number of servings is mandatory and can't be 0"); return; }
         if (!Categories.Any(c => c.IsSelected)) { ShowWarning("Recipe must have at least one category"); return; }
         if (Ingredients.Count == 0) { ShowWarning("Recipe must have at least one ingredient"); return; }
-        
+
         foreach (var ing in Ingredients)
         {
             if (ing.Quantity == 0) { ShowWarning($"Ingredient can't have zero quantity"); return; }
         }
+
+        for (int i = 0; i < RecipeSteps.Count; i++)
+        {
+            RecipeSteps[i].StepNumber = (short)(i + 1);
+        }
+
         foreach (var rs in RecipeSteps)
         {
             if (string.IsNullOrEmpty(rs.Description)) { ShowWarning($"Cooking step can't be empty ({rs.StepNumber})"); return; }
@@ -274,17 +349,29 @@ else
             RecipeSteps = RecipeSteps
         };
 
+        Stream? photoStream = null;
         if (_selectedPhoto is not null)
         {
-            using var photoStream = _selectedPhoto.OpenReadStream(maxAllowedSize: 5120000);
-        
-            await RecipeService.SaveRecipeAsync(dto,photoStream,_selectedPhoto.Name,_selectedPhoto.ContentType);
+            photoStream = _selectedPhoto.OpenReadStream(maxAllowedSize: 5120000);
         }
-        else
+
+        try
         {
-            await RecipeService.SaveRecipeAsync(dto, null, null, null);
+            if (IsEditMode)
+            {
+                await RecipeService.UpdateRecipeAsync(dto, RecipeId.Value, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
+            }
+            else
+            {
+                await RecipeService.SaveRecipeAsync(dto, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
+            }
+
+            await JSRuntime.InvokeVoidAsync("history.back");
         }
-        await JSRuntime.InvokeVoidAsync("history.back");
+        finally
+        {
+            photoStream?.Dispose();
+        }
     }
 
     private void ShowWarning(string msg)
@@ -306,13 +393,13 @@ else
         <div class="category-node">
             <div class="category-chip @(category.IsSelected ? "selected" : "") @(category.IsExpanded ? "expanded" : "")"
                  @onclick="() => HandleClick(category)">
-                
+
                 @if (!string.IsNullOrEmpty(category.Category.PictureUrl) && category.Category.PictureUrl != "default_category_picture.png")
                 {
                     <img src="@category.Category.PictureUrl" class="chip-img" />
                 }
                 <span class="chip-name">@category.Category.Name</span>
-                
+
                 @if (hasChildren)
                 {
                     <i class="bi @(category.IsExpanded ? "bi-chevron-down" : "bi-chevron-right") ms-1"></i>
@@ -334,7 +421,7 @@ else
     private void HandleClick(CategorySelectableBlazor cat)
     {
         cat.IsSelected = !cat.IsSelected;
-    
+
         bool hasChildren = Categories.Any(c => c.Category.ParentCategoryId == cat.Category.Id);
         if (hasChildren)
         {

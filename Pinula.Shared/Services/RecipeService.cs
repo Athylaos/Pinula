@@ -124,11 +124,6 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public Task UpdateRecipeAsync(Recipe recipe)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<List<RecipePreviewDto>> GetRecipePreviewsAsync(int amount)
         {
             var response = await _httpClient.GetFromJsonAsync<List<RecipePreviewDto>>($"{BaseUrl}/getPreviews?amount={amount}");
@@ -235,6 +230,38 @@ namespace Pinula.Shared.Services
         {
             var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentApproval/{commentId}", null);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<Guid?> UpdateRecipeAsync(RecipeCreateDto createDto, Guid recipeId, Stream? photoStream, string? photoName, string? contentType)
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                var recipeJson = JsonSerializer.Serialize(createDto);
+                content.Add(new StringContent(recipeJson, Encoding.UTF8, "application/json"), "recipeData");
+
+                if (photoStream is not null && photoName is not null && contentType is not null)
+                {
+                    var fileContent = new StreamContent(photoStream);
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    content.Add(fileContent, "image", photoName);
+                }
+
+                var response = await _httpClient.PutAsync($"{BaseUrl}/update/{recipeId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var guid = await response.Content.ReadFromJsonAsync<Guid>();
+                    return guid;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while updating recipe: {ex.Message}");
+                return null;
+            }
         }
 
 

@@ -61,7 +61,8 @@
                 <MealPlanDayView SelectedDate="SelectedDate"
                                  DayPlans="GetPlansForSelectedDate()"
                                  OnAddMeal="OpenAddMealModal"
-                                 OnEditMeal="OpenEditPopup" />
+                                 OnEditMeal="OpenEditPopup"
+                                 OnMealSelected="MealClicked"/>
             </div>
         }
         else
@@ -321,4 +322,6 @@
         await MealPlanService.AddRecipeToPlanAsync(newPlan);
         await LoadData();
     }
+
+    private void MealClicked(MealPlanPreviewDto mp) => NavManager.NavigateTo($"/recipe/{mp.RecipeId}");
 }

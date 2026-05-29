@@ -9,5 +9,8 @@ namespace Pinula.Shared.DTOs
         public decimal Quantity { get; set; }
         public string IngredientName { get; set; }
         public string UnitName { get; set; }
+
+        public Guid IngredientId { get; set; }
+        public Guid UnitId { get; set; }
     }
 }

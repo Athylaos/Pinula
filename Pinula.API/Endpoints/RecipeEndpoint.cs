@@ -215,7 +215,9 @@ namespace Pinula.API.Endpoints
                     {
                         Quantity = ri.Quantity ?? 0,
                         IngredientName = ri.Ingredient.Name,
-                        UnitName = ri.Unit.Name
+                        UnitName = ri.Unit.Name,
+                        IngredientId = ri.Ingredient.Id,
+                        UnitId = ri.Unit.Id,
                     }).ToList(),
                     RecipeSteps = r.RecipeSteps,
                     ServingUnit = r.ServingUnit,
@@ -403,6 +405,152 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(newRecipe.Id);
             }).RequireAuthorization();
 
+
+
+            //---------------------------------------------------------------Update recipe
+            group.MapPut("/update/{id:guid}", async (Guid id, HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            {
+                var userId = user.GetUserId();
+                var existingRecipe = await db.Recipes
+                    .Include(r => r.Categories)
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (existingRecipe is null) return Results.NotFound("Recipe not found.");
+                if (existingRecipe.UserId != userId) return Results.Forbid();
+
+                var form = await request.ReadFormAsync();
+                var dtoStr = form["recipeData"];
+                if (string.IsNullOrEmpty(dtoStr)) return Results.BadRequest("Missing recipe data.");
+
+                var dto = JsonSerializer.Deserialize<RecipeCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (dto == null) return Results.BadRequest("Invalid recipe data.");
+
+                var file = form.Files.GetFile("image");
+                if (file is { Length: > 0 })
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(extension)) return Results.BadRequest("Unsupported image format.");
+
+                    var uploadFolder = Path.Combine(env.WebRootPath, "images", "recipes");
+                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+
+                    var fileName = $"{Guid.NewGuid()}.jpg";
+                    var filePath = Path.Combine(uploadFolder, fileName);
+
+                    try
+                    {
+                        using (var image = await Image.LoadAsync(file.OpenReadStream()))
+                        {
+                            image.Mutate(x => x.Resize(new ResizeOptions { Mode = ResizeMode.Max, Size = new Size(1200, 0) }));
+                            await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 80 });
+                        }
+                        existingRecipe.PhotoUrl = fileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Image Processing Error: {ex.Message}");
+                    }
+                }
+
+                try
+                {
+                    await db.RecipeIngredients.Where(ri => ri.RecipeId == id).ExecuteDeleteAsync();
+                    await db.RecipeSteps.Where(rs => rs.RecipeId == id).ExecuteDeleteAsync();
+
+                    // 4. Přepis základních dat receptu
+                    existingRecipe.Title = dto.Title;
+                    existingRecipe.CookingTime = dto.CookingTime;
+                    existingRecipe.ServingsAmount = dto.ServingsAmount;
+                    existingRecipe.ServingUnitId = dto.ServingUnit;
+                    existingRecipe.Difficulty = dto.Difficulty;
+
+                    existingRecipe.Calories = 0;
+                    existingRecipe.Proteins = 0;
+                    existingRecipe.Fats = 0;
+                    existingRecipe.Carbohydrates = 0;
+                    existingRecipe.Fiber = 0;
+
+                    var newCategoryIds = dto.CategoriesIds;
+
+                    var categoriesToRemove = existingRecipe.Categories.Where(c => !newCategoryIds.Contains(c.Id)).ToList();
+                    foreach (var c in categoriesToRemove)
+                    {
+                        existingRecipe.Categories.Remove(c);
+                    }
+
+                    var existingCatIds = existingRecipe.Categories.Select(c => c.Id).ToList();
+                    var categoriesToAddIds = newCategoryIds.Except(existingCatIds).ToList();
+
+                    if (categoriesToAddIds.Any())
+                    {
+                        var catsToAdd = await db.Categories.Where(c => categoriesToAddIds.Contains(c.Id)).ToListAsync();
+                        foreach (var c in catsToAdd)
+                        {
+                            existingRecipe.Categories.Add(c);
+                        }
+                    }
+
+                    var ingredientIds = dto.RecipeIngredients.Select(x => x.IngredientId).ToList();
+                    var dbIngredients = await db.Ingredients.Include(x => x.IngredientUnits).Where(x => ingredientIds.Contains(x.Id)).ToListAsync();
+
+                    var newIngredients = new List<RecipeIngredient>();
+
+                    foreach (var i in dto.RecipeIngredients)
+                    {
+                        var dbIng = dbIngredients.FirstOrDefault(x => x.Id == i.IngredientId);
+
+                        if (dbIng != null)
+                        {
+                            var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.UnitId);
+                            decimal conversionFactor = ingredientUnit?.ToDefaultUnit ?? 1;
+                            decimal factor = (conversionFactor / 100) * (i.Quantity / dto.ServingsAmount) ?? 0;
+
+                            existingRecipe.Calories += factor * dbIng.Calories;
+                            existingRecipe.Proteins += factor * dbIng.Proteins;
+                            existingRecipe.Fats += factor * dbIng.Fats;
+                            existingRecipe.Carbohydrates += factor * dbIng.Carbohydrates;
+                            existingRecipe.Fiber += factor * dbIng.Fiber;
+                        }
+
+                        newIngredients.Add(new RecipeIngredient
+                        {
+                            RecipeId = existingRecipe.Id,
+                            IngredientId = i.IngredientId,
+                            Quantity = i.Quantity,
+                            UnitId = i.UnitId,
+                            ConversionFactor = i.ConversionFactor
+                        });
+                    }
+                    db.RecipeIngredients.AddRange(newIngredients);
+
+
+                    var newSteps = new List<RecipeStep>();
+                    foreach (var step in dto.RecipeSteps)
+                    {
+                        newSteps.Add(new RecipeStep
+                        {
+                            Id = Guid.NewGuid(), // Ignorujeme ID z frontendu, tvoříme nové
+                            RecipeId = existingRecipe.Id,
+                            Description = step.Description,
+                            StepNumber = step.StepNumber
+                        });
+                    }
+                    db.RecipeSteps.AddRange(newSteps);
+
+                    await db.SaveChangesAsync();
+
+                    return Results.Ok(existingRecipe.Id);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("================ UPDATE RECIPE ERROR ================");
+                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine("=====================================================");
+
+                    return Results.Problem("An error occurred while updating the recipe.");
+                }
+            }).RequireAuthorization();
 
 
             //---------------------------------------------------------------Post comment

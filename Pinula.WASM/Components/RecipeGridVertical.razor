@@ -4,7 +4,7 @@
     <div class="recipe-vertical-grid">
         @foreach (var recipe in Recipes)
         {
-            <RecipeDetailedCard Recipe="recipe" OnRecipeSelected="OnRecipeSelected" />
+            <RecipeDetailedCard Recipe="recipe" OnRecipeSelected="OnRecipeSelected" OnRecipeEditSelected="OnRecipeEditSelected" EnableEdit="EnableEdit" />
         }
     </div>
 
@@ -32,6 +32,8 @@
     [Parameter] public List<RecipePreviewDto> Recipes { get; set; } = new();
     [Parameter] public bool HasMoreToLoad { get; set; }
     [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool EnableEdit { get; set; }
     [Parameter] public EventCallback OnLoadMore { get; set; }
     [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeEditSelected { get; set; }
 }
