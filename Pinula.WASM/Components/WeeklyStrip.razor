@@ -1,0 +1,30 @@
+﻿@using Pinula.Shared.DTOs
+
+<div class="weekly-strip">
+    @for (int i = 0; i < 7; i++)
+    {
+        var date = CurrentWeekStart.AddDays(i);
+        var isSelected = date.Date == SelectedDate.Date;
+        var isToday = date.Date == DateTime.Today;
+        var hasMeals = WeeklyPlans.Any(p => p.Date.Date == date.Date);
+
+        <div class="day-bubble @(isSelected ? "selected" : "") @(isToday ? "today" : "")" @onclick="() => OnDateSelected.InvokeAsync(date)">
+            <span class="day-name">@date.ToString("ddd")</span>
+            <span class="day-number">@date.Day</span>
+
+            <div class="indicator-area">
+                @if (hasMeals)
+                {
+                    <div class="meal-dot"></div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public DateTime CurrentWeekStart { get; set; }
+    [Parameter] public DateTime SelectedDate { get; set; }
+    [Parameter] public List<MealPlanPreviewDto> WeeklyPlans { get; set; } = new();
+    [Parameter] public EventCallback<DateTime> OnDateSelected { get; set; }
+}

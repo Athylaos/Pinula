@@ -47,14 +47,14 @@ namespace Pinula.API.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("meal_plans_id");
 
-                    b.Property<Guid>("UsersId")
+                    b.Property<Guid>("UsersIds")
                         .HasColumnType("uuid")
                         .HasColumnName("users_id");
 
-                    b.HasKey("MealPlansId", "UsersId")
+                    b.HasKey("MealPlansId", "UsersIds")
                         .HasName("pk_meal_plan_user");
 
-                    b.HasIndex("UsersId")
+                    b.HasIndex("UsersIds")
                         .HasDatabaseName("ix_meal_plan_user_users_id");
 
                     b.ToTable("meal_plan_user", (string)null);
@@ -607,7 +607,7 @@ namespace Pinula.API.Migrations
 
                     b.HasOne("Pinula.Shared.Models.User", null)
                         .WithMany()
-                        .HasForeignKey("UsersId")
+                        .HasForeignKey("UsersIds")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_meal_plan_user_users_users_id");

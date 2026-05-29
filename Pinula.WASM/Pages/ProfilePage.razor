@@ -92,34 +92,37 @@
                 
                 @if (isEditing)
                 {
-                    <EditForm Model="@updateModel" OnValidSubmit="HandleUpdateProfile" class="pf-animate-slide">
-                        <div class="pf-form-group mb-3">
-                            <label class="pf-field-caption">First Name</label>
-                            <InputText @bind-Value="@updateModel.Name" class="pf-text-field" />
-                        </div>
-                        <div class="pf-form-group mb-3">
-                            <label class="pf-field-caption">Last Name</label>
-                            <InputText @bind-Value="@updateModel.Surname" class="pf-text-field" />
-                        </div>
-                        
-                        <div class="pf-form-group mb-4">
-                            <label class="pf-field-caption">Avatar Photo</label>
-                            <div class="pf-upload-zone">
-                                <InputFile OnChange="HandleFileSelected" class="pf-text-field pf-file-picker" accept="image/*" />
-                                @if (selectedFile != null)
-                                {
-                                    <span class="pf-upload-indicator pf-animate-slide">📸 Ready: @selectedFile.Name</span>
-                                }
-                            </div>
-                        </div>
+                    <div class="pf-card-scroll-body pf-animate-slide">
+						<EditForm Model="@updateModel" OnValidSubmit="HandleUpdateProfile" class="pf-animate-slide">
+							<div class="pf-form-group mb-3">
+								<label class="pf-field-caption">First Name</label>
+								<InputText @bind-Value="@updateModel.Name" class="pf-text-field" />
+							</div>
+							<div class="pf-form-group mb-3">
+								<label class="pf-field-caption">Last Name</label>
+								<InputText @bind-Value="@updateModel.Surname" class="pf-text-field" />
+							</div>
 
-                        <div class="pf-form-actions-row">
-                            <button type="button" class="pf-btn-dismiss" @onclick="ToggleEdit">Cancel</button>
-                            <button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
-                                @(isSaving ? "Saving..." : "Save Changes")
-                            </button>
-                        </div>
-                    </EditForm>
+							<div class="pf-form-group mb-4">
+								<label class="pf-field-caption">Avatar Photo</label>
+								<div class="pf-upload-zone">
+									<InputFile OnChange="HandleFileSelected" class="pf-text-field pf-file-picker" accept="image/*" />
+									@if (selectedFile != null)
+									{
+										<span class="pf-upload-indicator pf-animate-slide">📸 Ready: @selectedFile.Name</span>
+									}
+								</div>
+							</div>
+
+							<div class="pf-form-actions-row">
+								<button type="button" class="pf-btn-dismiss" @onclick="ToggleEdit">Cancel</button>
+								<button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
+									@(isSaving ? "Saving..." : "Save Changes")
+								</button>
+							</div>
+						</EditForm>
+                    </div>
+
                 }
                 else
                 {
@@ -156,7 +159,7 @@
                     {
                         <div class="pf-invites-empty-state">
                             <h5>No news</h5>
-                            <p class="pf-field-caption text-center">All your inbox, activities and invitations will appear right here.</p>
+                            <p class="pf-field-caption text-center">All your inbox, activities and notices will appear right here.</p>
                         </div>
                     }
                     else

@@ -154,7 +154,7 @@ namespace Pinula.Shared.Services
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<UserDisplayDto>>($"{BaseUrl}/members");
+                var response = await _httpClient.GetFromJsonAsync<List<UserDisplayDto>>($"{BaseUrl}/group/members");
 
                 return response ?? new();
             }
@@ -162,6 +162,24 @@ namespace Pinula.Shared.Services
             {
                 _logger.LogError($"Error while getting group members: {ex.Message}");
                 return new();
+            }
+        }
+
+        public async Task<bool> UpdateMealPlanAsync(UpdateMealPlanDto dto)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/update/{dto.Id}", dto);
+                if (response.IsSuccessStatusCode) return true;
+
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning($"Failed to update meal plan {response.StatusCode} error: {error}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while updating meal plan {dto.Id}: {ex.Message}");
+                return false;
             }
         }
     }

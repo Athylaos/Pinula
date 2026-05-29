@@ -178,6 +178,12 @@
 
         </div>
     </div>
+    <div class="floating-action-bar">
+        <button class="btn-add-to-calendar" @onclick="NavigateToPlannerWithRecipe">
+            <img src="images/icons/plus.png" class="fas fa-calendar-plus"/>
+            <span>Plan</span>
+        </button>
+    </div>
 </LoadingView>
 
 
@@ -339,6 +345,11 @@
     }
 
     private void LoginBtn() => NavManager.NavigateTo("/login");
+
+    private void NavigateToPlannerWithRecipe()
+    {
+        NavManager.NavigateTo($"/planner?preselectedRecipeId={recipe.Id}");
+    }
 
 
 

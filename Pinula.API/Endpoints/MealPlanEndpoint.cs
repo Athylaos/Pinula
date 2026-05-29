@@ -31,9 +31,12 @@ namespace Pinula.API.Endpoints
                 var groupId = userDb.GroupId;
                 if (groupId is null) return Results.BadRequest("User is not in group");
 
+                DateTime utcFromDate = DateTime.SpecifyKind(fromDate, DateTimeKind.Utc);
+                DateTime utcToDate = DateTime.SpecifyKind(toDate, DateTimeKind.Utc);
+
                 var mealplans = await db.MealPlans
                     .AsNoTracking()
-                    .Where(mp => mp.GroupId == groupId && mp.Date.Date >= fromDate.Date && mp.Date.Date <= toDate.Date)
+                    .Where(mp => mp.GroupId == groupId && mp.Date.Date.ToUniversalTime() >= utcFromDate.Date && mp.Date.Date.ToUniversalTime() <= utcToDate.Date)
                     .OrderBy(mp => mp.Date)
                     .ThenBy(mp => mp.MealType)
                     .Select(mp => new MealPlanPreviewDto
@@ -75,7 +78,7 @@ namespace Pinula.API.Endpoints
                 var mealPlan = new MealPlan
                 {
                     Id = Guid.NewGuid(),
-                    Date = dto.Date,
+                    Date = DateTime.SpecifyKind(dto.Date.Date, DateTimeKind.Utc),
                     MealType = dto.MealType,
                     RecipeId = dto.RecipeId,
                     GroupId = groupId.Value,
@@ -108,6 +111,33 @@ namespace Pinula.API.Endpoints
                 db.MealPlans.Remove(mealPlan);
                 await db.SaveChangesAsync();
 
+                return Results.Ok();
+
+            }).RequireAuthorization();
+
+            //---------------------------------------------------------------Update meal plan
+            group.MapPut("/update/{id:guid}", async (Guid id, UpdateMealPlanDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (userDb is null) return Results.BadRequest("User not found");
+
+                var groupId = userDb.GroupId;
+                if (groupId is null) return Results.BadRequest("User is not in group");
+
+                var mealPlan = await db.MealPlans.Include(mp => mp.Users).FirstOrDefaultAsync(mp => mp.Id == id);
+                if (mealPlan is null) return Results.NotFound();
+                if (mealPlan.GroupId != groupId) return Results.Unauthorized();
+
+                var newUsers = await db.Users.Where(u => dto.UsersIds.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
+                if (!newUsers.Any()) return Results.BadRequest("At least one user must be selected.");
+
+                mealPlan.Date = dto.Date.Date;
+                mealPlan.MealType = dto.MealType;
+                mealPlan.Servings = dto.Servings;
+                mealPlan.Users = newUsers;
+
+                await db.SaveChangesAsync();
                 return Results.Ok();
 
             }).RequireAuthorization();
@@ -242,6 +272,7 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(members);
 
             }).RequireAuthorization();
+
 
         }
     }
