@@ -11,7 +11,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapMealPlanEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/mealplan");
+            var group = app.MapGroup("/mealplan");
 
 
 
@@ -42,7 +42,7 @@ namespace Pinula.API.Endpoints
                     .Select(mp => new MealPlanPreviewDto
                     {
                         Id = mp.Id,
-                        Date = mp.Date,
+                        Date = DateOnly.FromDateTime(mp.Date),
                         MealType = mp.MealType,
                         Servings = mp.Servings,
                         RecipeId = mp.RecipeId,
@@ -78,7 +78,7 @@ namespace Pinula.API.Endpoints
                 var mealPlan = new MealPlan
                 {
                     Id = Guid.NewGuid(),
-                    Date = DateTime.SpecifyKind(dto.Date.Date, DateTimeKind.Utc),
+                    Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc),
                     MealType = dto.MealType,
                     RecipeId = dto.RecipeId,
                     GroupId = groupId.Value,
@@ -132,7 +132,7 @@ namespace Pinula.API.Endpoints
                 var newUsers = await db.Users.Where(u => dto.UsersIds.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
                 if (!newUsers.Any()) return Results.BadRequest("At least one user must be selected.");
 
-                mealPlan.Date = dto.Date.Date;
+                mealPlan.Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 mealPlan.MealType = dto.MealType;
                 mealPlan.Servings = dto.Servings;
                 mealPlan.Users = newUsers;
@@ -270,6 +270,32 @@ namespace Pinula.API.Endpoints
                     }).ToListAsync();
 
                 return Results.Ok(members);
+
+            }).RequireAuthorization();
+
+            //---------------------------------------------------------------Rename my group
+            group.MapPost("/group/rename/{name}", async (string name, ClaimsPrincipal user, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (userDb is null) return Results.BadRequest("User not found");
+
+                var groupId = userDb.GroupId;
+                if (groupId is null) return Results.BadRequest("User is not in group");
+
+                if(string.IsNullOrWhiteSpace(name)) Results.BadRequest("Invalid group name");
+
+                var newName = name.Trim();
+
+                var groupDb = await db.Groups.FirstOrDefaultAsync(g => g.Id == groupId);
+                if(groupDb is not null)
+                {
+                    groupDb.Name = newName;
+                    await db.SaveChangesAsync();
+                    return Results.Ok();
+                }
+
+                return Results.NotFound("Group not found");
 
             }).RequireAuthorization();
 

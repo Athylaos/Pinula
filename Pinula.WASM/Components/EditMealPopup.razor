@@ -86,7 +86,7 @@
 
     private Guid MealPlanId { get; set; }
     private string RecipeName { get; set; } = string.Empty;
-    private DateTime EditDate { get; set; }
+    private DateOnly EditDate { get; set; }
     private MealType EditMealType { get; set; }
     private int EditServings { get; set; }
     private HashSet<Guid> SelectedUserIds { get; set; } = new();
@@ -124,7 +124,7 @@
         var updateModel = new UpdateMealPlanDto
         {
             Id = MealPlanId,
-            Date = DateTime.SpecifyKind(EditDate.Date, DateTimeKind.Utc),
+            Date = EditDate,
             MealType = EditMealType,
             Servings = EditServings,
             UsersIds = SelectedUserIds.ToList()

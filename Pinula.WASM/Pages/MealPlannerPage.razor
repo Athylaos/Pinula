@@ -7,6 +7,8 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IRecipeService RecipeService
+@inject IUserService UserService
+@using Microsoft.AspNetCore.Authorization
 
 <div class="planner-container">
     <header class="planner-header-panel">
@@ -18,7 +20,7 @@
                 @if (!isNotInGroup)
                 {
                     <h1 class="page-title">@groupDetail?.Name</h1>
-                    <p class="subtitle">Group kitchen dashboard</p>
+                    <p class="subtitle">Yours kitchen dashboard</p>
                 }
                 else
                 {
@@ -146,6 +148,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+
         SelectedDate = DateTime.Today;
         WeekStartDate = SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek + (int)DayOfWeek.Monday);
         if (SelectedDate.DayOfWeek == DayOfWeek.Sunday) WeekStartDate = WeekStartDate.AddDays(-7);
@@ -159,7 +162,7 @@
             if (Guid.TryParse(recipeIdString, out Guid recipeId))
             {
                 popupRecipeId = recipeId;
-                popupDate = DateTime.Today;
+                popupDate = DateOnly.FromDateTime(DateTime.Today);
                 popupMealType = MealType.Lunch;
                 showPlanMealModal = true;
             }
@@ -169,6 +172,7 @@
     private async Task LoadData()
     {
         IsLoading = true;
+        if(!await UserService.IsUserLoggedInAsync()) NavManager.NavigateTo("/login");
         groupDetail = await MealPlanService.GetMyGroupAsync();
         if (groupDetail is null)
         {
@@ -190,7 +194,7 @@
 
     private IEnumerable<MealPlanPreviewDto> GetPlansForSelectedDate()
     {
-        return WeeklyPlans.Where(p => p.Date.Date == SelectedDate.Date);
+        return WeeklyPlans.Where(p => p.Date == DateOnly.FromDateTime(SelectedDate));
     }
 
 
@@ -239,8 +243,8 @@
 
     private async Task HandleUpdateGroupName(string newName)
     {
-        // Tady můžeš v budoucnu zavolat případný update endpoint
-        // Pro teď to klidně může jen zavřít modal, jelikož se skrze @bind hodnota změnila v objektu
+        await MealPlanService.RenameGroupAsync(newName);
+        await LoadData();
         showGroupModal = false;
         StateHasChanged();
     }
@@ -301,14 +305,14 @@
     //POPUP create 
 
     private bool showPlanMealModal = false;
-    private DateTime? popupDate;
+    private DateOnly? popupDate;
     private MealType? popupMealType;
     private Guid? popupRecipeId;
 
 
     private void OpenAddMealModal(MealType type)
     {
-        popupDate = SelectedDate;
+        popupDate = DateOnly.FromDateTime(SelectedDate);
         popupMealType = type;
         popupRecipeId = null;
         showPlanMealModal = true;

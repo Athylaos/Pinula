@@ -8,7 +8,7 @@ namespace Pinula.Shared.DTOs
     public class MealPlanPreviewDto
     {
         public Guid Id { get; set; }
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
         public MealType MealType { get; set; }
         public int Servings { get; set; }
 

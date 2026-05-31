@@ -19,7 +19,7 @@ namespace Pinula.API.Endpoints
 
         public static void MapRecipeEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/recipes");
+            var group = app.MapGroup("/recipes");
 
             //---------------------------------------------------------------Get recipes
             group.MapGet("/get", async (int? amount, PinulaDbContext db) =>
@@ -50,10 +50,11 @@ namespace Pinula.API.Endpoints
                         PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
                         CookingTime = r.CookingTime,
                         ServingsAmount = r.ServingsAmount,
-                        Difficulty = r.Difficulty,
+                        Difficulty = (DifficultyLevel)r.Difficulty,
                         Rating = r.Rating,
                         UserName = r.User.Name,
                         Calories = r.Calories,
+                        MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
                     });
 
                 if (amount > 0 && amount != null)
@@ -143,13 +144,14 @@ namespace Pinula.API.Endpoints
                         Title = r.Title,
                         PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
                         CookingTime = r.CookingTime,
-                        Difficulty = r.Difficulty,
+                        Difficulty = (DifficultyLevel)r.Difficulty,
                         Rating = r.Rating,
                         UserName = r.User.Name,
                         Calories = r.Calories,
                         ServingsAmount = r.ServingsAmount,
                         IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
-                        IsApproved = r.IsApproved
+                        IsApproved = r.IsApproved,
+                        MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
                     })
                     .ToListAsync();
 
@@ -530,7 +532,7 @@ namespace Pinula.API.Endpoints
                     {
                         newSteps.Add(new RecipeStep
                         {
-                            Id = Guid.NewGuid(), // Ignorujeme ID z frontendu, tvoříme nové
+                            Id = Guid.NewGuid(),
                             RecipeId = existingRecipe.Id,
                             Description = step.Description,
                             StepNumber = step.StepNumber
@@ -745,5 +747,41 @@ namespace Pinula.API.Endpoints
 
 
         }
-    }
+
+        public static string GetMacrosLabel(decimal? Calories, decimal? Proteins, decimal? Fats, decimal? Carbohydrates)
+        {
+            if (!Calories.HasValue || !Proteins.HasValue || !Fats.HasValue || !Carbohydrates.HasValue)
+            {
+                return "Unknown";
+            }
+
+            var calories = Calories.Value;
+            var proteins = Proteins.Value;
+            var fats = Fats.Value;
+            var carbs = Carbohydrates.Value;
+
+            if (calories == 0) return "Light";
+
+            if (calories > 800 || (fats > 30 && carbs > 80))
+            {
+                return "Cheat Meal";
+            }
+            if (proteins > 25 && fats < 15)
+            {
+                return "High Protein";
+            }
+
+            if (carbs < 20 && fats > 10)
+            {
+                return "Low Carb";
+            }
+
+            if (carbs > 60 && fats < 10)
+            {
+                return "Energy";
+            }
+
+            return "Balanced";
+        }
+    } 
 }

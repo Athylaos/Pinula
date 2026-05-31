@@ -21,7 +21,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/users");
+            var group = app.MapGroup("/users");
 
             //---------------------------------------------------------------UserRegistration
             group.MapPost("/register", async (UserRegistrationDto registrationDto, PinulaDbContext db) =>
@@ -97,7 +97,8 @@ namespace Pinula.API.Endpoints
                     AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(u.AvatarUrl) ? defaultImage : u.AvatarUrl)}",
                     UserCreated = u.UserCreated,
                     CanComment = u.CanComment,
-                    CanCreateRecipes = u.CanCreateRecipes
+                    CanCreateRecipes = u.CanCreateRecipes,
+                    Role = u.Role,
                 }).FirstOrDefaultAsync();
 
                 if (userData == null) return Results.NotFound("User not found");
@@ -135,6 +136,7 @@ namespace Pinula.API.Endpoints
                     UserCreated = u.UserCreated,
                     CanComment = u.CanComment,
                     CanCreateRecipes = u.CanCreateRecipes,
+                    Role = u.Role,
                 }).FirstOrDefaultAsync();
 
                 return Results.Ok(userData);

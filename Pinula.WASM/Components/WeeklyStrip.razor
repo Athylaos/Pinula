@@ -6,7 +6,7 @@
         var date = CurrentWeekStart.AddDays(i);
         var isSelected = date.Date == SelectedDate.Date;
         var isToday = date.Date == DateTime.Today;
-        var hasMeals = WeeklyPlans.Any(p => p.Date.Date == date.Date);
+        var hasMeals = WeeklyPlans.Any(p => p.Date == DateOnly.FromDateTime(date.Date));
 
         <div class="day-bubble @(isSelected ? "selected" : "") @(isToday ? "today" : "")" @onclick="() => OnDateSelected.InvokeAsync(date)">
             <span class="day-name">@date.ToString("ddd")</span>

@@ -15,9 +15,17 @@ builder.Services.AddScoped<ITokenStorage, BlazorTokenStorage>();
 builder.Services.AddTransient<AuthHttpMessageHandler>();
 builder.Services.AddAuthorizationCore();
 
+#if DEBUG
 builder.Services.AddHttpClient("CookApi", client =>
-    client.BaseAddress = new Uri("http://10.0.1.160:5017/api/"))
+    client.BaseAddress = new Uri("http://10.0.1.160:5017/"))
     .AddHttpMessageHandler<AuthHttpMessageHandler>();
+#else
+builder.Services.AddHttpClient("CookApi", client =>
+    client.BaseAddress = new Uri("https://api-pinula.hykys.eu/"))
+    .AddHttpMessageHandler<AuthHttpMessageHandler>();
+#endif
+
+
 
 builder.Services.AddScoped<IIngredientService>(sp => new IngredientService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<IngredientService>>()));
 builder.Services.AddScoped<IRecipeService>(sp => new RecipeService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<RecipeService>>()));

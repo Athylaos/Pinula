@@ -112,6 +112,26 @@ namespace Pinula.Shared.Services
             }
         }
 
+        public async Task<bool> RenameGroupAsync(string name)
+        {
+            try
+            {
+                var trimmedName = Uri.EscapeDataString(name.Trim());
+                var response = await _httpClient.PostAsync($"{BaseUrl}/group/rename/{trimmedName}", null);
+
+                if (response.IsSuccessStatusCode) return true;
+
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning($"Failed to rename group: {response.StatusCode} error: {error}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while renaming group: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<GroupDetailDto?> GetMyGroupAsync()
         {
             try
@@ -182,5 +202,6 @@ namespace Pinula.Shared.Services
                 return false;
             }
         }
+
     }
 }

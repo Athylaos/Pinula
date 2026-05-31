@@ -7,8 +7,8 @@
 
 @if (IsVisible)
 {
-    <div class="modal-backdrop-custom">
-        <div class="ingredient-modal">
+    <div class="modal-overlay">
+        <div class="glass-modal ingredient-modal">
             @if (isAddMode)
             {
                 <div class="welcome-header">
@@ -62,40 +62,40 @@
                 <div class="welcome-header">
                     <h1 class="fs-7 text-center">Create Ingredient</h1>
                 </div>
-                <div class="mb-3">
+                <div class="mb-1">
                     <label class="value-text">Name</label>
                     <input type="text" class="custom-input" @bind="newIngDto.Name" />
                 </div>
-                <h5 class="value fs-4">Nutrients</h5>
+                <div class="mb-3">
+                    <label class="value-text">Preferd unit</label>
+                    <select class="custom-select" @onchange="HandleMainUnitChange">
+                        <option value="">Select Unit</option>
+                        @foreach (var unit in allUnits)
+                        {
+                            <option value="@unit.Id">@unit.Name</option>
+                        }
+                    </select>
+                </div>
+                <h5 class="value fs-4">Nutrients for 100g</h5>
                 <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="value-text">Calories</label>
+                    <div class="col-12">
+                        <label class="value-text">Calories (kcal)</label>
                         <input type="number" class="custom-select" @bind="newIngDto.Calories" />
                     </div>
                     <div class="col-6">
-                        <label class="value-text">Preferd unit</label>
-                        <select class="custom-select" @onchange="HandleMainUnitChange">
-                            <option value="">Select Unit</option>
-                            @foreach (var unit in allUnits)
-                            {
-                                <option value="@unit.Id">@unit.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="value-text">Proteins</label>
+                        <label class="value-text">Proteins (g)</label>
                         <input type="number" class="custom-select" @bind="newIngDto.Proteins" />
                     </div>
                     <div class="col-6">
-                        <label class="value-text">Fats</label>
+                        <label class="value-text">Fats (g)</label>
                         <input type="number" class="custom-select" @bind="newIngDto.Fats" />
                     </div>
                     <div class="col-6">
-                        <label class="value-text">Carbohydrates</label>
+                        <label class="value-text">Carbohydrates (g)</label>
                         <input type="number" class="custom-select" @bind="newIngDto.Carbohydrates" />
                     </div>
                     <div class="col-6">
-                        <label class="value-text">Fiber</label>
+                        <label class="value-text">Fiber (g)</label>
                         <input type="number" class="custom-select" @bind="newIngDto.Fiber" />
                     </div>
                 </div>
@@ -107,7 +107,7 @@
 
                         @foreach (var opt in additionalUnits)
                         {
-                            <div class="ingredient-modal w-100 mb-2">
+                            <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
                                 <div class="d-flex align-items-center gap-3">
                                     <strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
                                     <div class="w-50">

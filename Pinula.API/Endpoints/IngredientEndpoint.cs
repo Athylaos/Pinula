@@ -10,7 +10,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapIngredientEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/ingredients");
+            var group = app.MapGroup("/ingredients");
 
             //---------------------------------------------------------------Get previews
             group.MapGet("/getPreviews", async (int? amount, PinulaDbContext db) =>

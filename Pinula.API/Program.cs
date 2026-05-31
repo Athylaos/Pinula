@@ -22,11 +22,14 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+var allowedOrigin = builder.Configuration["AllowedCORS"] ?? "https://pinula.hykys.eu";
+
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
-    policy.WithOrigins("http://localhost:5119")  // BLAZOR WASM url 
+    policy.WithOrigins(allowedOrigin)
           .AllowAnyHeader()
-          .AllowAnyMethod();
+          .AllowAnyMethod()
+          .AllowCredentials();
     });
 });
 
@@ -76,6 +79,10 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseCors();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 app.MapUserEndpoints();
 app.MapCategoryEndpoints();

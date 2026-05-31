@@ -348,7 +348,14 @@
 
     private void NavigateToPlannerWithRecipe()
     {
-        NavManager.NavigateTo($"/planner?preselectedRecipeId={recipe.Id}");
+        if (!isUserLogged)
+        {
+            LoginBtn();
+        }
+        else
+        {
+            NavManager.NavigateTo($"/planner?preselectedRecipeId={recipe.Id}");
+        }
     }
 
 

@@ -85,7 +85,7 @@
 </div>
 
 @code {
-    [Parameter] public DateTime? PreselectedDate { get; set; }
+    [Parameter] public DateOnly? PreselectedDate { get; set; }
     [Parameter] public MealType? PreselectedMealType { get; set; }
     [Parameter] public Guid? PreselectedRecipeId { get; set; }
     [Parameter] public List<UserDisplayDto> GroupMembers { get; set; } = new();
@@ -94,7 +94,7 @@
     [Parameter] public EventCallback<CreateMealPlanDto> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private DateTime PlanDate = DateTime.Today;
+    private DateOnly PlanDate = DateOnly.FromDateTime(DateTime.Today);
     private MealType SelectedMealType = MealType.Lunch;
     private Guid? SelectedRecipeId;
     private int Servings = 1;

@@ -14,6 +14,7 @@ namespace Pinula.Shared.Interface
 
         Task<GroupDetailDto?> CreateGroupAsync(CreateGroupDto dto);
         Task<bool> JoinGroupAsync(string code);
+        Task<bool> RenameGroupAsync(string name);
         Task<GroupDetailDto?> GetMyGroupAsync();
         Task<bool> LeaveGroupAsync();
         Task<List<UserDisplayDto>> GetMembersAsync();

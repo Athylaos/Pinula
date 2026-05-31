@@ -11,6 +11,7 @@ namespace Pinula.Shared.DTOs
         public string Surname { get; set; }
         public string? Email { get; set; }
         public string AvatarUrl { get; set; }
+        public string Role { get; set; }
         public DateTime UserCreated { get; set; }
         public int PostedRecipes { get; set; }
         public int PostedComments { get; set; }

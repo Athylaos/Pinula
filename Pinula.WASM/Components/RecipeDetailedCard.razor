@@ -1,5 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Models
+@using Pinula.Shared.Enums
 
 <div class="recipe-detailed-card" @onclick="() => OnRecipeSelected.InvokeAsync(Recipe)">
     <div class="card-image-section">
@@ -42,7 +43,7 @@
                 <img src="images/icons/difficulty.png" class="info-icon" />
                 <div class="info-text">
                     <span class="label">Level</span>
-                    <span class="value">@GetDifficultyText(Recipe.Difficulty)</span>
+                    <span class="value">@Recipe.Difficulty</span>
                 </div>
             </div>
 
@@ -74,7 +75,7 @@
                 <img src="images/icons/fridge.png" class="info-icon" />
                 <div class="info-text">
                     <span class="label">Macros</span>
-                    <span class="value">Fit</span>
+                    <span class="value">@Recipe.MacrosLabel</span>
                 </div>
             </div>
         </div>
@@ -86,12 +87,4 @@
     [Parameter] public bool EnableEdit { get; set; } = false;
     [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
     [Parameter] public EventCallback<RecipePreviewDto> OnRecipeEditSelected { get; set; }
-
-    private string GetDifficultyText(int diff) => diff switch
-    {
-        0 => "Easy",
-        1 => "Medium",
-        2 => "Hard",
-        _ => "Medium"
-    };
 }

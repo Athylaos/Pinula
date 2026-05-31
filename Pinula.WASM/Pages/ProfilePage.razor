@@ -28,6 +28,12 @@
                 <button class="pf-icon-action-btn pf-logout-accent" @onclick="HandleLogout" title="Log Out">
                     Log Out
                 </button>
+                @if(userProfile.Role == "admin")
+                {
+                    <button class="pf-icon-action-btn pf-logout-accent" @onclick="HandleAdmin" title="Administrace">
+                        ADMIN
+                    </button>
+                }
             </div>
         </div>
 
@@ -237,7 +243,7 @@
     private UserUpdateDto updateModel = new();
     private List<RecipePreviewDto> myRecipes = new();
     private List<RecipePreviewDto> fvRecipes = new();
-    
+
     private bool isLoading = true;
     private bool isRecipesLoading = false;
     private bool moreRecipesToLoad = true;
@@ -246,7 +252,7 @@
 
     private bool isFvRecipesLoading = false;
     private bool moreFvRecipesToLoad = true;
-    
+
     private string statusMessage = string.Empty;
     private readonly RecipeFilterParameters _mineFilter = new() { OnlyMine = true, Amount = 6 };
     private readonly RecipeFilterParameters _fvFilter = new() { OnlyFavorites = true, Amount = 6 };
@@ -265,7 +271,7 @@
         try
         {
             userProfile = await userService.GetCurrentUserAsync();
-            
+
             if (userProfile == null)
             {
                 NavManager.NavigateTo("/login");
@@ -305,7 +311,7 @@
     {
         isRecipesLoading = true;
         _mineFilter.Skip = myRecipes.Count;
-        
+
         var results = await recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
         var newList = results?.ToList() ?? new List<RecipePreviewDto>();
 
@@ -400,6 +406,7 @@
         NavManager.NavigateTo("/recipes", forceLoad: true);
     }
 
+    private void HandleAdmin() => NavManager.NavigateTo("/admin");
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
     private void RecipeEditClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/edit/{r.Id}");
 }

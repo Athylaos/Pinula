@@ -11,7 +11,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapUnitEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/units");
+            var group = app.MapGroup("/units");
 
             //---------------------------------------------------------------Get servingUnits
             group.MapGet("/getServing", async (PinulaDbContext db) =>

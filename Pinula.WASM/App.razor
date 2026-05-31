@@ -8,9 +8,11 @@
                 <NotAuthorized>
                     @if (context.User.Identity?.IsAuthenticated != true)
                     {
-                        <div class="flex-column w-50">
-                            <p>For this action you need to be logged in.</p>
-                            <button onclick="@LoginBtn">Log in</button>
+                        <div class="container mt-5">
+                            <div class="alert alert-danger">
+                                <h4>For this action you need to be logged in</h4>
+                                <button onclick="@LoginBtn" class="btn-cancel-mp" style="color:black;">Log in</button>
+                            </div>
                         </div>
                     }
                     else

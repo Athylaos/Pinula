@@ -41,17 +41,18 @@
                     <label>Recipe name</label>
                     <input type="text" class="custom-input " @bind="Title" placeholder="e.g. Spaghetti Bolognese" />
                 </div>
-
-                <div class="image-upload">
-                    <div class="image-preview">
-                        @if (!string.IsNullOrEmpty(SelectedImagePreview))
-                        {
-                            <img src="@SelectedImagePreview" alt="Recipe preview" />
-                        }
-                        else
-                        {
-                            <span>No image selected</span>
-                        }
+                <div class="w-100 mb-2" style="display: flex; justify-content: center; align-items: center;">
+                    <div class="image-upload" style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                        <div class="image-preview" style="display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto;">
+                            @if (!string.IsNullOrEmpty(SelectedImagePreview))
+                            {
+                                <img src="@SelectedImagePreview" alt="Recipe preview" style="max-width: 100%; max-height: 200px; object-fit: contain; display: block; margin: 0 auto;" />
+                            }
+                            else
+                            {
+                                <span style="text-align: center; display: block; width: 100%;">No image selected</span>
+                            }
+                        </div>
                     </div>
                 </div>
 

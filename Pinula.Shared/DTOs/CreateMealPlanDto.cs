@@ -7,7 +7,7 @@ namespace Pinula.Shared.DTOs
 {
     public class CreateMealPlanDto
     {
-        public required DateTime Date { get; set; }
+        public required DateOnly Date { get; set; }
         public required MealType MealType { get; set; }
         public required Guid RecipeId { get; set; }
         public required Guid GroupId { get; set; }
