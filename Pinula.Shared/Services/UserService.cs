@@ -23,7 +23,7 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-        public Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
+        public Task ChangePasswordAsync(string oldPassword, string newPassword)
         {
             throw new NotImplementedException();
         }

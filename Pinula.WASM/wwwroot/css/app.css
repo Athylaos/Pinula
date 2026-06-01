@@ -19,10 +19,6 @@
         font-size: 1.1rem !important;
     }
 
-    .recipe-time {
-        font-size: 0.9rem !important;
-    }
-
     .main-wrapper {
         padding: 10px;
     }
@@ -52,16 +48,6 @@ body, html {
 article.content {
     max-width: 100vw;
     overflow-x: hidden;
-}
-
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
 }
 
 #blazor-error-ui {
@@ -364,17 +350,7 @@ html, * {
     white-space: nowrap;
 }
 
-.recipe-time {
-    top: 12px;
-    right: 12px;
-}
-
-.recipe-rating {
-    top: 12px;
-    left: 12px;
-}
-
-.time-icon, .rating-icon {
+.time-icon {
     width: 16px;
     height: 16px;
     filter: brightness(0) invert(1);
@@ -607,15 +583,6 @@ html, * {
     z-index: 1000;
 }
 
-.filter-popup {
-    margin:20px;
-    max-width:500px;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-}
-
 .filter-row {
     display: flex;
     justify-content: space-between;
@@ -718,16 +685,6 @@ html, * {
         transition: all 0.2s;
     }
 
-.active-star {
-    color: black;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-}
-
-.inactive-star {
-    color: transparent;
-    -webkit-text-stroke: 1.5px #444;
-}
-
 .difficulty-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -757,14 +714,6 @@ html, * {
         border: 1px solid #1D4934;
         box-shadow: inset 0 0 10px rgba(29, 73, 52, 0.2);
     }
-
-.filter-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
 
 .btn-apply {
     background-color: #1D4934;
@@ -1260,14 +1209,6 @@ html, * {
 
 /*---------- Add recipe page ----------*/
 /* #region Add recipe page */
-.add-recipe-container {
-    background-color: var(--bg-main);
-    color: var(--text-porcelain) !important;
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Nunito', sans-serif;
-}
 
 .header {
     display: flex;
@@ -1340,10 +1281,6 @@ html, * {
         object-fit: cover;
     }
 
-.custom-file-upload input[type="file"] {
-    display: none;
-}
-
 .custom-file-upload .btn-apply {
     display: inline-block;
     padding: 10px 20px;
@@ -1360,12 +1297,6 @@ html, * {
     .custom-file-upload .btn-apply:hover {
         background-color: #2a6347;
     }
-
-.chips-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
 
 .category-root-container {
     display: flex;
@@ -1467,11 +1398,6 @@ html, * {
         box-shadow: 0 6px 20px rgba(29, 73, 52, 0.6);
     }
 
-.btn-primary-outline {
-    background-color: transparent;
-    color: var(--pine-teal);
-}
-
 .ingredient-row, .step-row {
     display: flex;
     align-items: center;
@@ -1527,12 +1453,6 @@ html, * {
     text-align: center;
 }
 
-.btn-primary.large {
-    padding: 15px 40px;
-    font-size: 1.1rem;
-    border-radius: 15px;
-}
-
 .custom-select {
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--pine-teal);
@@ -1557,18 +1477,6 @@ select.custom-select {
 
 /*---------- Recipe page ----------*/
 /* #region Recipe page */
-.modal-backdrop-custom {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
 .ingredient-modal {
     max-height: 85vh;
     overflow-y: auto;
@@ -1917,12 +1825,6 @@ select.custom-select {
     padding-top: 30px;
 }
 
-.reply-item {
-    background: rgba(0,0,0,0.1);
-    padding: 12px;
-    border-radius: 10px;
-}
-
 .star-icon {
     width: 32px;
     height: 32px;
@@ -1959,12 +1861,6 @@ select.custom-select {
     opacity: 0.6;
     border-left: 3px dashed #555 !important;
     background: rgba(255, 255, 255, 0.01) !important;
-}
-
-.reply-item {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 15px;
 }
 
 .inline-reply-form {
@@ -2090,17 +1986,6 @@ select.custom-select {
 .ing-amount {
     font-weight: 600;
     color: var(--text-porcelain);
-}
-
-.comment-login-prompt {
-    background: #f8f9fa;
-    border: 1px solid #e3e6f0;
-    border-radius: 12px;
-    padding: 2rem 1.5rem;
-    text-align: center;
-    max-width: 500px;
-    margin: 1.5rem auto;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .prompt-content {
@@ -2238,22 +2123,6 @@ select.custom-select {
     margin: 0 0 8px 0;
     font-family: 'Alegreya', sans-serif !important;
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.category-hero-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin: 0;
-    font-weight: 300;
-}
-
-.section-title-block .subtitle {
-    display: block;
-    color: #ff6b6b;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 1px;
 }
 /* #endregion*/
 
@@ -2584,12 +2453,6 @@ select.custom-select {
     text-align: center;
 }
 
-.pf-empty-state-glyph {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-    opacity: 0.4;
-}
-
 .pf-invites-empty-state h5 {
     font-weight: 700;
     margin-bottom: 4px;
@@ -2653,15 +2516,6 @@ select.custom-select {
 
 /*---------- Weekly strip ----------*/
 /* #region Weekly strip */
-.current-date-title {
-    font-family: Alegreya, serif;
-    margin-bottom: 25px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 10px;
-    display: inline-block;
-    padding: 3px 10px;
-    font-weight: bold;
-}
 
 .weekly-strip {
     display: flex;
@@ -3137,10 +2991,6 @@ select.custom-select {
 .w-100 {
     width: 100%;
 }
-
-.text-success {
-    color: #2ecc71;
-}
 /* #endregion */
 
 /*---------- MealPlanner page ----------*/
@@ -3297,13 +3147,6 @@ select.custom-select {
     border-radius: 50%;
 }
 
-.showcase-icon {
-    position: relative;
-    font-size: 3.5rem;
-    color: var(--text-porcelain);
-    line-height: 100px;
-}
-
 .no-group-showcase h2 {
     font-family: 'Alegreya', serif;
     font-size: 2.2rem;
@@ -3458,11 +3301,6 @@ select.custom-select {
     gap: 12px;
     color: var(--text-porcelain);
     font-weight: 500;
-}
-
-.text-accent {
-    color: var(--pine-teal);
-    font-size: 1.2rem;
 }
 
 .section-header-flex {
