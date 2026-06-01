@@ -8,151 +8,159 @@
 @if (IsVisible)
 {
     <div class="modal-overlay">
-        <div class="glass-modal ingredient-modal">
+        <div class="glass-modal">
             @if (isAddMode)
             {
-                <div class="welcome-header">
-                    <h1 class="fs-7 text-center">Select Ingredient</h1>
+                <div class="modal-header">
+                    <h2 style="display:inline-block"> Select ingredient</h2>
+                    <button class="close-modal-btn" @onclick="Close">&times;</button>
                 </div>
+                <div class="modal-body">
+                    <input type="text" class="custom-input"
+                           placeholder="Search ingredient..."
+                           @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
 
-                
-                <input type="text" class="custom-input"
-                       placeholder="Search ingredient..."
-                       @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
+                    <ul class="search-results-list">
+                        @foreach (var ing in FilteredIngredients)
+                        {
+                            <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
+                                @onclick="() => selectedIngredient = ing">
+                                @ing.Name
+                            </li>
+                        }
+                    </ul>
 
-                <ul class="search-results-list">
-                    @foreach (var ing in FilteredIngredients)
-                    {
-                        <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
-                            @onclick="() => selectedIngredient = ing">
-                            @ing.Name
-                        </li>
-                    }
-                </ul>
+                    <button class="btn btn-link text-gray w-100 mb-1" @onclick="ToggleMode">
+                        Create new ingredient
+                    </button>
 
-                <button class="btn btn-link text-gray w-100 mb-3" @onclick="ToggleMode">
-                    Create new ingredient
-                </button>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-4">
-                        <input type="number" class="custom-select" placeholder="Qty" @bind="quantity" />
-                    </div>
-                    <div class="col-8">
-                        <select class="custom-select" @bind="selectedUnitId" >
-                            <option value="">Select Unit</option>
-                            @if (selectedIngredient?.IngredientUnits != null)
-                            {
-                                @foreach (var unit in selectedIngredient.IngredientUnits)
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <input type="number" class="custom-select" placeholder="Qty" @bind="quantity" />
+                        </div>
+                        <div class="col-8">
+                            <select class="custom-select" @bind="selectedUnitId">
+                                <option value="">Select Unit</option>
+                                @if (selectedIngredient?.IngredientUnits != null)
                                 {
-                                    <option value="@unit.Id">@unit.Name</option>
+                                    @foreach (var unit in selectedIngredient.IngredientUnits)
+                                    {
+                                        <option value="@unit.Id">@unit.Name</option>
+                                    }
                                 }
-                            }
-                        </select>
+                            </select>
+                        </div>
                     </div>
+                    @if (!string.IsNullOrEmpty(warningText))
+                    {
+                        <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                    }
+
                 </div>
-                @if (!string.IsNullOrEmpty(warningText))
-                {
-                    <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
-                }
-                <button class="btn-apply" @onclick="ConfirmSelection">Add to Recipe</button>
+
+                <div class="modal-footer">
+                    <button class="btn-apply" @onclick="ConfirmSelection">Add to Recipe</button>
+                </div>
+                
             }
             else
             {
-                <div class="welcome-header">
-                    <h1 class="fs-7 text-center">Create Ingredient</h1>
+                <div class="modal-header">
+                    <h2 style="display:inline-block"> Create ingredient</h2>
+                    <button class="close-modal-btn" @onclick="Close">&times;</button>
                 </div>
-                <div class="mb-1">
-                    <label class="value-text">Name</label>
-                    <input type="text" class="custom-input" @bind="newIngDto.Name" />
-                </div>
-                <div class="mb-3">
-                    <label class="value-text">Preferd unit</label>
-                    <select class="custom-select" @onchange="HandleMainUnitChange">
-                        <option value="">Select Unit</option>
-                        @foreach (var unit in allUnits)
-                        {
-                            <option value="@unit.Id">@unit.Name</option>
-                        }
-                    </select>
-                </div>
-                <h5 class="value fs-4">Nutrients for 100g</h5>
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <label class="value-text">Calories (kcal)</label>
-                        <input type="number" class="custom-select" @bind="newIngDto.Calories" />
+                <div class="modal-body ">
+                    <div class="mb-1">
+                        <label class="value-text">Name</label>
+                        <input type="text" class="custom-input" @bind="newIngDto.Name" />
                     </div>
-                    <div class="col-6">
-                        <label class="value-text">Proteins (g)</label>
-                        <input type="number" class="custom-select" @bind="newIngDto.Proteins" />
+                    <div class="mb-3">
+                        <label class="value-text">Preferd unit</label>
+                        <select class="custom-select" @onchange="HandleMainUnitChange">
+                            <option value="">Select Unit</option>
+                            @foreach (var unit in allUnits)
+                            {
+                                <option value="@unit.Id">@unit.Name</option>
+                            }
+                        </select>
                     </div>
-                    <div class="col-6">
-                        <label class="value-text">Fats (g)</label>
-                        <input type="number" class="custom-select" @bind="newIngDto.Fats" />
-                    </div>
-                    <div class="col-6">
-                        <label class="value-text">Carbohydrates (g)</label>
-                        <input type="number" class="custom-select" @bind="newIngDto.Carbohydrates" />
-                    </div>
-                    <div class="col-6">
-                        <label class="value-text">Fiber (g)</label>
-                        <input type="number" class="custom-select" @bind="newIngDto.Fiber" />
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-12 mt-4">
-                        <h5 class="value fs-4">Additional units</h5>
-                        <p class="value-text text-start">Enter how many grams are in one unit (e.g., 1 piece = 60g).</p>
-
-                        @foreach (var opt in additionalUnits)
-                        {
-                            <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
-                                    <div class="w-50">
-                                        <input type="number" class="custom-input"
-                                               @bind="opt.ToDefaultUnit"
-                                               placeholder="Weight" />
-                                    </div>
-                                    <p class="value fs-5 mb-0">g</p>
-                    
-                                    @if (opt.UnitId != selectedMainUnitId)
-                                    {
-                                        <button type="button" class="btn-delete" @onclick="() => RemoveUnit(opt)">✕</button>
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <div class="d-flex gap-2 mt-2 mb-3 align-items-center">
-                            <select class="custom-select w-50" @bind="unitToAddId">
-                                <option value="@Guid.Empty">-- Select unit to add --</option>
-                                @foreach (var u in availableUnits)
-                                {
-                                    <option value="@u.Id">@u.Name</option>
-                                }
-                            </select>
-            
-                            <button class="btn-apply w-50"
-                                    @onclick="AddUnitFromSelect"
-                                    disabled="@(unitToAddId == Guid.Empty)">
-                                Add unit
-                            </button>
+                    <h5 class="value fs-4">Nutrients for 100g</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="value-text">Calories (kcal)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Calories" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Proteins (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Proteins" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Fats (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Fats" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Carbohydrates (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Carbohydrates" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Fiber (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Fiber" />
                         </div>
                     </div>
-                </div>
-                @if (!string.IsNullOrEmpty(warningText))
-                {
-                    <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
-                }
 
-                <button class="btn-apply w-100 text-center" @onclick="SaveNewIngredient">Create & Add</button>
-                <button class="btn btn-link text-gray w-100" @onclick="ToggleMode">Back to Search</button>
+                    <div class="row g-3">
+                        <div class="col-12 mt-4">
+                            <h5 class="value fs-4">Additional units</h5>
+                            <p class="value-text text-start">Enter how many grams are in one unit (e.g., 1 piece = 60g).</p>
+
+                            @foreach (var opt in additionalUnits)
+                            {
+                                <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
+                                        <div class="w-50">
+                                            <input type="number" class="custom-input"
+                                                   @bind="opt.ToDefaultUnit"
+                                                   placeholder="Weight" />
+                                        </div>
+                                        <p class="value fs-5 mb-0">g</p>
+
+                                        @if (opt.UnitId != selectedMainUnitId)
+                                        {
+                                            <button type="button" class="btn-delete" @onclick="() => RemoveUnit(opt)">✕</button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2 mt-2 mb-3 align-items-center">
+                                <select class="custom-select w-50" @bind="unitToAddId">
+                                    <option value="@Guid.Empty">-- Select unit to add --</option>
+                                    @foreach (var u in availableUnits)
+                                    {
+                                        <option value="@u.Id">@u.Name</option>
+                                    }
+                                </select>
+
+                                <button class="btn-apply w-50"
+                                        @onclick="AddUnitFromSelect"
+                                        disabled="@(unitToAddId == Guid.Empty)">
+                                    Add unit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(warningText))
+                    {
+                        <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-apply w-100 text-center" @onclick="SaveNewIngredient">Create & Add</button>
+                    <button class="btn btn-link text-gray w-100" @onclick="ToggleMode">Back to Search</button>
+                </div>
             }
-            
-            <button class="btn btn-link text-gray w-100 mt-2" @onclick="Close">Cancel</button>
-            
         </div>
     </div>
 }

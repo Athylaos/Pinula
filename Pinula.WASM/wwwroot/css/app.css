@@ -47,10 +47,13 @@ body, html {
     width: 100%;
 }
 
+
+
 article.content {
     max-width: 100vw;
     overflow-x: hidden;
 }
+
 
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -79,6 +82,31 @@ select:focus {
     background-color: var(--evergreen);
     filter: brightness(1.2);
     transition: filter 0.2s ease;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+    *::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.35);
+    }
+
+html, * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.03);
 }
 
 /*---------- Navbar ----------*/
@@ -1295,8 +1323,8 @@ select:focus {
 
 .image-preview {
     width: 100%;
-    max-width:400px;
-    height: 300px;
+    max-width:800px;
+    height: 400px;
     border: 2px solid #1D4934;
     border-radius: 15px;
     margin-bottom: 15px;
@@ -1542,23 +1570,15 @@ select.custom-select {
     z-index: 1000;
 }
 .ingredient-modal {
-    background-color: #1f1f1f;
-    border-radius: 20px;
-    padding: 20px;
-    width: 90%;
-    max-width: 500px;
     max-height: 85vh;
     overflow-y: auto;
-    border: 1px solid #2d3635;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-
 }
 
 .search-results-list {
     list-style: none;
     padding: 0;
     margin: 10px 0;
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
 }
 
@@ -1603,6 +1623,7 @@ select.custom-select {
     position: relative;
     display: flex;
     align-items: flex-end;
+    border-radius: 0 0 20px 20px;
 }
 
 .hero-content {
@@ -2167,8 +2188,8 @@ select.custom-select {
         filter:invert(1) opacity(0.8);
     }
     /* #endregion */
-    /*---------- Category page ----------*/
-    /* #region Category page */
+/*---------- Category page ----------*/
+/* #region Category page */
     .category-hero-container {
         width: 100%;
         border-radius: 24px;
@@ -2454,20 +2475,7 @@ select.custom-select {
     flex: 1 1 auto;
     overflow-y: auto;
     padding-right: 5px;
-}
-    .pf-card-scroll-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .pf-card-scroll-body::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .pf-card-scroll-body::-webkit-scrollbar-thumb {
-        background-color: #adb5bd;
-        border-radius: 4px;
-    }
-    
+}    
 .pf-field-caption {
     font-size: 0.9rem;
     color: #aaa;
@@ -2644,6 +2652,7 @@ select.custom-select {
 /* #endregion*/
 
 /*---------- Weekly strip ----------*/
+/* #region Weekly strip */
 .current-date-title {
     font-family: Alegreya, serif;
     margin-bottom: 25px;
@@ -2916,6 +2925,9 @@ select.custom-select {
     overflow: hidden;
     animation: fadeInModal 0.2s ease-out;
     margin: 0 15px;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
 }
 
 @keyframes fadeInModal {
@@ -2936,11 +2948,12 @@ select.custom-select {
     align-items: center;
     padding: 20px 24px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
 }
 
     .modal-header h2 {
         font-family: 'Alegreya', serif;
-        font-size: 1.5rem;
+        font-size: 2.1rem;
         margin: 0;
     }
 
@@ -2957,8 +2970,19 @@ select.custom-select {
     }
 
 .modal-body {
-    padding: 24px;
+    padding: 10px 24px;
+    flex-grow: 1;
+    overflow-y: auto;
 }
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
 
 .modal-section {
     margin-bottom: 24px;
@@ -3518,15 +3542,6 @@ select.custom-select {
     justify-content: center;
     font-size: 0.6rem;
     border: 2px solid var(--bg-card);
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .btn-cancel-mp {

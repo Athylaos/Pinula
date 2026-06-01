@@ -14,7 +14,7 @@
 
 <LoadingView IsLoading="isLoading" IsFullScreen="true" Text="Preparing your recipe">
     <div class="recipe-page-container">
-        <div class="recipe-hero" style="background-image: linear-gradient(to top, var(--bg-main) 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
+        <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('images/recipes/default_recipe_picture.png');">
             <div class="hero-content">
                 <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" />
                 <div class="hero-actions">
@@ -56,7 +56,7 @@
                 <div class="info-card">
                     <div class="details-info-icon servings"><img src="images/icons/spoon_fork.png" class="info-icon opacity-100 px-1 py-1" /></div>
                     <div class="details-info-text">
-                        <span class="info-value">@recipe.ServingsAmount</span>
+                        <span class="info-value">@recipe.ServingsAmount @recipe.ServingUnit.Name</span>
                         <span class="info-label">Servings</span>
                     </div>
                 </div>

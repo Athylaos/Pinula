@@ -3,6 +3,7 @@
 @using Pinula.Shared.Enums
 @implements IDisposable
 @inject NavigationManager NavManager
+@inject IJSRuntime JS
 
 <div class="header-actions">
     <img src="favicon.png" class="header-logo"/>
@@ -21,61 +22,67 @@
 @if (showFilterPopup)
 {
     <div class="modal-backdrop" @onclick="ToggleFilter">
-        <div class="filter-popup glass-modal" @onclick:stopPropagation="true">
-            
-            <div class="filter-row">
-                <label>Cooking time</label>
-                <input type="checkbox" class="custom-checkbox" @bind="cookingTimeOn" />
-            </div>
-            <div class="slider-row @(!cookingTimeOn ? "disabled" : "")">
-                <input type="range" min="5" max="180" step="5" @bind="filterParams.MaxCookingTime" @bind:event="oninput" disabled="@(!cookingTimeOn)" />
-                <span class="value-text">@(filterParams.MaxCookingTime)m</span>
+        <div class="glass-modal" @onclick:stopPropagation="true">
+
+            <div class="modal-header">
+                <h2 style="display:inline-block">Filter</h2>
+                <button class="close-modal-btn" @onclick="ToggleFilter"> &times; </button >
             </div>
 
-            <div class="filter-row mt-4">
-                <label>Calories</label>
-                <input type="checkbox" class="custom-checkbox" @bind="caloriesOn" />
-            </div>
-            <div class="slider-row @(!caloriesOn ? "disabled" : "")">
-                <input type="range" min="100" max="2500" step="50" @bind="filterParams.MaxCalories" @bind:event="oninput" disabled="@(!caloriesOn)" />
-                <span class="value-text">@(filterParams.MaxCalories)kcal</span>
-            </div>
+            <div class="modal-body">
+                <div class="filter-row">
+                    <label>Cooking time</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="cookingTimeOn" />
+                </div>
+                <div class="slider-row @(!cookingTimeOn ? "disabled" : "")">
+                    <input type="range" min="5" max="180" step="5" @bind="filterParams.MaxCookingTime" @bind:event="oninput" disabled="@(!cookingTimeOn)" />
+                    <span class="value-text">@(filterParams.MaxCookingTime)m</span>
+                </div>
 
-            <div class="filter-row mt-4">
-                <label>Rating</label>
-                <span class="btn-clear" @onclick="ClearRating">Clear</span>
-            </div>
-            <div class="rating-stars">
-                @for (int i = 1; i <= 5; i++)
-                {
-                    var starValue = i;
-                    <img src="@(filterParams.MinRating >= starValue ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" class="time-icon"
-                         @onclick="() => SetRating(starValue)" />
-                }
-            </div>
+                <div class="filter-row mt-4">
+                    <label>Calories</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="caloriesOn" />
+                </div>
+                <div class="slider-row @(!caloriesOn ? "disabled" : "")">
+                    <input type="range" min="100" max="2500" step="50" @bind="filterParams.MaxCalories" @bind:event="oninput" disabled="@(!caloriesOn)" />
+                    <span class="value-text">@(filterParams.MaxCalories)kcal</span>
+                </div>
 
-            <div class="filter-row mt-4">
-                <label>Difficulty</label>
-            </div>
-            <div class="difficulty-grid">
-                @foreach (var diff in Enum.GetValues<DifficultyLevel>())
-                {
-                    <button class="diff-btn @(filterParams.MaxDifficulty == (int)diff ? "active" : "")"
-                            @onclick="() => SetDifficulty(diff)">
-                        @diff
-                    </button>
-                }
-            </div>
+                <div class="filter-row mt-4">
+                    <label>Rating</label>
+                    <span class="btn-clear" @onclick="ClearRating">Clear</span>
+                </div>
+                <div class="rating-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        var starValue = i;
+                        <img src="@(filterParams.MinRating >= starValue ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" class="time-icon"
+                             @onclick="() => SetRating(starValue)" />
+                    }
+                </div>
 
-            <div class="filter-row mt-4 mb-4">
-                <label>Only favorite</label>
-                <input type="checkbox" class="custom-checkbox" @bind="filterParams.OnlyFavorites" />
-            </div>
+                <div class="filter-row mt-4">
+                    <label>Difficulty</label>
+                </div>
+                <div class="difficulty-grid">
+                    @foreach (var diff in Enum.GetValues<DifficultyLevel>())
+                    {
+                        <button class="diff-btn @(filterParams.MaxDifficulty == (int)diff ? "active" : "")"
+                                @onclick="() => SetDifficulty(diff)">
+                            @diff
+                        </button>
+                    }
+                </div>
 
-            <div class="filter-footer">
-                <button class="btn-apply" @onclick="ApplyFilters">Apply</button>
-                <button class="btn-cancel" @onclick="ToggleFilter">Cancel</button>
-            </div>
+                <div class="filter-row mt-4 mb-4">
+                    <label>Only favorite</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="filterParams.OnlyFavorites" />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-apply" @onclick="ApplyFilters">Apply</button>
+                </div>
+            </div>         
         </div>
     </div>
 }
