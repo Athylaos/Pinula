@@ -14,7 +14,7 @@
 
 <LoadingView IsLoading="isLoading" IsFullScreen="true" Text="Preparing your recipe">
     <div class="recipe-page-container">
-        <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('images/recipes/default_recipe_picture.png');">
+        <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
             <div class="hero-content">
                 <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" />
                 <div class="hero-actions">
@@ -397,7 +397,7 @@
                         </div>
                     </div>
                     <p class="comment-body" style="color: #888; font-style: italic; margin-bottom: 0;">
-                        <i class="bi bi-eye-slash-fill me-1"></i> This comment has been removed by a moderator.
+                        This comment has been removed by a moderator.
                     </p>
                 }
             </div>

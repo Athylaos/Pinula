@@ -401,10 +401,6 @@
                 }
                 <span class="chip-name">@category.Category.Name</span>
 
-                @if (hasChildren)
-                {
-                    <i class="bi @(category.IsExpanded ? "bi-chevron-down" : "bi-chevron-right") ms-1"></i>
-                }
             </div>
 
             @if (hasChildren && category.IsExpanded)

@@ -187,7 +187,7 @@
         if (!isLoading)
         {
             try { await JSRuntime.InvokeVoidAsync("setupHorizontalScroll"); }
-            catch (Exception ex) { Console.WriteLine($"JS Error: {ex.Message}"); }
+            catch (Exception ex) { Console.WriteLine($"JS Error"); }
         }
     }
 
@@ -221,7 +221,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading category details: {ex.Message}");
+            Console.WriteLine($"Error loading category details");
         }
         finally { isLoading = false; }
     }

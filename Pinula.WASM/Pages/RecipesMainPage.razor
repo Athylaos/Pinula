@@ -52,18 +52,20 @@
                 }
 
                 <div class="hero-container mt-4">
+                    @*
                     <div class="welcome-header mb-4">
-                        @if(currentUser != null)
-                        {
-                            <h1>Hello, @currentUser.Name!</h1>
-                        }
-                        else
-                        {
-                            <h1>Hello, Cook!</h1>
-                        }
-                        <p>What are we cooking today?</p>
-                    </div>
-
+						@if (currentUser != null)
+						{
+							<h1>Hello, @currentUser.Name!</h1>
+						}
+						else
+						{
+							<h1>Hello, Cook!</h1>
+						}
+						<p>What are we cooking today?</p>
+					</div>
+                    *@
+					
                     <div class="featured-recipe mb-5">
                         <div class="hero-card" @onclick="() => RecipeClicked(recipeOfTheDay)">
                             <div class="hero-image" style="background-image: url('@recipeOfTheDay.PhotoUrl');"></div>
@@ -189,7 +191,7 @@
         if (!isLoading)
         {
             try { await JSRuntime.InvokeVoidAsync("setupHorizontalScroll"); }
-            catch (Exception ex) { Console.WriteLine($"JS Error: {ex.Message}"); }
+            catch (Exception ex) { Console.WriteLine($"JS Error"); }
         }
     }
 
@@ -208,7 +210,7 @@
             var bestTask = recipeService.GetFilteredRecipePreviewsAsync(_bestFilter, null);
             var mineTask = recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
 
-            await Task.WhenAll(categoriesTask, userTask, favouriteTask, latestTask, fastTask, bestTask, mineTask);
+            await Task.WhenAll(categoriesTask, userTask, recipeTask, favouriteTask, latestTask, fastTask, bestTask, mineTask);
 
             categories = categoriesTask.Result?.ToList() ?? new();
             currentUser = userTask.Result;

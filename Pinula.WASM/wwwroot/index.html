@@ -8,6 +8,7 @@
     <base href="/" />
     <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="Pinula.WASM.styles.css" rel="stylesheet" />
@@ -91,7 +92,6 @@
     <script>
         window.setupHorizontalScroll = function () {
             const containers = document.querySelectorAll('.scroll-container');
-            console.log("containers for scroll:", containers.length);
 
             containers.forEach(container => {
                 const newWheelHandler = (evt) => {

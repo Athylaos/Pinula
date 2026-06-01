@@ -44,14 +44,12 @@ else
                     <td>
                         <button class="btn btn-sm @(user.CanComment ? "btn-outline-success" : "btn-danger")"
                                 @onclick="() => ToggleComment(user)">
-                            <i class="bi @(user.CanComment ? "bi-chat-left-text" : "bi-chat-left-x-fill")"></i>
                             @(user.CanComment ? "Allowed" : "Banned")
                         </button>
                     </td>
                     <td>
                         <button class="btn btn-sm @(user.CanCreateRecipes ? "btn-outline-success" : "btn-danger")"
                                 @onclick="() => ToggleRecipes(user)">
-                            <i class="bi @(user.CanCreateRecipes ? "bi-journal-plus" : "bi-journal-x")"></i>
                             @(user.CanCreateRecipes ? "Allowed" : "Banned")
                         </button>
                     </td>

@@ -11,7 +11,7 @@
         
         <div class="header-section">
             <h1 class="login-title">Register</h1>
-            <p class="login-subtitle">Let's start cooking!</p>
+            <p class="login-subtitle">Join us!</p>
         </div>
 
         <div class="form-section">
@@ -95,6 +95,13 @@
             ShowError("Passwords don't match");
             return;
         }
+
+        if (password1.Length < 6)
+        {
+            ShowError("Password has to be atleast 5 characters long");
+            return;
+        }
+
 
         isBusy = true;
         indicatorVisibility = false;
