@@ -1,0 +1,49 @@
+﻿@using Pinula.Shared.DTOs
+
+<div class="horizontal-section-wrapper">
+    <div class="section-header-minor">
+        <div class="title-group">
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <span class="section-subtitle">@Subtitle</span>
+            }
+            <h3>@Title</h3>
+        </div>
+        <div class="header-line"></div>
+    </div>
+
+    <div class="scroll-container">
+        @foreach (var recipe in Recipes)
+        {
+            <RecipeSimpleCard Recipe="recipe" OnRecipeSelected="OnRecipeSelected" />
+        }
+
+        @if (HasMoreToLoad)
+        {
+            <div class="load-more-item">
+                <button class="load-more-card" @onclick="OnLoadMore" disabled="@IsLoading">
+                    <div class="load-more-content">
+                        @if (IsLoading)
+                        {
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        }
+                        else
+                        {
+                            <span>Show more</span>
+                        }
+                    </div>
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Other recipes";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public List<RecipePreviewDto> Recipes { get; set; } = new();
+    [Parameter] public bool HasMoreToLoad { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnLoadMore { get; set; }
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
+}

@@ -1,0 +1,62 @@
+﻿@page "/admin"
+@using Pinula.WASM.Components
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin")]
+
+<div class="container mt-4" style="background:LightGrey">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <ul class="nav nav-tabs mb-4">
+        <li>
+            <button class="nav-link @(activeTab == "categories" ? "active" : "")" 
+                    @onclick='() => activeTab = "categories"'>Categories</button>
+        </li>
+        <li>
+            <button class="nav-link @(activeTab == "units" ? "active" : "")" 
+                    @onclick='() => activeTab = "units"'>Units</button>
+        </li>
+        <li>
+            <button class="nav-link @(activeTab == "users" ? "active" : "")"
+                    @onclick='() => activeTab = "users"'>Users</button>
+        </li>
+        <li>
+            <button class="nav-link @(activeTab == "recipes" ? "active" : "")"
+                    @onclick='() => activeTab = "recipes"'>Recipes</button>
+        </li>
+        <li>
+            <button class="nav-link @(activeTab == "comments" ? "active" : "")"
+                    @onclick='() => activeTab = "comments"'>Comments</button>
+        </li>
+    </ul>
+
+    <div class="card p-3 shadow-sm">
+        @if (activeTab == "units")
+        {
+            <UnitManager/>
+        }
+        else if (activeTab == "categories")
+        {
+            <CategoryManager/>
+        }
+        else if(activeTab == "users")
+        {
+            <UserManager/>
+        }
+        else if (activeTab == "recipes")
+        {
+            <RecipeManager/>
+        }
+        else if (activeTab == "comments")
+        {
+            <CommentManager />
+        }
+        else
+        {
+            <p>Select tab</p>
+        }
+    </div>
+</div>
+
+@code {
+    private string activeTab = "";
+}

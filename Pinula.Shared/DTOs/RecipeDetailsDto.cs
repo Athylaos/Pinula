@@ -1,15 +1,8 @@
-﻿using Pinula.Shared.Models;
+﻿using Pinula.Shared.Enums;
+using Pinula.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
-public enum DifficultyLevel
-{
-    Easy = 1,
-    Medium = 2,
-    Hard = 3,
-    Chef = 4,
-}
 
 namespace Pinula.Shared.DTOs
 {
@@ -19,9 +12,9 @@ namespace Pinula.Shared.DTOs
 
         public Guid UserId { get; set; }
 
-        public string Title { get; set; } = null!;
+        public string Title { get; set; }
 
-        public string PhotoUrl { get; set; } = null!;
+        public string PhotoUrl { get; set; }
 
         public short CookingTime { get; set; }
 
@@ -53,8 +46,8 @@ namespace Pinula.Shared.DTOs
 
         public virtual Unit ServingUnit { get; set; } = null!;
 
-        public string UserName { get; set; } = string.Empty;
-        public string UserSurname { get; set; } = string.Empty;
+        public required string UserName { get; set; } = string.Empty;
+        public required string UserSurname { get; set; } = string.Empty;
 
         public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
 

@@ -1,0 +1,24 @@
+﻿@if (IsLoading)
+{
+    <div class="loading-component-container @(IsFullScreen ? "fullscreen" : "")">
+        <div class="inner-container">
+            <div class="spinner"></div>
+            <img src="images/icons/PinulaLogo1024.png" class="logo" alt="Pinula Logo" />
+        </div>
+        @if (!string.IsNullOrEmpty(Text))
+        {
+            <p class="loading-text">@Text</p>
+        }
+    </div>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsFullScreen { get; set; } = true;
+    [Parameter] public string Text { get; set; } = "Loading...";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

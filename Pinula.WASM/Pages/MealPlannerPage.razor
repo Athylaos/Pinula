@@ -1,0 +1,331 @@
+﻿@page "/planner"
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.Shared.Enums
+@using Pinula.WASM.Components
+@inject IMealPlanService MealPlanService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@inject IRecipeService RecipeService
+@inject IUserService UserService
+@using Microsoft.AspNetCore.Authorization
+
+<div class="planner-container">
+    <header class="planner-header-panel">
+        <div class="header-brand">
+            <div class="header-icon-box">
+                <img src="images/icons/calendar.png" class="header-icon-box p-2" />
+            </div>
+            <div>
+                @if (!isNotInGroup)
+                {
+                    <h1 class="page-title">@groupDetail?.Name</h1>
+                    <p class="subtitle">Yours kitchen dashboard</p>
+                }
+                else
+                {
+                    <h1 class="page-title">Start Planning</h1>
+                    <p class="subtitle">Organize your meals together</p>
+                }
+            </div>
+        </div>
+
+        <div class="header-actions">
+            @if (!isNotInGroup && Members != null && Members.Any())
+            {
+                <div class="avatar-row">
+                    @foreach (var member in Members)
+                    {
+                        <div class="avatar-wrapper" title="@($"{member.Name} {member.Surname}")">
+                            <img src="@member.AvatarUrl" alt="@member.Name" class="user-avatar" />
+                            <span class="avatar-status-dot"></span>
+                        </div>
+                    }
+                </div>
+            }
+
+            <button class="btn-group-action" @onclick="() => showGroupModal = true">
+                <img src="images/icons/account.png" class="header-icon-box p-2" style=""/>
+                <span>@(isNotInGroup ? "Setup Group" : "Group Settings")</span>
+            </button>
+        </div>
+    </header>
+
+    <LoadingView IsFullScreen="true" IsLoading="IsLoading" Text="Loading your plans">
+        @if (!isNotInGroup)
+        {
+            <WeeklyStrip CurrentWeekStart="WeekStartDate"
+                         SelectedDate="SelectedDate"
+                         WeeklyPlans="WeeklyPlans"
+                         OnDateSelected="ChangeSelectedDate" />
+
+            <div class="day-view-container">
+                <MealPlanDayView SelectedDate="SelectedDate"
+                                 DayPlans="GetPlansForSelectedDate()"
+                                 OnAddMeal="OpenAddMealModal"
+                                 OnEditMeal="OpenEditPopup"
+                                 OnMealSelected="MealClicked"/>
+            </div>
+        }
+        else
+        {
+            <div class="no-group-showcase">
+                <div class="showcase-art">
+                    <div class="glow-sphere"></div>
+                </div>
+                <h2>You are not in a kitchen group yet</h2>
+                <p>To start planning breakfast, lunch, and dinner, you need to cooperate with your household.</p>
+
+                <div class="showcase-actions">
+                    <div class="action-card">
+                        <h3>Create New Group</h3>
+                        <p>Start a brand new sheet for your home or vacation.</p>
+                        <div class="input-group-custom">
+                            <input type="text" placeholder="e.g. My Awesome Family" @bind="newGroupName" />
+                            <button class="btn-accent" @onclick="CreateGroupFromShowcase">Create</button>
+                        </div>
+                    </div>
+
+                    <div class="action-card">
+                        <h3>Join Existing</h3>
+                        <p>Enter the invitation code provided by your partner.</p>
+                        <div class="input-group-custom">
+                            <input type="text" placeholder="XXXX-XXXX-XXXX" @bind="joinGroupCode" />
+                            <button class="btn-accent-secondary" @onclick="JoinGroupFromShowcase">Join</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </LoadingView>
+</div>
+
+@if (showGroupModal)
+{
+    <GroupManagementPopup groupDetail="groupDetail"
+                          isNotInGroup="isNotInGroup"
+                          Members="Members"
+                          OnClose="CloseGroupModal"
+                          OnCreateGroup="HandleCreateGroup"
+                          OnJoinGroup="HandleJoinGroup"
+                          OnLeaveGroup="HandleLeaveGroup"
+                          OnUpdateGroupName="HandleUpdateGroupName" />
+}
+
+@if (showPlanMealModal)
+{
+    <PlanMealPopup GroupMembers="Members"
+                   GroupDetail="groupDetail"
+                   FvRecipes="fvRecipes"
+                   PreselectedDate="popupDate"
+                   PreselectedMealType="popupMealType"
+                   PreselectedRecipeId="popupRecipeId"
+                   OnSave="HandleSaveMealPlan"
+                   OnCancel="() => showPlanMealModal = false" />
+}
+
+<EditMealPopup @ref="editMealPopup" 
+                   AllGroupMembers="Members" 
+                   OnSave="SaveUpdatedPlanToDb" 
+                   OnDelete="DeletePlanFromDb" />
+
+@code {
+    private bool IsLoading = true;
+    private DateTime WeekStartDate;
+    private DateTime SelectedDate;
+
+    private List<MealPlanPreviewDto> WeeklyPlans = new();
+    private List<UserDisplayDto> Members = new();
+    private GroupDetailDto? groupDetail = new() { Name = "Not in group", InviteCode = "ERROR" };
+    private List<RecipePreviewDto> fvRecipes = new();
+
+    private bool isNotInGroup = false;
+    private bool showGroupModal = false;
+
+
+    private string newGroupName = "";
+    private string joinGroupCode = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        SelectedDate = DateTime.Today;
+        WeekStartDate = SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek + (int)DayOfWeek.Monday);
+        if (SelectedDate.DayOfWeek == DayOfWeek.Sunday) WeekStartDate = WeekStartDate.AddDays(-7);
+
+        await LoadData();
+
+
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("preselectedRecipeId", out var recipeIdString))
+        {
+            if (Guid.TryParse(recipeIdString, out Guid recipeId))
+            {
+                popupRecipeId = recipeId;
+                popupDate = DateOnly.FromDateTime(DateTime.Today);
+                popupMealType = MealType.Lunch;
+                showPlanMealModal = true;
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        if(!await UserService.IsUserLoggedInAsync()) NavManager.NavigateTo("/login");
+        groupDetail = await MealPlanService.GetMyGroupAsync();
+        if (groupDetail is null)
+        {
+            isNotInGroup = true;
+            IsLoading = false;
+            return;
+        }
+        isNotInGroup = false;
+        WeeklyPlans = await MealPlanService.GetMyGroupMealPlansAsync(WeekStartDate, WeekStartDate.AddDays(6)) ?? new();
+        Members = await MealPlanService.GetMembersAsync();
+        fvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
+        IsLoading = false;
+    }
+
+    private void ChangeSelectedDate(DateTime date)
+    {
+        SelectedDate = date;
+    }
+
+    private IEnumerable<MealPlanPreviewDto> GetPlansForSelectedDate()
+    {
+        return WeeklyPlans.Where(p => p.Date == DateOnly.FromDateTime(SelectedDate));
+    }
+
+
+
+
+    private void CloseGroupModal()
+    {
+        showGroupModal = false;
+    }
+
+    private async Task HandleCreateGroup(string name)
+    {
+        IsLoading = true;
+        var result = await MealPlanService.CreateGroupAsync(new CreateGroupDto { Name = name });
+        if (result != null)
+        {
+            showGroupModal = false;
+            await LoadData();
+        }
+        IsLoading = false;
+    }
+
+    private async Task HandleJoinGroup(string code)
+    {
+        IsLoading = true;
+        var success = await MealPlanService.JoinGroupAsync(code);
+        if (success)
+        {
+            showGroupModal = false;
+            await LoadData();
+        }
+        IsLoading = false;
+    }
+
+    private async Task HandleLeaveGroup()
+    {
+        IsLoading = true;
+        var success = await MealPlanService.LeaveGroupAsync();
+        if (success)
+        {
+            showGroupModal = false;
+            await LoadData();
+        }
+        IsLoading = false;
+    }
+
+    private async Task HandleUpdateGroupName(string newName)
+    {
+        await MealPlanService.RenameGroupAsync(newName);
+        await LoadData();
+        showGroupModal = false;
+        StateHasChanged();
+    }
+
+
+
+    private async Task CreateGroupFromShowcase()
+    {
+        await HandleCreateGroup(newGroupName);
+    }
+
+    private async Task JoinGroupFromShowcase()
+    {
+        await HandleJoinGroup(joinGroupCode);
+    }
+
+    private async Task LeaveCurrentGroup()
+    {
+        await HandleLeaveGroup();
+    }
+
+    //POPUP edit
+
+    private EditMealPopup editMealPopup;
+
+    private void OpenEditPopup(Guid mealPlanId)
+    {
+        var selectedMeal = WeeklyPlans.FirstOrDefault(m => m.Id == mealPlanId);
+
+        if (selectedMeal != null)
+        {
+            editMealPopup.Open(selectedMeal);
+        }
+    }
+
+    private async Task SaveUpdatedPlanToDb(UpdateMealPlanDto updatedDto)
+    {
+        var suc = await MealPlanService.UpdateMealPlanAsync(updatedDto);
+
+        if (suc)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeletePlanFromDb(Guid id)
+    {
+        var suc = await MealPlanService.RemoveRecipeFromPlanAsync(id);
+
+        if (suc)
+        {
+            await LoadData();
+        }
+    }
+
+
+
+    //POPUP create 
+
+    private bool showPlanMealModal = false;
+    private DateOnly? popupDate;
+    private MealType? popupMealType;
+    private Guid? popupRecipeId;
+
+
+    private void OpenAddMealModal(MealType type)
+    {
+        popupDate = DateOnly.FromDateTime(SelectedDate);
+        popupMealType = type;
+        popupRecipeId = null;
+        showPlanMealModal = true;
+    }
+
+    private async Task HandleSaveMealPlan(CreateMealPlanDto newPlan)
+    {
+        IsLoading = true;
+        showPlanMealModal = false;
+
+        await MealPlanService.AddRecipeToPlanAsync(newPlan);
+        await LoadData();
+    }
+
+    private void MealClicked(MealPlanPreviewDto mp) => NavManager.NavigateTo($"/recipe/{mp.RecipeId}");
+}

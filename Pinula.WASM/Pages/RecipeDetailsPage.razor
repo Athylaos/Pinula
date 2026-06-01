@@ -1,0 +1,434 @@
+﻿@page "/recipe/{Id:guid}"
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.Shared.Models
+@using Pinula.Shared.Services
+@using Pinula.WASM.Components
+@inject NavigationManager NavManager
+@inject IRecipeService RecipeService
+@inject IUserService UserService
+@inject IJSRuntime JSRuntime
+
+
+
+
+<LoadingView IsLoading="isLoading" IsFullScreen="true" Text="Preparing your recipe">
+    <div class="recipe-page-container">
+        <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
+            <div class="hero-content">
+                <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" />
+                <div class="hero-actions">
+                    <button class="icon-btn" @onclick="ToggleFavorite"><img class="info-icon" src="@(recipe.IsFavorite ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" /></button>
+                    <button class="icon-btn"><img src="images/icons/share.png" class="info-icon" /></button>
+                </div>
+                <h1 class="recipe-title">@recipe.Title</h1>
+                <div class="author-info">By @recipe.UserName @recipe.UserSurname</div>
+            </div>
+        </div>
+
+        <div class="recipe-body">
+            
+            <div class="recipe-info-grid">
+                <div class="info-card">
+                    <div class="details-info-icon rating"><img src="images/icons/favorite_full.png" class="info-icon opacity-100 px-1 py-1" /></div>
+                    <div class="details-info-text">
+                        <span class="info-value">@(recipe.Rating?.ToString("0.#") ?? "0.0")</span>
+                        <span class="info-label">@(recipe.UsersRated ?? 0) reviews</span>
+                    </div>
+                </div>
+    
+                <div class="info-card">
+                    <div class="details-info-icon difficulty"><img src="images/icons/difficulty.png" class="info-icon opacity-100 px-1 py-1" /></div>
+                    <div class="details-info-text">
+                        <span class="info-value">@recipe.Difficulty.ToString()</span>
+                        <span class="info-label">Difficulty</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="details-info-icon time"><img src="images/icons/time.png" class="info-icon opacity-100 px-1 py-1" /></div>
+                    <div class="details-info-text">
+                        <span class="info-value">@recipe.CookingTime min</span>
+                        <span class="info-label">Prep time</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="details-info-icon servings"><img src="images/icons/spoon_fork.png" class="info-icon opacity-100 px-1 py-1" /></div>
+                    <div class="details-info-text">
+                        <span class="info-value">@recipe.ServingsAmount @recipe.ServingUnit.Name</span>
+                        <span class="info-label">Servings</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nutrition-card">
+                <div class="nutrition-header">
+                    <h4>Per serving:</h4>
+                    <div class="calories">
+                        <i class="bi bi-fire text-danger"></i>
+                        <span class="cal-value">@(recipe.Calories?.ToString("0.#"))</span> kcal
+                    </div>
+                </div>
+                <div class="macros-grid">
+                    <div class="macro-item">Protein <span>@recipe.Proteins?.ToString("0.#") g</span></div>
+                    <div class="macro-item">Carbs <span>@recipe.Carbohydrates?.ToString("0.#") g</span></div>
+                    <div class="macro-item">Fat <span>@recipe.Fats?.ToString("0.#") g</span></div>
+                    <div class="macro-item">Fiber <span>@recipe.Fiber?.ToString("0.#") g</span></div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                
+                <div class="ingredients-section">
+                    <h2 class="section-title">Ingredients:</h2>
+                    <ul class="ingredient-list">
+                        @foreach (var ing in recipe.RecipeIngredients)
+                        {
+                            <li class="ingredient-item">
+                                <input type="checkbox" class="custom-checkbox" />
+                                <span class="ing-name">@ing.IngredientName</span>
+                                <span class="ing-amount">@(ing.Quantity.ToString("0.#")) @ing.UnitName</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="steps-section">
+                    <h2 class="section-title">Steps:</h2>
+                    <div class="timeline">
+                        @foreach (var step in recipe.RecipeSteps.OrderBy(s => s.StepNumber))
+                        {
+                            <div class="timeline-item">
+                                <div class="step-number">@step.StepNumber</div>
+                                <div class="step-content">
+                                    <p>@step.Description</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="reviews-section">
+                <h2 class="section-title">Community Reviews</h2>
+
+                @if(!isUserLogged)
+                {
+                    <div class="comment-input-card">
+                        <div class="prompt-content">
+                            <h5>Join the Conversation</h5>
+                            <p>Only logged-in chefs can write a review and share their experience.</p>
+                            <button @onclick="LoginBtn" class="btn-prompt-login">Log In to Review</button>
+                        </div>
+                    </div>
+                }
+                else if (!userDto.CanComment)
+                {
+                    <div class="comment-input-card">
+                        <div class="prompt-content">
+                            <h5>You have been banned</h5>
+                            <p>Your right to post comments has been revoked by the administrator. You can appeal this decision through our support team.</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="comment-input-card">
+                        @if (!alreadyRated)
+                        {
+                            <div class="rating-selector">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    int starIndex = i;
+                                    <img src="@(newComment.Rating >= starIndex ? "images/icons/favorite_full.png" : "images/icons/favorite.png")"
+                                         class="star-icon"
+                                         @onclick="() => SetRating(starIndex)"
+                                         alt="Star rating" />
+                                }
+                                <span class="rating-label">@GetRatingLabel()</span>
+                            </div>
+                        }
+
+                        <textarea @bind="newComment.Text" @bind:event="oninput"
+                                  placeholder="Share your thoughts or rate this recipe..."
+                                  class="comment-field"></textarea>
+
+                        <div class="input-actions">
+                            <button class="btn-clear" @onclick="ResetForm">Clear</button>
+                            <button class="btn-post"
+                                    disabled="@(string.IsNullOrWhiteSpace(newComment.Text) && newComment.Rating == null)"
+                                    @onclick="HandlePostReview">
+                                Post Review
+                            </button>
+                        </div>
+                    </div>
+                }
+                <div class="comments-container">
+                    @if (recipe.Comments != null && recipe.Comments.Any())
+                    {
+                        @foreach (var comment in recipe.Comments.OrderByDescending(c => c.CreatedAt))
+                        {
+                            @DisplayComment(comment)
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="floating-action-bar">
+        <button class="btn-add-to-calendar" @onclick="NavigateToPlannerWithRecipe">
+            <img src="images/icons/plus.png" class="fas fa-calendar-plus"/>
+            <span>Plan</span>
+        </button>
+    </div>
+</LoadingView>
+
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private RecipeDetailsDto? recipe;
+    private bool isLoading;
+    private bool isUserLogged;
+
+    private Comment newComment = new Comment();
+    private bool isReplying = false;
+    private string replyingToName = "";
+    private Guid? activeReplyCommentId = null;
+    private string replyText = "";
+
+    private bool alreadyRated = false;
+
+    private UserDisplayDto? userDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        userDto = await UserService.GetCurrentUserAsync();
+        if(userDto is null)
+        {
+            isUserLogged = false;
+            userDto = new();
+        }
+        else
+        {
+            isUserLogged = true;           
+        }
+        recipe = await RecipeService.GetRecipeDetailsAsync(Id); 
+        if(recipe is not null)
+        {
+            isLoading = false;
+        }
+        alreadyRated = recipe.Comments.Any(c => c.Rating.HasValue);
+    }
+
+    private void GoBack()
+    {
+        JSRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private async void ToggleFavorite()
+    {
+        recipe.IsFavorite = !recipe.IsFavorite;
+        if(!isUserLogged)
+        {
+            NavManager.NavigateTo("/login");
+        }
+        await RecipeService.ChangeFavoriteAsync(recipe.Id);
+    }
+
+
+    private void SetRating(int r)
+    {
+        if (newComment.Rating == r) newComment.Rating = null;
+        else newComment.Rating = (short)r;
+    }
+
+    private string GetRatingLabel() => newComment.Rating switch
+    {
+        1 => "Poor",
+        2 => "Fair",
+        3 => "Good",
+        4 => "Great",
+        5 => "Excellent!",
+        _ => "Optional rating"
+    };
+
+    private void StartReply(CommentPreview parent)
+    {
+        isReplying = true;
+        replyingToName = parent.UserName;
+        newComment.ParentCommentId = parent.Id;
+        newComment.Rating = null;
+    }
+
+    private void ResetForm()
+    {
+        newComment = new Comment();
+    }
+
+    private async Task HandlePostReview()
+    {
+        newComment.RecipeId = recipe.Id;
+        newComment.ParentCommentId = null;
+        newComment.IsApproved = true;
+
+        var response = await RecipeService.PostCommentAsync(newComment);
+
+        if (response != null)
+        {
+            recipe.Rating = response.NewAverageRating;
+            recipe.UsersRated = response.NewUsersRatedCount;
+            recipe.Comments.Add(response.NewComment);
+            alreadyRated = response.NewComment.Rating.HasValue;
+            ResetForm();
+            StateHasChanged();
+        }
+    }
+
+    private void OpenReplyForm(Guid commentId)
+    {
+        activeReplyCommentId = commentId;
+        newComment = new Comment
+        {
+            ParentCommentId = commentId,
+            RecipeId = recipe.Id
+        };
+        replyText = "";
+    }
+
+    private void CancelReply()
+    {
+        activeReplyCommentId = null;
+        replyText = "";
+    }
+
+    private CommentPreview? FindCommentRecursive(IEnumerable<CommentPreview> comments, Guid id)
+    {
+        foreach (var comment in comments)
+        {
+            if (comment.Id == id) return comment;
+
+            var foundInReplies = FindCommentRecursive(comment.Replies, id);
+            if (foundInReplies != null) return foundInReplies;
+        }
+        return null;
+    }
+
+    private async Task HandlePostReply(Guid parentId)
+    {
+        var replyComment = new Comment
+        {
+            RecipeId = recipe.Id,
+            ParentCommentId = parentId,
+            Text = replyText,
+            Rating = null,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var response = await RecipeService.PostCommentAsync(replyComment);
+        if (response != null)
+        {
+            var parentComment = FindCommentRecursive(recipe.Comments, parentId);
+
+            if (parentComment != null)
+            {
+                parentComment.Replies.Add(response.NewComment);
+            }
+            CancelReply();
+            StateHasChanged();
+        }
+    }
+
+    private void LoginBtn() => NavManager.NavigateTo("/login");
+
+    private void NavigateToPlannerWithRecipe()
+    {
+        if (!isUserLogged)
+        {
+            LoginBtn();
+        }
+        else
+        {
+            NavManager.NavigateTo($"/planner?preselectedRecipeId={recipe.Id}");
+        }
+    }
+
+
+
+    RenderFragment<CommentPreview> DisplayComment => comment => __builder =>
+    {
+        <div class="comment-thread">
+            <div class="comment-main @(comment.IsApproved ? "" : "comment-moderated-deleted")">           
+                @if (comment.IsApproved)
+                {
+                    <div class="comment-header">
+                        <div class="author-meta">
+                            <span class="author-name">@comment.UserName @comment.UserSurname</span>
+                            <span class="post-date">@comment.CreatedAt.ToShortDateString()</span>
+                        </div>
+                        @if (comment.Rating.HasValue)
+                        {
+                            <div class="applied-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <img src="@(i <= comment.Rating ? "images/icons/favorite_full.png" : "images/icons/favorite.png")"
+                                         class="star-icon-small" />
+                                }
+                            </div>
+                        }
+                    </div>
+                    <p class="comment-body">@comment.Text</p>
+                    @if (userDto.CanComment)
+                    {
+                        <button class="btn-reply-link" @onclick="() => OpenReplyForm(comment.Id)">Reply</button>
+                    }
+                }
+                else
+                {
+                    <div class="comment-header">
+                        <div class="author-meta">
+                            <span class="author-name" style="color: #888; font-style: italic;">[Content Removed]</span>
+                            <span class="post-date text-muted">@comment.CreatedAt.ToShortDateString()</span>
+                        </div>
+                    </div>
+                    <p class="comment-body" style="color: #888; font-style: italic; margin-bottom: 0;">
+                        This comment has been removed by a moderator.
+                    </p>
+                }
+            </div>
+
+            @if (comment.IsApproved && activeReplyCommentId == comment.Id)
+            {
+                <div class="inline-reply-form animate-slide-down">
+                    <textarea @bind="replyText" @bind:event="oninput"
+                              placeholder="Write your reply to @comment.UserName..."
+                              class="comment-field reply-field"></textarea>
+                    <div class="input-actions">
+                        <button class="btn-clear" @onclick="CancelReply">Cancel</button>
+                        <button class="btn-post"
+                                disabled="@string.IsNullOrWhiteSpace(replyText)"
+                                @onclick="() => HandlePostReply(comment.Id)">
+                            Post Reply
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (comment.Replies != null && comment.Replies.Any())
+            {
+                <div class="replies-container">
+                    @foreach (var reply in comment.Replies.OrderBy(r => r.CreatedAt))
+                    {
+                        @DisplayComment(reply)
+                    }
+                </div>
+            }
+        </div>
+    };
+
+}

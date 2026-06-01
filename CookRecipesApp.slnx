@@ -1,7 +1,9 @@
 <Solution>
   <Project Path="Pinula.API/Pinula.API.csproj" Id="198bdfbb-34a5-4bf4-afc8-d2682a0de180" />
-  <Project Path="Pinula.Shared/Pinula.Shared.csproj" Id="86c7b404-0687-41b5-bb3f-35f0874618e9" />
   <Project Path="Pinula.Maui/Pinula.Maui.csproj">
-    <Deploy Solution="Debug|*" />
+    <Build Project="false" />
+    <Deploy />
   </Project>
+  <Project Path="Pinula.Shared/Pinula.Shared.csproj" Id="86c7b404-0687-41b5-bb3f-35f0874618e9" />
+  <Project Path="Pinula.WASM/Pinula.WASM.csproj" Id="3c42951c-62f4-4d6e-ae4f-1a60796ad4c8" />
 </Solution>

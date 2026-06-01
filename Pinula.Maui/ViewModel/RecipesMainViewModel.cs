@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Pinula.Service;
-using Pinula.Service.Interface;
-using Pinula.Service.Services;
+using Pinula.Shared;
+using Pinula.Shared.Interface;
+using Pinula.Shared.Services;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
 using Pinula.View;
@@ -34,7 +34,7 @@ namespace Pinula.ViewModel
         [ObservableProperty]
         string searchTerm;
         [ObservableProperty]
-        RecipeFilterParametrs filterParametrs;
+        RecipeFilterParameters filterParametrs;
         [ObservableProperty]
         bool isEmpty;
         public ObservableCollection<RecipePreviewDto> SearchedRecipes { get; set; } = new();
@@ -55,22 +55,22 @@ namespace Pinula.ViewModel
         [ObservableProperty]
         bool myOwnVisible;
 
-        private readonly RecipeFilterParametrs _favouriteFilter = new  RecipeFilterParametrs()
+        private readonly RecipeFilterParameters _favouriteFilter = new  RecipeFilterParameters()
         {
             OnlyFavorites = true,
             Amount = 4
         };
-        private readonly RecipeFilterParametrs _popularFilter = new RecipeFilterParametrs()
+        private readonly RecipeFilterParameters _popularFilter = new RecipeFilterParameters()
         {
             MinRating = 4,
             Amount = 4
         };
-        private readonly RecipeFilterParametrs _fastFilter = new RecipeFilterParametrs()
+        private readonly RecipeFilterParameters _fastFilter = new RecipeFilterParameters()
         {
             MaxCookingTime = 20,
             Amount = 4
         };
-        private readonly RecipeFilterParametrs _myOwnFilter = new RecipeFilterParametrs()
+        private readonly RecipeFilterParameters _myOwnFilter = new RecipeFilterParameters()
         {
             OnlyMine = true,
             Amount = 4
@@ -164,7 +164,7 @@ namespace Pinula.ViewModel
 
         }
 
-        private async Task LoadMoreRecipesAsync(RecipeFilterParametrs filterPar, ObservableCollection<RecipePreviewDto> list)
+        private async Task LoadMoreRecipesAsync(RecipeFilterParameters filterPar, ObservableCollection<RecipePreviewDto> list)
         {
             if (LoadingRecipes) return;
 
@@ -290,7 +290,7 @@ namespace Pinula.ViewModel
         public void ClearFilters()
         {
             SearchTerm = string.Empty;
-            FilterParametrs = new RecipeFilterParametrs();
+            FilterParametrs = new RecipeFilterParameters();
             IsSearching = false;
             return;
         }

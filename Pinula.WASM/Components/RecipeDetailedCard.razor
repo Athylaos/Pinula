@@ -1,0 +1,90 @@
+﻿@using Pinula.Shared.DTOs
+@using Pinula.Shared.Models
+@using Pinula.Shared.Enums
+
+<div class="recipe-detailed-card" @onclick="() => OnRecipeSelected.InvokeAsync(Recipe)">
+    <div class="card-image-section">
+        <img src="@Recipe.PhotoUrl" class="recipe-img" alt="@Recipe.Title" />
+        <div class="image-overlay">
+            <h4 class="recipe-title">@Recipe.Title</h4>
+        </div>
+        
+        <div class="top-badges">
+            @if (Recipe.IsFavorite)
+            {
+                <div class="recipe-badge">
+                    <img src="images/icons/heart.png" class="time-icon" />
+                </div>
+            }
+            <div class="recipe-badge">
+                <span>@Recipe.Rating.Value.ToString("0.#")</span>
+                <img src="images/icons/favorite_full.png" class="time-icon" />
+            </div>
+            @if (EnableEdit)
+            {
+                <button class="edit-badge" @onclick="() => OnRecipeEditSelected.InvokeAsync(Recipe)" title="Edit recipe">
+                    <img src="images/icons/pencil.png" style="margin-top:-3px" class="time-icon" />
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="card-info-section">
+        <div class="info-grid">
+            <div class="info-item">
+                <img src="images/icons/time.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Time</span>
+                    <span class="value">@Recipe.CookingTime min</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <img src="images/icons/difficulty.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Level</span>
+                    <span class="value">@Recipe.Difficulty</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <img src="images/icons/spoon_fork.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Servings</span>
+                    <span class="value">@Recipe.ServingsAmount</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <img src="images/icons/calories.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Energy</span>
+                    <span class="value">@Recipe.Calories?.ToString("F0") kcal</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <img src="images/icons/account.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Author</span>
+                    <span class="value author">@Recipe.UserName</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <img src="images/icons/fridge.png" class="info-icon" />
+                <div class="info-text">
+                    <span class="label">Macros</span>
+                    <span class="value">@Recipe.MacrosLabel</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RecipePreviewDto Recipe { get; set; } = new();
+    [Parameter] public bool EnableEdit { get; set; } = false;
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeEditSelected { get; set; }
+}

@@ -1,0 +1,82 @@
+﻿@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@inject IRecipeService RecipeService
+@inject NavigationManager Navigation
+
+<h3>Manage Comments</h3>
+
+@if (comments == null)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else if (!comments.Any())
+{
+    <div class="alert alert-info">No comments found.</div>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Author</th>
+                <th>Comment Text</th>
+                <th>Recipe</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comment in comments)
+            {
+                <tr style="@(comment.IsApproved ? "" : "opacity: 0.6;")">
+                    <td class="text-nowrap">@comment.CreatedAt.ToShortDateString()</td>
+                    <td><strong>@comment.UserName @comment.UserSurname</strong></td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        @comment.Text
+                    </td>
+                    <td>
+                        <a href="/recipe/@comment.RecipeId" class="text-decoration-none text-info">
+                            @comment.RecipeName
+                        </a>
+                    </td>
+                    <td>
+                        @if (comment.IsApproved)
+                        {
+                            <span class="badge bg-success">Visible</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Deleted / Hidden</span>
+                        }
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm @(comment.IsApproved ? "btn-outline-danger" : "btn-success")"
+                                @onclick="() => HandleToggleComment(comment)">
+                            @(comment.IsApproved ? "Delete" : "Restore")
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<AdminCommentDto>? comments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        comments = await RecipeService.GetAdminCommentsAsync();
+    }
+
+    private async Task HandleToggleComment(AdminCommentDto comment)
+    {
+        var success = await RecipeService.AdminToggleCommentApprovalAsync(comment.Id);
+        if (success)
+        {
+            comment.IsApproved = !comment.IsApproved;
+            StateHasChanged();
+        }
+    }
+}

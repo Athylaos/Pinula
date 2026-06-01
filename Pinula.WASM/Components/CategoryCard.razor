@@ -1,0 +1,14 @@
+﻿@using Pinula.Shared.Models
+
+<div class="category-card" @onclick="OnClick">
+    <img src="@Category.PictureUrl" alt="@Category.Name" />
+    <div class="gradient-overlay"></div>
+    <span class="category-name">@Category.Name</span>
+</div>
+
+@code {
+    [Parameter] public Category Category { get; set; } = null!;
+    [Parameter] public EventCallback<Category> OnCategorySelected { get; set; }
+
+    private async Task OnClick() => await OnCategorySelected.InvokeAsync(Category);
+}

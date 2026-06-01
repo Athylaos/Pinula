@@ -1,0 +1,144 @@
+﻿@using Pinula.Shared.DTOs
+@using Pinula.Shared.Enums
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal plan-meal-modal">
+
+            <div class="modal-header">
+                <img src="images/icons/calendar.png" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
+                <h2 style="display:inline-block"> Edit meal plan</h2>
+                <button class="close-modal-btn" @onclick="Close">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="preselected-recipe-card modal-spacer-md">
+                    <div class="recipe-info">
+                        <div>
+                            <small class="recipe-label-sub">Recipe</small>
+                            <span>@RecipeName</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row-2 modal-spacer-md">
+                    <div class="modal-section">
+                        <label class="section-label">Date</label>
+                        <input type="date" class="modal-input" @bind="EditDate" />
+                    </div>
+                    <div class="modal-section">
+                        <label class="section-label">Meal Type</label>
+                        <select class="modal-input" @bind="EditMealType">
+                            @foreach (var type in Enum.GetValues<MealType>())
+                            {
+                                <option value="@type">@type.ToString()</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-header-flex modal-spacer-sm">
+                    <label class="section-label">Servings</label>
+                    <div class="servings-selector">
+                        <input type="number" min="1" max="20" class="input-servings" @bind="EditServings" />
+                        <span>portions</span>
+                    </div>
+                </div>
+
+                <div class="modal-section modal-spacer-top-lg">
+                    <label class="section-label section-label-block">Who's eating?</label>
+                    <div class="eaters-selection">
+                        @foreach (var member in AllGroupMembers)
+                        {
+                            var isSelected = SelectedUserIds.Contains(member.Id);
+                            <div class="eater-avatar-wrapper @(isSelected ? "selected" : "")"
+                                 @onclick="() => ToggleUser(member.Id)"
+                                 title="@member.Name @member.Surname">
+                                <img src="@member.AvatarUrl" class="eater-avatar" alt="@member.Name" />
+                                @if (isSelected)
+                                {
+                                    <div class="eater-check">
+                                        <i class="fa-check"></i>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-delete-mp" @onclick="HandleDelete">Delete from plan</button>
+                <div class="flex-spacer"></div>
+                <button type="button" class="btn-accent" @onclick="HandleSave" disabled="@(!SelectedUserIds.Any())"> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public List<UserDisplayDto> AllGroupMembers { get; set; } = new();
+
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<UpdateMealPlanDto> OnSave { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+
+    private Guid MealPlanId { get; set; }
+    private string RecipeName { get; set; } = string.Empty;
+    private DateOnly EditDate { get; set; }
+    private MealType EditMealType { get; set; }
+    private int EditServings { get; set; }
+    private HashSet<Guid> SelectedUserIds { get; set; } = new();
+
+    public void Open(MealPlanPreviewDto mealPlan)
+    {
+        MealPlanId = mealPlan.Id;
+        RecipeName = mealPlan.RecipeName;
+        EditDate = mealPlan.Date;
+        EditMealType = mealPlan.MealType;
+        EditServings = mealPlan.Servings;
+
+        SelectedUserIds = mealPlan.UsersPreviews.Select(u => u.Id).ToHashSet();
+
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        IsVisible = false;
+        OnClose.InvokeAsync();
+    }
+
+    private void ToggleUser(Guid userId)
+    {
+        if (SelectedUserIds.Contains(userId))
+            SelectedUserIds.Remove(userId);
+        else
+            SelectedUserIds.Add(userId);
+    }
+
+    private void HandleSave()
+    {
+        var updateModel = new UpdateMealPlanDto
+        {
+            Id = MealPlanId,
+            Date = EditDate,
+            MealType = EditMealType,
+            Servings = EditServings,
+            UsersIds = SelectedUserIds.ToList()
+        };
+
+        OnSave.InvokeAsync(updateModel);
+        IsVisible = false;
+    }
+
+    private void HandleDelete()
+    {
+        OnDelete.InvokeAsync(MealPlanId);
+        IsVisible = false;
+    }
+}

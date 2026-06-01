@@ -1,0 +1,180 @@
+﻿@using Pinula.Shared.Models
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@inject ICategoryService CategoryService
+
+<h3>Manage Categories</h3>
+
+<div class="card p-3 mb-4 shadow-sm" style="max-width: 500px; background-color: #f8f9fa;">
+    <h5 class="card-title">Create New Category</h5>
+    
+    <div class="row g-2">
+        <div class="col-12">
+            <input type="text" class="form-control" placeholder="Category Name" @bind="newCategoryName" />
+        </div>
+
+        <div class="col-8">
+            <select class="form-control" @bind="selectedParentId">
+                <option value="">-- No Parent (Main) --</option>
+                @if (displayCategories != null)
+                {
+                    @foreach (var cat in displayCategories)
+                    {
+                        var level = GetLevel(cat.Id);
+                        <option value="@cat.Id">
+                            @(new string('—', level * 2)) @cat.Name
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-4">
+            <input type="number" class="form-control" placeholder="Order" @bind="newSortOrder" />
+        </div>
+
+        <div class="col-12">
+            <div class="custom-file-upload">
+                <label for="category-image-upload" class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="bi bi-image"></i> @(string.IsNullOrEmpty(selectedFileName) ? "Select Image" : selectedFileName)
+                </label>
+                <InputFile id="category-image-upload" OnChange="LoadPhoto" style="display: none;" accept="image/*" />
+            </div>
+        </div>
+
+        <div class="col-12 mt-2">
+            <button class="btn btn-success w-100" @onclick="HandleCreate">Create Category</button>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div class="alert alert-warning py-2">@statusMessage</div>
+}
+
+@if (displayCategories == null)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+    <p class="text-muted small">Total categories: @displayCategories.Count</p>
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width: 60px;">Order</th>
+                <th style="width: 80px;">Image</th>
+                <th>Name (Hierarchical Structure)</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in displayCategories)
+            {
+                var level = GetLevel(category.Id);
+                <tr class="@(level == 0 ? "fw-bold" : level == 1 ? "table-light" : "")">
+                    <td class="text-center text-muted">@category.SortOrder</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(category.PictureUrl) && category.PictureUrl != "default_category_picture.png")
+                        {
+                            <img src="@category.PictureUrl"
+                                 style="width: 35px; height: 35px; object-fit: cover; border-radius: 5px;" />
+                        }
+                    </td>
+                    <td>
+                        <div style="padding-left: @(level * 30)px">
+                            @if (level > 0)
+                            {
+                                <span class="text-muted me-1">↳</span>
+                            }
+                            @category.Name
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => HandleDelete(category.Id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Category>? displayCategories;
+    private Dictionary<Guid, int> categoryLevels = new();
+    
+    private string newCategoryName = "";
+    private Guid? selectedParentId;
+    private short newSortOrder = 0;
+    private string statusMessage = "";
+    private IBrowserFile? selectedFile;
+    private string selectedFileName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private int GetLevel(Guid id) => categoryLevels.ContainsKey(id) ? categoryLevels[id] : 0;
+
+    private async Task LoadCategories()
+    {
+        var allData = await CategoryService.GetAllCategoriesAsync();
+        
+        if (allData == null) return;
+
+        var result = new List<Category>();
+        categoryLevels.Clear();
+
+        var roots = allData
+            .Where(c => c.ParentCategoryId == null || c.ParentCategoryId == Guid.Empty)
+            .OrderBy(c => c.SortOrder)
+            .ToList();
+
+        foreach (var root in roots)
+        {
+            AddToTreeRecursive(root, allData, 0, result);
+        }
+
+        displayCategories = result;
+        StateHasChanged();
+    }
+
+    private void AddToTreeRecursive(Category current, List<Category> allData, int level, List<Category> resultList)
+    {
+        categoryLevels[current.Id] = level;
+        resultList.Add(current);
+
+        var children = allData
+            .Where(c => c.ParentCategoryId == current.Id)
+            .OrderBy(c => c.SortOrder)
+            .ToList();
+
+        foreach (var child in children)
+        {
+            AddToTreeRecursive(child, allData, level + 1, resultList);
+        }
+    }
+
+    private void LoadPhoto(InputFileChangeEventArgs e) { selectedFile = e.File; selectedFileName = e.File.Name; }
+
+    private async Task HandleCreate()
+    {
+        if (string.IsNullOrWhiteSpace(newCategoryName)) return;
+        var dto = new CategoryCreateDto { Name = newCategoryName, ParentCategory = selectedParentId, SortOrder = newSortOrder };
+        Stream? stream = null;
+        if (selectedFile != null) stream = selectedFile.OpenReadStream(5 * 1024 * 1024);
+        var resultId = await CategoryService.SaveCategoryAsync(dto, stream, selectedFile?.Name, selectedFile?.ContentType);
+        if (resultId != null) { newCategoryName = ""; selectedParentId = null; newSortOrder = 0; selectedFile = null; selectedFileName = ""; await LoadCategories(); }
+        else { statusMessage = "Failed to create category."; }
+    }
+
+    private async Task HandleDelete(Guid id)
+    {
+        if (await CategoryService.DeleteCategoryAsync(id)) await LoadCategories();
+        else statusMessage = "Cannot delete: Category has children or is used.";
+    }
+}

@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Pinula.Service.Interface;
+using Pinula.Shared.Interface;
 using Pinula.View;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Pinula.Service;
+using Pinula.Shared;
 
 
 

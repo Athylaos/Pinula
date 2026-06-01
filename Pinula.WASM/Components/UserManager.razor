@@ -1,0 +1,199 @@
+﻿@using Pinula.Shared.Models
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@inject IUserService UserService
+@inject IJSRuntime JSRuntime
+
+<h3>Manage Users</h3>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div @onclick="DismissStatusMsg" class="alert @(isError ? "alert-danger" : "alert-success") py-2">
+        @statusMessage
+    </div>
+}
+
+@if (users == null)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Registered</th>
+                <th>Commenting</th>
+                <th>Posting Recipes</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td class="small text-muted text" style="max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@user.Id</td>
+                    <td><strong>@user.Name @user.Surname</strong></td>
+                    <td>@user.Email</td>
+                    <td style="@((user.Role == "admin") ? "color:red; font-weight:bold;" : "")">@user.Role</td>
+                    <td>@user.UserCreated.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <button class="btn btn-sm @(user.CanComment ? "btn-outline-success" : "btn-danger")"
+                                @onclick="() => ToggleComment(user)">
+                            @(user.CanComment ? "Allowed" : "Banned")
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm @(user.CanCreateRecipes ? "btn-outline-success" : "btn-danger")"
+                                @onclick="() => ToggleRecipes(user)">
+                            @(user.CanCreateRecipes ? "Allowed" : "Banned")
+                        </button>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-warning"
+                                @onclick="() => OpenPasswordReset(user)">
+                            Reset Password
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (selectedUser != null)
+    {
+        <div class="card border-warning mt-4" style="max-width: 400px;">
+            <div class="card-header bg-warning text-dark">
+                <strong>Change Password for:</strong> @selectedUser.Email
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label small">New Password</label>
+                    <div class="" style="width: 100%;">
+                        <input type="text" class="form-control" style="flex: 1;" placeholder="Enter new temporary password" @bind="newPassword" />
+                        <button class="btn btn-outline-secondary w-100 my-1" type="button" @onclick="CopyPasswordToClipboard" title="Copy to clipboard"> Copy</button>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-warning" @onclick="HandlePasswordChange">Save</button>
+                    <button class="btn btn-secondary" @onclick="ClosePasswordReset">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<User>? users;
+    private User? selectedUser;
+
+    private string newPassword = "";
+    private string statusMessage = "";
+    private bool isError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        var result = await UserService.GetAllUsersAsync();
+        users = result.ToList();
+    }
+
+    private void OpenPasswordReset(User user)
+    {
+        selectedUser = user;
+        newPassword = "";
+        statusMessage = "";
+        newPassword = $"{GenerateRandomPassword(4)}-{GenerateRandomPassword(4)}-{GenerateRandomPassword(4)}";
+    }
+
+    private string GenerateRandomPassword(int length)
+    {
+        const string chars = "QWERYIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890";
+        var random = Random.Shared;
+    
+        return new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    private void ClosePasswordReset()
+    {
+        selectedUser = null;
+        newPassword = "";
+    }
+
+    private async Task HandlePasswordChange()
+    {
+        if (selectedUser == null) return;
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            isError = true;
+            statusMessage = "Password cannot be empty.";
+            return;
+        }
+
+        var success = await UserService.AdminChangePasswordAsync(selectedUser.Id, newPassword);
+
+        if (success)
+        {
+            isError = false;
+            statusMessage = $"Password for {selectedUser.Email} was successfully changed. Write them via email their new password: {newPassword}";
+            ClosePasswordReset();
+        }
+        else
+        {
+            isError = true;
+            statusMessage = "Failed to change password. Check server logs.";
+        }
+    }
+
+    private void DismissStatusMsg()
+    {
+        statusMessage = "";
+    }
+
+    private async Task CopyPasswordToClipboard()
+    {
+        if (string.IsNullOrWhiteSpace(newPassword)) return;
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", newPassword);
+        
+            isError = false;
+            statusMessage = "Password copied to clipboard.";
+        }
+        catch (Exception)
+        {
+            isError = true;
+            statusMessage = "Copying failed, copy manually.";
+        }
+    }
+
+    private async Task ToggleComment(User user)
+    {
+        var success = await UserService.AdminToggleCommentPermissionAsync(user.Id);
+        if (success)
+        {
+            user.CanComment = !user.CanComment;
+        }
+    }
+
+    private async Task ToggleRecipes(User user)
+    {
+        var success = await UserService.AdminToggleRecipePermissionAsync(user.Id);
+        if (success)
+        {
+            user.CanCreateRecipes = !user.CanCreateRecipes;
+ 
+        }
+    }
+}

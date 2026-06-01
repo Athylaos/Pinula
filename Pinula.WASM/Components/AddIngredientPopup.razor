@@ -1,0 +1,426 @@
+﻿@using System.Timers
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.Shared.Models
+@inject IIngredientService IngredientService
+@inject IUnitService UnitService
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal">
+            @if (isAddMode)
+            {
+                <div class="modal-header">
+                    <h2 style="display:inline-block"> Select ingredient</h2>
+                    <button class="close-modal-btn" @onclick="Close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="custom-input"
+                           placeholder="Search ingredient..."
+                           @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
+
+                    <ul class="search-results-list">
+                        @foreach (var ing in FilteredIngredients)
+                        {
+                            <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
+                                @onclick="() => selectedIngredient = ing">
+                                @ing.Name
+                            </li>
+                        }
+                    </ul>
+
+                    <button class="btn btn-link text-gray w-100 mb-1" @onclick="ToggleMode">
+                        Create new ingredient
+                    </button>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <input type="number" class="custom-select" placeholder="Qty" @bind="quantity" />
+                        </div>
+                        <div class="col-8">
+                            <select class="custom-select" @bind="selectedUnitId">
+                                <option value="">Select Unit</option>
+                                @if (selectedIngredient?.IngredientUnits != null)
+                                {
+                                    @foreach (var unit in selectedIngredient.IngredientUnits)
+                                    {
+                                        <option value="@unit.Id">@unit.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(warningText))
+                    {
+                        <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                    }
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-apply" @onclick="ConfirmSelection">Add to Recipe</button>
+                </div>
+                
+            }
+            else
+            {
+                <div class="modal-header">
+                    <h2 style="display:inline-block"> Create ingredient</h2>
+                    <button class="close-modal-btn" @onclick="Close">&times;</button>
+                </div>
+                <div class="modal-body ">
+                    <div class="mb-1">
+                        <label class="value-text">Name</label>
+                        <input type="text" class="custom-input" @bind="newIngDto.Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="value-text">Preferd unit</label>
+                        <select class="custom-select" @onchange="HandleMainUnitChange">
+                            <option value="">Select Unit</option>
+                            @foreach (var unit in allUnits)
+                            {
+                                <option value="@unit.Id">@unit.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <h5 class="value fs-4">Nutrients for 100g</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="value-text">Calories (kcal)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Calories" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Proteins (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Proteins" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Fats (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Fats" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Carbohydrates (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Carbohydrates" />
+                        </div>
+                        <div class="col-6">
+                            <label class="value-text">Fiber (g)</label>
+                            <input type="number" class="custom-select" @bind="newIngDto.Fiber" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 mt-4">
+                            <h5 class="value fs-4">Additional units</h5>
+                            <p class="value-text text-start">Enter how many grams are in one unit (e.g., 1 piece = 60g).</p>
+
+                            @foreach (var opt in additionalUnits)
+                            {
+                                <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
+                                        <div class="w-50">
+                                            <input type="number" class="custom-input"
+                                                   @bind="opt.ToDefaultUnit"
+                                                   placeholder="Weight" />
+                                        </div>
+                                        <p class="value fs-5 mb-0">g</p>
+
+                                        @if (opt.UnitId != selectedMainUnitId)
+                                        {
+                                            <button type="button" class="btn-delete" @onclick="() => RemoveUnit(opt)">✕</button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2 mt-2 mb-3 align-items-center">
+                                <select class="custom-select w-50" @bind="unitToAddId">
+                                    <option value="@Guid.Empty">-- Select unit to add --</option>
+                                    @foreach (var u in availableUnits)
+                                    {
+                                        <option value="@u.Id">@u.Name</option>
+                                    }
+                                </select>
+
+                                <button class="btn-apply w-50"
+                                        @onclick="AddUnitFromSelect"
+                                        disabled="@(unitToAddId == Guid.Empty)">
+                                    Add unit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(warningText))
+                    {
+                        <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-apply w-100 text-center" @onclick="SaveNewIngredient">Create & Add</button>
+                    <button class="btn btn-link text-gray w-100" @onclick="ToggleMode">Back to Search</button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<RecipeIngredient> OnIngredientAdded { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool isAddMode = true;
+    private string _searchText = "";
+
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            _searchText = value;
+            HandleSearch();
+        }
+    }
+
+    private List<IngredientPreview> FilteredIngredients = new();
+    private IngredientPreview? selectedIngredient;
+    private List<UnitPreviewDto> allUnits = new();
+    private Guid? selectedUnitId;
+    private decimal quantity;
+
+    private string _warningText = "";
+    private CancellationTokenSource? _warningTokenSource;
+    private string warningText
+    {
+        get => _warningText;
+        set
+        {
+            if (_warningText == value) return;
+            _warningText = value;
+
+            _warningTokenSource?.Cancel();
+            _warningTokenSource?.Dispose();
+
+            if (!string.IsNullOrEmpty(_warningText))
+            {
+                _warningTokenSource = new CancellationTokenSource();
+                var token = _warningTokenSource.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(2000, token);
+
+                        _warningText = "";
+                        await InvokeAsync(StateHasChanged);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }, token);
+            }
+        }
+    }
+
+    private System.Timers.Timer? debounceTimer;
+    private IngredientCreateDto newIngDto = new();
+
+    public List<IngredientUnit> additionalUnits = new();
+    private Guid? selectedMainUnitId;
+    private List<UnitPreviewDto> availableUnits = new();
+    private Guid unitToAddId = Guid.Empty;
+
+    private async Task HandleMainUnitChange(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var unitId))
+        {
+            selectedMainUnitId = unitId;
+            var unit = allUnits.FirstOrDefault(u => u.Id == unitId);
+
+            if (unit != null)
+            {
+                if (!additionalUnits.Any(a => a.UnitId == unitId) && unit.Name != "g" && unit.Name != "kg")
+                {
+                    additionalUnits.Add(new IngredientUnit
+                    {
+                        UnitId = unit.Id,
+                        Unit = new Unit() { Id = unit.Id, Name = unit.Name },
+                        ToDefaultUnit = unit.Name.ToLower() == "g" ? 1 : 0
+                    });
+                }
+            }
+            UpdateAvailableUnits();
+        }
+    }
+
+    private void UpdateAvailableUnits()
+    {
+        var usedIds = additionalUnits.Select(a => a.UnitId).ToList();
+        availableUnits = allUnits
+            .Where(u => !usedIds.Contains(u.Id) && u.Name!="g")
+            .OrderBy(u => u.Name)
+            .ToList();
+    }
+
+    private void AddUnitFromSelect()
+    {
+        if (unitToAddId == Guid.Empty) return;
+
+        var unit = allUnits.FirstOrDefault(u => u.Id == unitToAddId);
+        if (unit != null)
+        {
+            additionalUnits.Add(new IngredientUnit
+            {
+                UnitId = unit.Id,
+                Unit = new(){Id = unit.Id, Name = unit.Name},
+                ToDefaultUnit = unit.Name.ToLower() == "g" ? 1 : 0
+            });
+
+            unitToAddId = Guid.Empty;
+            UpdateAvailableUnits();
+        }
+    }
+
+    private void RemoveUnit(IngredientUnit opt)
+    {
+        additionalUnits.Remove(opt);
+        UpdateAvailableUnits();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIngredients();
+
+    }
+
+    private async Task LoadIngredients()
+    {
+        try
+        {
+            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(_searchText, 10);
+        }
+        catch (Exception ex)
+        {
+            warningText = "Error loading ingredients.";
+        }
+    }
+
+    private void HandleSearch()
+    {
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+
+        debounceTimer = new System.Timers.Timer(350);
+        debounceTimer.Elapsed += async (s, e) =>
+        {
+            debounceTimer.Stop();
+            await InvokeAsync(async () =>
+            {
+                await LoadIngredients();
+                StateHasChanged();
+            });
+        };
+        debounceTimer.AutoReset = false;
+        debounceTimer.Start();
+    }
+
+    private async Task ToggleMode()
+    {
+        isAddMode = !isAddMode;
+        if (isAddMode) await LoadIngredients();
+        else
+        {
+            allUnits.Clear();
+            var u = await UnitService.GetAllUnitsAsync();
+            foreach(var unit in u)
+            {
+                allUnits.Add(unit);
+            }
+            UpdateAvailableUnits();
+        }
+
+    }
+
+    private async Task ConfirmSelection()
+    {
+        if (selectedIngredient == null || selectedUnitId == null || quantity <= 0)
+        {
+            warningText = "Please select ingredient and unit.";
+            return;
+        }
+
+        var unit = selectedIngredient.IngredientUnits.FirstOrDefault(u => u.Id == selectedUnitId);
+        if (unit == null) return;
+
+        var result = new RecipeIngredient
+        {
+            IngredientId = selectedIngredient.Id,
+            Quantity = quantity,
+            UnitId = unit.Id,
+            Ingredient = new Ingredient { Name = selectedIngredient.Name },
+            Unit = new Unit { Name = unit.Name }
+        };
+
+        await OnIngredientAdded.InvokeAsync(result);
+
+        selectedIngredient = null;
+        selectedUnitId = null;
+        quantity = 0;
+        Close();
+    }
+
+    private async Task SaveNewIngredient()
+    {
+        if (string.IsNullOrWhiteSpace(newIngDto.Name)) { warningText = "Name is mandatory"; return; }
+        if (newIngDto.Calories < 0) { warningText = "Calories can't be negative"; return; }
+        if (newIngDto.Proteins < 0) { warningText = "Proteins can't be negative"; return; }
+        if (newIngDto.Fats < 0) { warningText = "Fats can't be negative"; return; }
+        if (newIngDto.Carbohydrates < 0) { warningText = "Carbohydrates can't be negative"; return; }
+        if (newIngDto.Fiber < 0) { warningText = "Fiber can't be negative"; return; }
+
+        if (selectedMainUnitId is null) { warningText = "Preferd unit not selected"; return; }
+
+        foreach (var opt in additionalUnits)
+        {
+            if (opt.ToDefaultUnit <= 0)
+            {
+                warningText = $"{opt} doesn't have proper conversion!";
+                return;
+            }
+        }
+
+        newIngDto.DefaultUnitId = selectedMainUnitId??new();
+
+        newIngDto.AdditionalUnits = new();
+        foreach(var unit in additionalUnits)
+        {
+            newIngDto.AdditionalUnits.Add(new() { UnitId = unit.UnitId, ToDefaultUnit = unit.ToDefaultUnit });
+        }
+        if(additionalUnits.FirstOrDefault(u => u.Unit.Name == "g") is null)
+        {
+            var g = allUnits.FirstOrDefault(u => u.Name == "g");
+            newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
+        }
+        var result = await IngredientService.CreateIngredientAsync(newIngDto);
+        if (result.IsSuccess)
+        {
+            newIngDto = new();
+            additionalUnits.Clear();
+            selectedMainUnitId = null;
+            await ToggleMode();
+        }
+        else
+        {
+            warningText = result.Message;
+        }
+    }
+
+    private void Close()
+    {
+        debounceTimer?.Dispose();
+        IsVisible = false;
+        OnClose.InvokeAsync();
+    }
+}

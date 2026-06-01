@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Pinula.Service.Interface;
-using Pinula.Service.Services;
+using Pinula.Shared.Interface;
+using Pinula.Shared.Services;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
 using Pinula.View;
@@ -55,7 +55,7 @@ namespace Pinula.ViewModel
         public ObservableCollection<RecipePreviewDto> MyOwnRecipes { get; set; } = new();
         [ObservableProperty]
         bool myOwnVisible;
-        private readonly RecipeFilterParametrs _myOwnFilter = new RecipeFilterParametrs()
+        private readonly RecipeFilterParameters _myOwnFilter = new RecipeFilterParameters()
         {
             OnlyMine = true,
             Amount = 4
@@ -119,7 +119,7 @@ namespace Pinula.ViewModel
         [RelayCommand]
         public async Task LoadMoreMyOwnAsync() => await LoadMoreRecipesAsync(_myOwnFilter, MyOwnRecipes);
 
-        private async Task LoadMoreRecipesAsync(RecipeFilterParametrs filterPar, ObservableCollection<RecipePreviewDto> list)
+        private async Task LoadMoreRecipesAsync(RecipeFilterParameters filterPar, ObservableCollection<RecipePreviewDto> list)
         {
             if (LoadingRecipes) return;
 
@@ -166,7 +166,18 @@ namespace Pinula.ViewModel
                     Surname = Surname.Trim()
                 };
 
-                var response = await _userService.UpdateUserAsync(updateDto, _selectedPhoto);
+                bool response;
+                if(_selectedPhoto is not null)
+                {
+                    var photo = await _selectedPhoto.OpenReadAsync();
+                    response = await _userService.UpdateUserAsync(updateDto, photo, _selectedPhoto.FileName, _selectedPhoto.ContentType);
+                }
+                else
+                {
+                    response = await _userService.UpdateUserAsync(updateDto, null, null, null);
+                }
+
+
 
                 if (response)
                 {

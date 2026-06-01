@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Pinula.Shared.Models;
 using Pinula.Shared.DTOs;
-using Pinula.Service.Interface;
+using Pinula.Shared.Interface;
 using Pinula.View;
 using Pinula.ModelsUI;
 using System;
@@ -178,12 +178,15 @@ namespace Pinula.ViewModel
 
             var res = await _recipeService.PostCommentAsync(comment);
 
-            RecipeRating = res.NewAverageRating;
-            RecipeUsersRated = res.NewUsersRatedCount;
-            CommentTime = DateOnly.FromDateTime(res.CreatedAt);
+            if (res.NewAverageRating.HasValue )
+            {
+                RecipeRating = res.NewAverageRating ?? 0;
+                RecipeUsersRated = res.NewUsersRatedCount ?? 0;
+            }
+            CommentTime = DateOnly.FromDateTime(res.NewComment.CreatedAt);
 
-            comment.User.Name = res.UserName;
-            comment.User.Surname = res.UserSurname;       
+            comment.User.Name = res.NewComment.UserName;
+            comment.User.Surname = res.NewComment.UserSurname;       
 
             PostBtnVisible = false;
             EditorEditable = false;
@@ -217,9 +220,9 @@ namespace Pinula.ViewModel
 
             if(comment is not null)
             {
-                CommentTime = DateOnly.FromDateTime(comment.CreatedAt);
-                CommentText = comment.Text;
-                SelectRating(comment.Rating);
+                CommentTime = DateOnly.FromDateTime(comment.NewComment.CreatedAt);
+                CommentText = comment.NewComment.Text;
+                SelectRating((int)comment.NewComment.Rating);
                 PostBtnVisible = false;
                 EditorEditable = false;
                 DelGridVisible = true;

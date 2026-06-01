@@ -1,5 +1,5 @@
 ﻿using Pinula.Shared.Models;
-using Pinula.Service;
+using Pinula.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using SQLite;
 using System.Diagnostics;

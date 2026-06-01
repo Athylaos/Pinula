@@ -1,0 +1,259 @@
+﻿@page "/recipes/category/{CategoryId:guid}"
+@using Pinula.Shared.Interface
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Models
+@using Pinula.WASM.Components
+@inject IRecipeService recipeService
+@inject ICategoryService categoryService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+
+<PageTitle>Pinula - @(currentCategory?.Name ?? "Category")</PageTitle>
+
+<div class="recipes-container">
+    
+    <RecipesHeader @ref="headerActionsRef" OnSearchApplied="HandleSearch" />
+
+    <div class="main-content">
+        @if (isActuallySearching)
+        {
+            <div class="search-results-header">
+                <h3 class="d-inline">Results in @currentCategory?.Name (@searchedRecipes.Count)</h3>
+                <button class="btn-cancel" @onclick="ClearAll">Cancel filters</button>
+            </div>
+            
+            <div class="recipes-grid">
+                @if (searchedRecipes != null && searchedRecipes.Any())
+                {
+                    <RecipeGridVertical HasMoreToLoad="false" OnRecipeSelected="RecipeClicked" Recipes="searchedRecipes"></RecipeGridVertical>
+                }
+                else
+                {
+                    <div class="flex-column pt-5">
+                        <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.6rem; font-style:italic;">
+                            No recipes found matching your filters in this category.
+                        </p>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <LoadingView IsLoading="@(isLoading)" Text="Loading category delicacies..." IsFullScreen="true">
+
+                @if (currentCategory != null)
+                {
+                    <div class="category-hero-container mb-4">
+                        <div class="category-hero-card" style="background-image: url('@currentCategory.PictureUrl');">
+                            <div class="category-hero-overlay">
+                                <div class="category-hero-content">
+                                    <span class="category-badge">Category</span>
+                                    <h1 class="category-hero-title">@currentCategory.Name</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (subCategories != null && subCategories.Any())
+                {
+                    <div class="d-flex pb-4 scroll-container">
+                        @foreach (var sub in subCategories)
+                        {
+                            <CategoryCard Category="sub" OnCategorySelected="CategoryClicked" />
+                        }
+                    </div>
+                }
+
+                @if (bestInCategoryRecipes != null && bestInCategoryRecipes.Any())
+                {
+                    <RecipeGridHorizontal Title="Top Rated"
+                                          Subtitle="Highest rated masterpieces here"
+                                          HasMoreToLoad="moreBestToLoad"
+                                          IsLoading="isBestLoading"
+                                          OnLoadMore="LoadMoreBest"
+                                          OnRecipeSelected="RecipeClicked"
+                                          Recipes="bestInCategoryRecipes">
+                    </RecipeGridHorizontal>
+                }
+
+                @if (fastInCategoryRecipes != null && fastInCategoryRecipes.Any())
+                {
+                    <RecipeGridHorizontal Title="Quick Bites"
+                                          Subtitle="Ready before you know it"
+                                          HasMoreToLoad="moreFastToLoad"
+                                          IsLoading="isFastLoading"
+                                          OnLoadMore="LoadMoreFast"
+                                          OnRecipeSelected="RecipeClicked"
+                                          Recipes="fastInCategoryRecipes">
+                    </RecipeGridHorizontal>
+                }
+
+                <div class="section-divider">
+                    <div class="title-block">
+                        <span class="subtitle">Collection</span>
+                        <h2>All Recipes</h2>
+                    </div>
+                    <div class="line"></div>
+                </div>
+
+                @if (allCategoryRecipes != null && allCategoryRecipes.Any())
+                {
+                    <RecipeGridVertical HasMoreToLoad="moreAllToLoad"
+                                        IsLoading="isAllLoading"
+                                        OnLoadMore="LoadMoreAll"
+                                        OnRecipeSelected="RecipeClicked"
+                                        Recipes="allCategoryRecipes">
+                    </RecipeGridVertical>
+                }
+                else
+                {
+                    <div class="flex-column pt-4">
+                        <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.2rem; font-style:italic; color: #666;">
+                            We are currently gathering recipes for this section. Stay tuned!
+                        </p>
+                    </div>
+                }
+
+            </LoadingView>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid CategoryId { get; set; }
+
+    private RecipesHeader? headerActionsRef;
+    private bool isActuallySearching;
+    private bool isLoading = true;
+
+    private Category? currentCategory;
+    private List<Category> subCategories = new();
+    private List<RecipePreviewDto> searchedRecipes = new();
+
+    #region Filtrované Seznamy Receptů
+    private List<RecipePreviewDto> bestInCategoryRecipes = new();
+    private List<RecipePreviewDto> fastInCategoryRecipes = new();
+    private List<RecipePreviewDto> allCategoryRecipes = new();
+
+    private readonly RecipeFilterParameters _bestFilter = new() { MinRating = 4, Amount = 4 };
+    private readonly RecipeFilterParameters _fastFilter = new() { MaxCookingTime = 20, Amount = 4 };
+    private readonly RecipeFilterParameters _allFilter = new() { Sort = SortBy.Newest, Amount = 6 };
+
+    private bool isBestLoading;
+    private bool isFastLoading;
+    private bool isAllLoading;
+
+    private bool moreBestToLoad = true;
+    private bool moreFastToLoad = true;
+    private bool moreAllToLoad = true;
+
+    private async Task LoadMoreBest() => bestInCategoryRecipes = await LoadMoreLogic(_bestFilter, bestInCategoryRecipes, status => moreBestToLoad = status, () => isBestLoading = true, () => isBestLoading = false);
+    private async Task LoadMoreFast() => fastInCategoryRecipes = await LoadMoreLogic(_fastFilter, fastInCategoryRecipes, status => moreFastToLoad = status, () => isFastLoading = true, () => isFastLoading = false);
+    private async Task LoadMoreAll() => allCategoryRecipes = await LoadMoreLogic(_allFilter, allCategoryRecipes, status => moreAllToLoad = status, () => isAllLoading = true, () => isAllLoading = false);
+
+    private async Task<List<RecipePreviewDto>> LoadMoreLogic(RecipeFilterParameters filter, List<RecipePreviewDto> currentList, Action<bool> setMoreToLoad, Action startLoading, Action stopLoading)
+    {
+        startLoading();
+        filter.Skip = currentList.Count;
+
+        filter.CategoryId = CategoryId;
+        var results = await recipeService.GetFilteredRecipePreviewsAsync(filter, null);
+        var newList = results?.ToList() ?? new List<RecipePreviewDto>();
+
+        if (!newList.Any() || newList.Count < filter.Amount)
+        {
+            setMoreToLoad(false);
+        }
+
+        currentList.AddRange(newList);
+        stopLoading();
+        return currentList;
+    }
+    #endregion
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isActuallySearching = false;
+        moreBestToLoad = true;
+        moreFastToLoad = true;
+        moreAllToLoad = true;
+
+        await LoadCategoryDashboardData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isLoading)
+        {
+            try { await JSRuntime.InvokeVoidAsync("setupHorizontalScroll"); }
+            catch (Exception ex) { Console.WriteLine($"JS Error"); }
+        }
+    }
+
+    private async Task LoadCategoryDashboardData()
+    {
+        isLoading = true;
+        try
+        {
+            _bestFilter.CategoryId = CategoryId;
+            _fastFilter.CategoryId = CategoryId;
+            _allFilter.CategoryId = CategoryId;
+
+            var categoryDetailTask = categoryService.GetCategoryByIdAsync(CategoryId);
+
+            var bestTask = recipeService.GetFilteredRecipePreviewsAsync(_bestFilter, null);
+            var fastTask = recipeService.GetFilteredRecipePreviewsAsync(_fastFilter, null);
+            var allTask = recipeService.GetFilteredRecipePreviewsAsync(_allFilter, null);
+
+            await Task.WhenAll(categoryDetailTask, bestTask, fastTask, allTask);
+
+            currentCategory = categoryDetailTask.Result;
+            subCategories = currentCategory?.ChildCategories?.ToList() ?? new();
+
+            bestInCategoryRecipes = bestTask.Result?.ToList() ?? new();
+            fastInCategoryRecipes = fastTask.Result?.ToList() ?? new();
+            allCategoryRecipes = allTask.Result?.ToList() ?? new();
+
+            if (bestInCategoryRecipes.Count < _bestFilter.Amount) moreBestToLoad = false;
+            if (fastInCategoryRecipes.Count < _fastFilter.Amount) moreFastToLoad = false;
+            if (allCategoryRecipes.Count < _allFilter.Amount) moreAllToLoad = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading category details");
+        }
+        finally { isLoading = false; }
+    }
+
+    private async Task HandleSearch(RecipeFilterParameters activeParams)
+    {
+        if (string.IsNullOrWhiteSpace(activeParams.SearchTerm) &&
+            activeParams.MaxCookingTime == null &&
+            activeParams.MaxCalories == null &&
+            activeParams.MinRating == null &&
+            activeParams.MaxDifficulty == null &&
+            !activeParams.OnlyFavorites)
+        {
+            isActuallySearching = false;
+            return;
+        }
+
+        isActuallySearching = true;
+
+        activeParams.CategoryId = CategoryId;
+        var recipes = await recipeService.GetFilteredRecipePreviewsAsync(activeParams, null);
+        searchedRecipes = recipes?.ToList() ?? new();
+    }
+
+    private async Task ClearAll()
+    {
+        if (headerActionsRef != null)
+        {
+            await headerActionsRef.Reset();
+        }
+    }
+
+    private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
+    private void CategoryClicked(Category c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
+}

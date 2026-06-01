@@ -1,0 +1,118 @@
+﻿@page "/login"
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.WASM.Services
+@inject IUserService UserService
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+@inject ApiAuthenticationStateProvider AuthStateProvider
+@inject ITokenStorage TokenStorage
+
+<div class="login-page">
+    <div class="login-container">
+        
+        <div class="header-section">
+            <h1 class="login-title">Login</h1>
+            <p class="login-subtitle">Welcome back</p>
+        </div>
+
+        <div class="form-section">
+            <div class="input-group">
+                <input type="email"
+                       placeholder="Email"
+                       @bind="email"
+                       class="custom-input" />
+            </div>
+
+            <div class="input-group">
+                <input type="password"
+                       placeholder="Password"
+                       @bind="password"
+                       class="custom-input" />
+            </div>
+
+            @if (indicatorVisibility)
+            {
+                <div class="error-message">
+                    @indicatorText
+                </div>
+            }
+
+            <button class="btn-continue" @onclick="LoginBtn" disabled="@isBusy">
+                @if (isBusy)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <span>Continue</span>
+                }
+            </button>
+        </div>
+
+        <div class="footer-section">
+            <button class="btn-link" @onclick="CreateAccountBtn">Create Account</button>
+            <button class="btn-link" @onclick="ForgotPasswordBtn">Forgot password</button>
+        </div>
+
+        <button class="btn-skip" @onclick="SkipBtn">Skip</button>
+    </div>
+</div>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private bool indicatorVisibility = false;
+    private string indicatorText = string.Empty;
+    private bool isBusy = false;
+
+    private async Task LoginBtn()
+    {
+        isBusy = true;
+        indicatorVisibility = false;
+
+        try
+        {
+            var loginDto = new UserLoginDto { Email = email, Password = password };
+            var result = await UserService.LoginAsync(loginDto);
+
+            if (result == null)
+            {
+                indicatorText = "Wrong email or password";
+                indicatorVisibility = true;
+            }
+            else
+            {
+                var customAuthStateProvider = (ApiAuthenticationStateProvider)AuthStateProvider;
+                customAuthStateProvider.MarkUserAsAuthenticated(await TokenStorage.GetTokenAsync());
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("history.back");
+                }
+                catch
+                {
+                    NavManager.NavigateTo("/");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            indicatorText = "An error occurred during login";
+            indicatorVisibility = true;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void CreateAccountBtn() => NavManager.NavigateTo("/register");
+
+    private void ForgotPasswordBtn()
+    {
+        indicatorText = "For password reset please contact support";
+        indicatorVisibility = true;
+    }
+
+    private void SkipBtn() => JSRuntime.InvokeVoidAsync("history.back");
+}

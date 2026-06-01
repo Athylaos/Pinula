@@ -1,0 +1,41 @@
+﻿@inject NavigationManager NavManager
+
+<div class="bottom-nav-container ">
+    @*
+    <div class="nav-item @GetActiveClass("/fridge")" @onclick="@(() => NavManager.NavigateTo("/fridge"))">
+        <img src="images/icons/fridge.png" alt="Fridge" />
+    </div>
+    *@
+    <div class="nav-item @GetActiveClass("/recipes")" @onclick="@(() => NavManager.NavigateTo("/recipes"))">
+        <img src="images/icons/book.png" alt="Recipes" />
+    </div>
+
+    <div class="nav-item @GetActiveClass("/profile")" @onclick="@(() => NavManager.NavigateTo("/profile"))">
+        <img src="images/icons/home.png" alt="Home" />
+    </div>
+    @*
+    <div class="nav-item @GetActiveClass("/calories")" @onclick="@(() => NavManager.NavigateTo("/calories"))">
+        <img src="images/icons/nutrition.png" alt="Calories" />
+    </div>
+    *@
+    <div class="nav-item @GetActiveClass("/planner")" @onclick="@(() => NavManager.NavigateTo("/planner"))">
+        <img src="images/icons/calendar.png" alt="Planner" />
+    </div>
+
+</div>
+
+@code {
+    private string GetActiveClass(string pagePath)
+    {
+        var relativePath = "/" + NavManager.ToBaseRelativePath(NavManager.Uri);
+        
+        if (pagePath == "/" && relativePath == "/") return "active";
+        
+        return relativePath.StartsWith(pagePath) && pagePath != "/" ? "active" : "";
+    }
+
+    protected override void OnInitialized()
+    {
+        NavManager.LocationChanged += (s, e) => StateHasChanged();
+    }
+}

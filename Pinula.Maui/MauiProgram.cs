@@ -1,18 +1,17 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
-using Pinula.Service.Services;
+using Pinula.Shared.Services;
 using Pinula.View;
 using Pinula.View.Popups;
 using Pinula.ViewModel;
 using Pinula.ViewModel.Popups;
-using Pinula.Service.Interface;
+using Pinula.Shared.Interface;
 using Microsoft.Extensions.Logging;
 using Sharpnado.MaterialFrame;
 using Sharpnado.Shades;
 using UraniumUI;
 using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
+using Pinula.Maui.Service;
 
 
 namespace Pinula
@@ -53,7 +52,7 @@ namespace Pinula
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-
+            builder.Services.AddSingleton<ITokenStorage, MauiTokenStorage>();
             builder.Services.AddTransient<AuthHttpMessageHandler>();
 
             builder.Services.AddHttpClient("CookApi", client =>
@@ -76,12 +75,11 @@ namespace Pinula
 
 
 
-
-            builder.Services.AddSingleton<IIngredientService>(sp => new IngredientService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi")));
-            builder.Services.AddSingleton<IRecipeService>(sp => new RecipeService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi")));
-            builder.Services.AddSingleton<ICategoryService>(sp => new CategoryService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi")));
-            builder.Services.AddSingleton<IUserService>(sp => new UserService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi")));
-            builder.Services.AddSingleton<IUnitService>(sp => new UnitService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi")));
+            builder.Services.AddSingleton<IIngredientService>(sp => new IngredientService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<IngredientService>>()));
+            builder.Services.AddSingleton<IRecipeService>(sp => new RecipeService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<RecipeService>>()));
+            builder.Services.AddSingleton<ICategoryService>(sp => new CategoryService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<CategoryService>>()));
+            builder.Services.AddSingleton<IUserService>(sp => new UserService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ITokenStorage>(), sp.GetRequiredService<ILogger<UserService>>()));
+            builder.Services.AddSingleton<IUnitService>(sp => new UnitService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger>()));
 
             builder.Services.AddSingleton<LoginPage>();
             builder.Services.AddTransient<LoginViewModel>();

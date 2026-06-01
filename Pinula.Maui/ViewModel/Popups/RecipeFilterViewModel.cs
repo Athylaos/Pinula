@@ -13,11 +13,11 @@ namespace Pinula.ViewModel.Popups
 {
     public partial class RecipeFilterViewModel : ObservableObject
     {
-        private TaskCompletionSource<RecipeFilterParametrs?> _resultSource = new();
-        public Task<RecipeFilterParametrs?> Result => _resultSource.Task;
+        private TaskCompletionSource<RecipeFilterParameters?> _resultSource = new();
+        public Task<RecipeFilterParameters?> Result => _resultSource.Task;
 
         [ObservableProperty]
-        private RecipeFilterParametrs filterParametrs = new();
+        private RecipeFilterParameters filterParametrs = new();
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(DisplayTime))]
@@ -103,7 +103,7 @@ namespace Pinula.ViewModel.Popups
 
         }
 
-        partial void OnFilterParametrsChanged(RecipeFilterParametrs value)
+        partial void OnFilterParametrsChanged(RecipeFilterParameters value)
         {
             if (value == null) return;
 

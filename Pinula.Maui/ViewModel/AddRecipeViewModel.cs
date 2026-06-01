@@ -4,8 +4,8 @@ using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pinula.Shared.Models;
-using Pinula.Service;
-using Pinula.Service.Interface;
+using Pinula.Shared;
+using Pinula.Shared.Interface;
 using Pinula.View.Popups;
 using Pinula.ViewModel.Popups;
 using Microsoft.Maui.Controls.Shapes;
@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 using Pinula.Shared.DTOs;
+
 
 
 namespace Pinula.ViewModel
@@ -256,11 +257,19 @@ namespace Pinula.ViewModel
                 CategoriesIds = Categories.Where(c => c.IsSelected).Select(c => c.Category.Id).ToList(),
                 RecipeIngredients = Ingredients.ToList(),
                 RecipeSteps = RecipeSteps.ToList(),
-                //PhotoUrl = PhotoPath,
 
             };
 
-            await _recipesService.SaveRecipeAsync(rc, _selectedPhoto);
+            if(_selectedPhoto is not null)
+            {
+                var photo = await _selectedPhoto.OpenReadAsync();
+
+                await _recipesService.SaveRecipeAsync(rc, photo, _selectedPhoto.FileName, _selectedPhoto.ContentType);
+            }
+            else
+            {
+                await _recipesService.SaveRecipeAsync(rc, null, null, null);
+            }
 
 
             Title = string.Empty;

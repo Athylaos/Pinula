@@ -1,0 +1,166 @@
+﻿@using System.Timers
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Enums
+@implements IDisposable
+@inject NavigationManager NavManager
+@inject IJSRuntime JS
+
+<div class="header-actions">
+    <img src="favicon.png" class="header-logo"/>
+    <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search recipes..." value="@searchTerm" @oninput="HandleSearchInput" />
+        <img src="images/icons/search.png" />
+    </div>
+    <button class="btn-icon btn-filter" @onclick="ToggleFilter">
+        <img src="images/icons/filter.png" class="recipe-nav-icon" />
+    </button>
+    <button class="btn-icon btn-add" @onclick="AddRecipe">
+        <img src="images/icons/plus.png" class="recipe-nav-icon" />
+    </button>
+</div>
+
+@if (showFilterPopup)
+{
+    <div class="modal-backdrop" @onclick="ToggleFilter">
+        <div class="glass-modal" @onclick:stopPropagation="true">
+
+            <div class="modal-header">
+                <h2 style="display:inline-block">Filter</h2>
+                <button class="close-modal-btn" @onclick="ToggleFilter"> &times; </button >
+            </div>
+
+            <div class="modal-body">
+                <div class="filter-row">
+                    <label>Cooking time</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="cookingTimeOn" />
+                </div>
+                <div class="slider-row @(!cookingTimeOn ? "disabled" : "")">
+                    <input type="range" min="5" max="180" step="5" @bind="filterParams.MaxCookingTime" @bind:event="oninput" disabled="@(!cookingTimeOn)" />
+                    <span class="value-text">@(filterParams.MaxCookingTime)m</span>
+                </div>
+
+                <div class="filter-row mt-4">
+                    <label>Calories</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="caloriesOn" />
+                </div>
+                <div class="slider-row @(!caloriesOn ? "disabled" : "")">
+                    <input type="range" min="100" max="2500" step="50" @bind="filterParams.MaxCalories" @bind:event="oninput" disabled="@(!caloriesOn)" />
+                    <span class="value-text">@(filterParams.MaxCalories)kcal</span>
+                </div>
+
+                <div class="filter-row mt-4">
+                    <label>Rating</label>
+                    <span class="btn-clear" @onclick="ClearRating">Clear</span>
+                </div>
+                <div class="rating-stars">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        var starValue = i;
+                        <img src="@(filterParams.MinRating >= starValue ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" class="time-icon"
+                             @onclick="() => SetRating(starValue)" />
+                    }
+                </div>
+
+                <div class="filter-row mt-4">
+                    <label>Difficulty</label>
+                </div>
+                <div class="difficulty-grid">
+                    @foreach (var diff in Enum.GetValues<DifficultyLevel>())
+                    {
+                        <button class="diff-btn @(filterParams.MaxDifficulty == (int)diff ? "active" : "")"
+                                @onclick="() => SetDifficulty(diff)">
+                            @diff
+                        </button>
+                    }
+                </div>
+
+                <div class="filter-row mt-4 mb-4">
+                    <label>Only favorite</label>
+                    <input type="checkbox" class="custom-checkbox" @bind="filterParams.OnlyFavorites" />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-apply" @onclick="ApplyFilters">Apply</button>
+                </div>
+            </div>         
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<RecipeFilterParameters> OnSearchApplied { get; set; }
+
+    private RecipeFilterParameters filterParams = new() { MaxCookingTime = 20, MaxCalories = 1000 };
+    private string searchTerm = "";
+    private bool showFilterPopup;
+    private bool cookingTimeOn;
+    private bool caloriesOn;
+    private Timer? debounceTimer;
+
+    protected override void OnInitialized()
+    {
+        debounceTimer = new Timer(1000);
+        debounceTimer.AutoReset = false;
+        debounceTimer.Elapsed += async (sender, e) =>
+        {
+            await InvokeAsync(TriggerSearchCall);
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        debounceTimer?.Stop();
+        debounceTimer?.Start();
+    }
+
+    private void ToggleFilter() => showFilterPopup = !showFilterPopup;
+
+    private void SetDifficulty(DifficultyLevel diff)
+    {
+        if (filterParams.MaxDifficulty == (int)diff) filterParams.MaxDifficulty = null;
+        else filterParams.MaxDifficulty = (int)diff;
+    }
+
+    private void SetRating(int rating) => filterParams.MinRating = rating;
+    private void ClearRating() => filterParams.MinRating = null;
+
+    private async Task ApplyFilters()
+    {
+        showFilterPopup = false;
+        await TriggerSearchCall();
+    }
+
+    private async Task TriggerSearchCall()
+    {
+        var processedParams = new RecipeFilterParameters
+        {
+            SearchTerm = searchTerm,
+            OnlyFavorites = filterParams.OnlyFavorites,
+            MaxDifficulty = filterParams.MaxDifficulty,
+            MaxCookingTime = cookingTimeOn ? filterParams.MaxCookingTime : null,
+            MaxCalories = caloriesOn ? filterParams.MaxCalories : null,
+            MinRating = filterParams.MinRating
+        };
+
+        await OnSearchApplied.InvokeAsync(processedParams);
+    }
+
+    public async Task Reset()
+    {
+        searchTerm = string.Empty;
+        filterParams = new() { MaxCookingTime = 20, MaxCalories = 1000 };
+        cookingTimeOn = false;
+        caloriesOn = false;
+        showFilterPopup = false;
+        await TriggerSearchCall();
+    }
+
+    private void AddRecipe() => NavManager.NavigateTo("/recipes/add");
+
+    public void Dispose()
+    {
+        debounceTimer?.Dispose();
+    }
+}

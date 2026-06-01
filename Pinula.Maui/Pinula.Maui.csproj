@@ -39,151 +39,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
-
-		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
-		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Include="Resources\Images\**\*" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
-		
-		<!-- Custom Fonts -->
-		<MauiFont Include="Resources\Fonts\*" />
 
-		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+		<MauiFont Include="Resources\Fonts\**\*" />
+
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Remove="Resources\Fonts\Alegreya\Alegreya-Italic-VariableFont_wght.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\Alegreya-VariableFont_wght.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-Black.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-BlackItalic.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-Bold.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-BoldItalic.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-ExtraBold.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-ExtraBoldItalic.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-Italic.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-Medium.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-MediumItalic.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-Regular.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-SemiBold.ttf" />
-	  <None Remove="Resources\Fonts\Alegreya\static\Alegreya-SemiBoldItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\Nunito-Italic-VariableFont_wght.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\Nunito-VariableFont_wght.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Black.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-BlackItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Bold.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-BoldItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-ExtraBold.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-ExtraBoldItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-ExtraLight.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-ExtraLightItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Italic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Light.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-LightItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Medium.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-MediumItalic.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-Regular.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-SemiBold.ttf" />
-	  <None Remove="Resources\Fonts\Nunito\static\Nunito-SemiBoldItalic.ttf" />
-	  <None Remove="Resources\Images\Categories\breakfast_icon.png" />
-	  <None Remove="Resources\Images\Categories\dessert_icon.png" />
-	  <None Remove="Resources\Images\Categories\dinner_icon.png" />
-	  <None Remove="Resources\Images\Categories\drinks_icon.png" />
-	  <None Remove="Resources\Images\Categories\lunch_icon.png" />
-	  <None Remove="Resources\Images\Categories\salad_icon.png" />
-	  <None Remove="Resources\Images\Categories\snack_icon.png" />
-	  <None Remove="Resources\Images\Categories\soup_icon.png" />
-	  <None Remove="Resources\Images\Icons\add_recepie.png" />
-	  <None Remove="Resources\Images\Icons\back.png" />
-	  <None Remove="Resources\Images\Icons\calories.png" />
-	  <None Remove="Resources\Images\Icons\chat.png" />
-	  <None Remove="Resources\Images\Icons\cooking.png" />
-	  <None Remove="Resources\Images\Icons\delete.png" />
-	  <None Remove="Resources\Images\Icons\difficulty.png" />
-	  <None Remove="Resources\Images\Icons\favorite.png" />
-	  <None Remove="Resources\Images\Icons\filter.png" />
-	  <None Remove="Resources\Images\Icons\home.png" />
-	  <None Remove="Resources\Images\Icons\menu.png" />
-	  <None Remove="Resources\Images\Icons\pencil.png" />
-	  <None Remove="Resources\Images\Icons\plus.png" />
-	  <None Remove="Resources\Images\Icons\rating.png" />
-	  <None Remove="Resources\Images\Icons\search.png" />
-	  <None Remove="Resources\Images\Icons\share.png" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiFont Include="Resources\Fonts\Alegreya\Alegreya-Italic-VariableFont_wght.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\Alegreya-VariableFont_wght.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-Black.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-BlackItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-Bold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-BoldItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-ExtraBold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-ExtraBoldItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-Italic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-Medium.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-MediumItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-Regular.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-SemiBold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Alegreya\static\Alegreya-SemiBoldItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\Nunito-Italic-VariableFont_wght.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\Nunito-VariableFont_wght.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Black.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-BlackItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Bold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-BoldItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-ExtraBold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-ExtraBoldItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-ExtraLight.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-ExtraLightItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Italic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Light.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-LightItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Medium.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-MediumItalic.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-Regular.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-SemiBold.ttf" />
-	  <MauiFont Include="Resources\Fonts\Nunito\static\Nunito-SemiBoldItalic.ttf" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiImage Include="Resources\Images\Categories\breakfast_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\dessert_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\dinner_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\drinks_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\lunch_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\salad_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\snack_icon.png" />
-	  <MauiImage Include="Resources\Images\Categories\soup_icon.png" />
-	  <MauiImage Include="Resources\Images\Icons\account.png" />
-	  <MauiImage Include="Resources\Images\Icons\add_recepie.png" />
-	  <MauiImage Include="Resources\Images\Icons\back.png" />
-	  <MauiImage Include="Resources\Images\Icons\book.png" />
-	  <MauiImage Include="Resources\Images\Icons\calendar.png" />
-	  <MauiImage Include="Resources\Images\Icons\calories.png" />
-	  <MauiImage Include="Resources\Images\Icons\chat.png" />
-	  <MauiImage Include="Resources\Images\Icons\cooking.png" />
-	  <MauiImage Include="Resources\Images\Icons\delete.png" />
-	  <MauiImage Include="Resources\Images\Icons\difficulty.png" />
-	  <MauiImage Include="Resources\Images\Icons\favorite.png" />
-	  <MauiImage Include="Resources\Images\Icons\favorite_full.png" />
-	  <MauiImage Include="Resources\Images\Icons\filter.png" />
-	  <MauiImage Include="Resources\Images\Icons\fridge.png" />
-	  <MauiImage Include="Resources\Images\Icons\home.png" />
-	  <MauiImage Include="Resources\Images\Icons\menu.png" />
-	  <MauiImage Include="Resources\Images\Icons\nutrition.png" />
-	  <MauiImage Include="Resources\Images\Icons\pencil.png" />
-	  <MauiImage Include="Resources\Images\Icons\plus.png" />
-	  <MauiImage Include="Resources\Images\Icons\rating.png" />
-	  <MauiImage Include="Resources\Images\Icons\search.png" />
-	  <MauiImage Include="Resources\Images\Icons\share.png" />
-	  <MauiImage Include="Resources\Images\Icons\spoon_fork.png" />
-	  <MauiImage Include="Resources\Images\Icons\time.png" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />

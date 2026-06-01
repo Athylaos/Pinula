@@ -1,0 +1,170 @@
+﻿@page "/register"
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using System.Net.Mail
+@inject IUserService UserService
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+
+<div class="login-page">
+    <div class="login-container">
+        
+        <div class="header-section">
+            <h1 class="login-title">Register</h1>
+            <p class="login-subtitle">Join us!</p>
+        </div>
+
+        <div class="form-section">
+            <div class="input-group">
+                <input type="text" placeholder="Name" @bind="nameEntry" class="custom-input" />
+            </div>
+
+            <div class="input-group">
+                <input type="text" placeholder="Surname" @bind="surnameEntry" class="custom-input" />
+            </div>
+
+            <div class="input-group">
+                <input type="email" placeholder="Email" @bind="emailEntry" class="custom-input" />
+            </div>
+
+            <div class="input-group">
+                <input type="password" placeholder="Password" @bind="password1" class="custom-input" />
+            </div>
+
+            <div class="input-group">
+                <input type="password" placeholder="Confirm Password" @bind="password2" class="custom-input" />
+            </div>
+
+            @if (indicatorVisibility)
+            {
+                <div class="error-message">
+                    @indicatorText
+                </div>
+            }
+
+            <button class="btn-continue" @onclick="RegisterBtn" disabled="@isBusy">
+                @if (isBusy)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <span>Continue</span>
+                }
+            </button>
+        </div>
+
+        <div class="footer-section">
+            <button class="btn-link" @onclick="LoginBtn">Login to existing account</button>
+        </div>
+
+        <div class="bottom-controls">
+            <button class="btn-skip" @onclick="BackBtn">Back</button>
+            <button class="btn-skip" @onclick="SkipBtn">Skip</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string nameEntry = "";
+    private string surnameEntry = "";
+    private string emailEntry = "";
+    private string password1 = "";
+    private string password2 = "";
+
+    private bool indicatorVisibility = false;
+    private string indicatorText = "";
+    private bool isBusy = false;
+
+    private async Task RegisterBtn()
+    {
+        if (string.IsNullOrWhiteSpace(nameEntry) || string.IsNullOrWhiteSpace(surnameEntry) || string.IsNullOrWhiteSpace(emailEntry))
+        {
+            ShowError("Please fill in all fields");
+            return;
+        }
+
+        if (!IsValidEmail(emailEntry))
+        {
+            ShowError("Invalid email format");
+            return;
+        }
+
+        if (password1 != password2)
+        {
+            ShowError("Passwords don't match");
+            return;
+        }
+
+        if (password1.Length < 6)
+        {
+            ShowError("Password has to be atleast 5 characters long");
+            return;
+        }
+
+
+        isBusy = true;
+        indicatorVisibility = false;
+
+        try
+        {
+            var registrationDto = new UserRegistrationDto
+            {
+                Name = nameEntry,
+                Surname = surnameEntry,
+                Email = emailEntry,
+                Password = password1
+            };
+
+            var success = await UserService.RegisterAsync(registrationDto);
+            if (!success)
+            {
+                ShowError("This email is already registered, please login");
+                return;
+            }
+
+            var loginResult = await UserService.LoginAsync(new UserLoginDto { Email = emailEntry, Password = password1 });
+            if (loginResult != null)
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("history.go", -2);
+                }
+                catch
+                {
+                    NavManager.NavigateTo("/");
+                }
+            }
+        }
+        catch (Exception)
+        {
+            ShowError("An error occurred during registration");
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void ShowError(string text)
+    {
+        indicatorText = text;
+        indicatorVisibility = true;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new MailAddress(email);
+            return addr.Address == email;
+        }
+        catch { return false; }
+    }
+
+    private void LoginBtn() => NavManager.NavigateTo("/login");
+
+    private async Task BackBtn() => await JSRuntime.InvokeVoidAsync("history.go", -2);
+
+    private void SkipBtn() => NavManager.NavigateTo("/");
+}

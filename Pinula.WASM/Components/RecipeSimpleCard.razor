@@ -1,0 +1,25 @@
+﻿@using Pinula.Shared.DTOs
+
+<div class="recipe-card" @onclick="OnClick">
+    <img src="@Recipe.PhotoUrl" class="recipe-img" />
+    <div class="recipe-overlay">
+        <span class="recipe-title">@Recipe.Title</span>
+        <div class="recipe-badge-container">
+            <div class="recipe-badge">
+                <span>@Recipe.CookingTime</span>
+                <img src="images/icons/time.png" class="time-icon" />
+            </div>
+            <div class="recipe-badge">
+                <span>@Recipe.Rating.Value.ToString("0.#")</span>
+                <img src="images/icons/favorite_full.png" class="time-icon" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RecipePreviewDto Recipe { get; set; } = null!;
+    [Parameter] public EventCallback<RecipePreviewDto> OnRecipeSelected { get; set; }
+
+    private async Task OnClick() => await OnRecipeSelected.InvokeAsync(Recipe);
+}

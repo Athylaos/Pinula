@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavManager
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <div class="container mt-5">
+                            <div class="alert alert-danger">
+                                <h4>For this action you need to be logged in</h4>
+                                <button onclick="@LoginBtn" class="btn-cancel-mp" style="color:black;">Log in</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="container mt-5">
+                            <div class="alert alert-danger">
+                                <h4>Access denied</h4>
+                                <p>You do not have sufficient permissions (Admin required).</p>
+                                <button onclick="@LoginBtn" class="btn-cancel-mp" style="color:black;">Log in to admin account</button>
+                            </div>
+                        </div>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+
+@code{
+    private void LoginBtn() => NavManager.NavigateTo("/register");
+}

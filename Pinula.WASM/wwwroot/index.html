@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pinula.WASM</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="Pinula.WASM.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <style>
+            .loading-container {
+                background-color: #1C1C1C;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                width: 100vw;
+                color: white;
+                font-family: 'Alegreya', sans-serif;
+            }
+
+            .inner-container {
+                position: relative;
+                width: 200px;
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .spinner {
+                position: absolute;
+                border: 5px solid rgba(255, 255, 255, 0.1);
+                border-left-color: #1D4934;
+                border-radius: 50%;
+                width: 100%;
+                height: 100%;
+                animation: spin 1s linear infinite;
+                box-sizing: border-box;
+            }
+
+            .logo {
+                width: 85%;
+                height: 85%;
+                border-radius: 50%;
+                object-fit: cover;
+                z-index: 2;
+            }
+
+            .loading-text {
+                font-family: Alegreya, sans-serif;
+                font-style: italic;
+                margin-top: 15px;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
+        <div class="loading-container">
+            <div class="inner-container">
+
+                <div class="spinner"></div>
+
+                <img src="images/icons/PinulaLogo1024.png" class="logo" />
+
+            </div>
+            <p class="loading-text">Loading...</p>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script>
+        window.setupHorizontalScroll = function () {
+            const containers = document.querySelectorAll('.scroll-container');
+
+            containers.forEach(container => {
+                const newWheelHandler = (evt) => {
+                    if (evt.deltaY !== 0) {
+                        evt.preventDefault();
+                        container.scrollLeft += evt.deltaY;
+                    }
+                };
+                container.onwheel = newWheelHandler;
+            });
+        };
+    </script>
+</body>
+
+</html>

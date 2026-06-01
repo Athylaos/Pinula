@@ -1,0 +1,135 @@
+﻿@using Pinula.Shared.DTOs
+@using Pinula.Shared.Enums
+@inject IJSRuntime JSRuntime
+
+<div class="modal-overlay" @onclick="CloseGroupModalInternal">
+    <div class="glass-modal" @onclick:stopPropagation>
+        <div class="modal-header">
+            <h2>Group Management</h2>
+            <button class="close-modal-btn" @onclick="CloseGroupModalInternal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            @if (!isNotInGroup && groupDetail != null)
+            {
+                <div class="modal-section">
+                    <label class="section-label">Group Name</label>
+                    <div class="inline-edit-box">
+                        <input type="text" @bind="groupDetail.Name" class="modal-input" />
+                        <button class="btn-save-name" @onclick="UpdateGroupNameInternal">Edit</button>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <label class="section-label">Invitation Code (Click to Copy)</label>
+                    <div class="code-copy-panel" @onclick="CopyInviteCode">
+                        <span class="invite-code-text">@groupDetail.InviteCode</span>
+                        <span class="copy-badge">
+                            @(isCopied ? "Copied!" : "Copy")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <label class="section-label">Members (@Members?.Count)</label>
+                    <div class="members-list-container">
+                        @if (Members != null)
+                        {
+                            @foreach (var member in Members)
+                            {
+                                <div class="member-item-row">
+                                    <img src="@member.AvatarUrl" class="member-row-avatar" />
+                                    <div class="member-row-info">
+                                        <span class="member-row-name">@member.Name @member.Surname</span>
+                                        <span class="member-row-role">Member</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer-danger">
+                    <button class="btn-leave-group" @onclick="LeaveGroupInternal">
+                        Leave Group
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="modal-no-group-tabs">
+                    <div class="action-card-modal">
+                        <h3>Setup Household</h3>
+                        <input type="text" placeholder="Group Name..." @bind="newGroupName" class="modal-input-spaced" />
+                        <button class="btn-accent w-100" @onclick="CreateGroupInternal">Confirm & Create</button>
+                    </div>
+                    <div class="divider-text">OR</div>
+                    <div class="action-card-modal">
+                        <h3>Enter Invitation Key</h3>
+                        <input type="text" placeholder="XXXX-XXXX-XXXX" @bind="joinGroupCode" class="modal-input-spaced" />
+                        <button class="btn-accent-secondary w-100" @onclick="JoinGroupInternal">Confirm & Join</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool isNotInGroup { get; set; }
+    [Parameter] public GroupDetailDto? groupDetail { get; set; }
+    [Parameter] public List<UserDisplayDto> Members { get; set; } = new();
+
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<string> OnCreateGroup { get; set; }
+    [Parameter] public EventCallback<string> OnJoinGroup { get; set; }
+    [Parameter] public EventCallback OnLeaveGroup { get; set; }
+    [Parameter] public EventCallback<string> OnUpdateGroupName { get; set; }
+
+    private string newGroupName = "";
+    private string joinGroupCode = "";
+    private bool isCopied = false;
+
+    private async Task CloseGroupModalInternal() => await OnClose.InvokeAsync();
+
+    private async Task CreateGroupInternal()
+    {
+        if (!string.IsNullOrWhiteSpace(newGroupName))
+        {
+            await OnCreateGroup.InvokeAsync(newGroupName);
+            newGroupName = "";
+        }
+    }
+
+    private async Task JoinGroupInternal()
+    {
+        if (!string.IsNullOrWhiteSpace(joinGroupCode))
+        {
+            await OnJoinGroup.InvokeAsync(joinGroupCode);
+            joinGroupCode = "";
+        }
+    }
+
+    private async Task LeaveGroupInternal()
+    {
+        await OnLeaveGroup.InvokeAsync();
+    }
+
+    private async Task UpdateGroupNameInternal()
+    {
+        if (groupDetail != null && !string.IsNullOrWhiteSpace(groupDetail.Name))
+        {
+            await OnUpdateGroupName.InvokeAsync(groupDetail.Name);
+        }
+    }
+
+    private async Task CopyInviteCode()
+    {
+        if (groupDetail == null) return;
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", groupDetail.InviteCode);
+        isCopied = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        isCopied = false;
+    }
+}

@@ -2,12 +2,12 @@
 using CommunityToolkit.Mvvm.Input;
 using Pinula.Shared.Models;
 using Pinula.Shared.DTOs;
-using Pinula.Service;
+using Pinula.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using Pinula.Service.Interface;
+using Pinula.Shared.Interface;
 
 namespace Pinula.ViewModel.Popups
 {

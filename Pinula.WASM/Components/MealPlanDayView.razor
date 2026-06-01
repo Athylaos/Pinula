@@ -1,0 +1,65 @@
+﻿@using Pinula.Shared.DTOs
+@using Pinula.Shared.Enums
+
+<div class="day-content">
+
+    @foreach (var mealType in Enum.GetValues<MealType>())
+    {
+        var mealsInCategory = DayPlans.Where(p => p.MealType == mealType).ToList();
+
+        <div class="meal-section">
+            <div class="meal-section-header">
+                <h3>@mealType.ToString()</h3>
+                <button class="btn-icon-add" @onclick="() => OnAddMeal.InvokeAsync(mealType)">
+                    + Add
+                </button>
+            </div>
+
+            @if (mealsInCategory.Any())
+            {
+                <div class="meal-cards-grid">
+                    @foreach (var meal in mealsInCategory)
+                    {
+                        <div class="meal-card" @onclick="() => OnMealSelected.InvokeAsync(meal)">
+                            <button class="btn-card-edit"
+                                    @onclick="() => OnEditMeal.InvokeAsync(meal.Id)"
+                                    @onclick:stopPropagation="true"
+                                    title="Edit meal plan">
+                                <img src="images/icons/pencil.png" style="filter:invert(1); width:13px; height:13px;"/>
+                            </button>
+
+                            <img src="@meal.RecipePhotoUrl" alt="@meal.RecipeName" class="meal-img" />
+                            <div class="meal-info">
+                                <h4>@meal.RecipeName</h4>
+                                <div class="meal-meta">
+                                    <span> @meal.Servings portions.</span>
+                                </div>
+                                <div class="meal-eaters">
+                                    @foreach (var user in meal.UsersPreviews)
+                                    {
+                                        <img src="@user.AvatarUrl" class="mini-avatar" title="@user.Name" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-meal-slot" @onclick="() => OnAddMeal.InvokeAsync(mealType)">
+                    <p>No recipe selected</p>
+                    <span>Click to plan</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public DateTime SelectedDate { get; set; }
+    [Parameter] public IEnumerable<MealPlanPreviewDto> DayPlans { get; set; } = new List<MealPlanPreviewDto>();
+    [Parameter] public EventCallback<MealType> OnAddMeal { get; set; }
+    [Parameter] public EventCallback<Guid> OnEditMeal { get; set; }
+    [Parameter] public EventCallback<MealPlanPreviewDto> OnMealSelected { get; set; }
+}
