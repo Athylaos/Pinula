@@ -205,6 +205,34 @@ namespace Pinula.API.Endpoints
                 return Results.Ok();
             }).DisableAntiforgery();
 
+            //---------------------------------------------------------------Change password
+            group.MapPost("/changePassword", async (ClaimsPrincipal user, ChangePasswordDto dto, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                    if (userDb is null) return Results.NotFound();
+
+                if (string.IsNullOrEmpty(dto.OldPassword) || string.IsNullOrEmpty(dto.NewPassword))
+                {
+                    return Results.BadRequest("Passwords from dtos are null");
+                }
+
+                if (!BCrypt.Net.BCrypt.Verify(dto.OldPassword, userDb.PasswordHash))
+                {
+                    return Results.Unauthorized();
+                }
+
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+                userDb.PasswordHash = passwordHash;
+                db.SaveChanges();
+
+                return Results.Ok();
+
+
+            }).RequireAuthorization();
+
 
             //---------------------------------------------------------------Get all users
             group.MapGet("/admin/all", async (HttpRequest request, PinulaDbContext db) =>
