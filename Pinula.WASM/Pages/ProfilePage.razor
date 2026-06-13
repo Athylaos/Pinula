@@ -130,6 +130,33 @@
                     </div>
 
                 }
+                else if(isChangingPswd){
+                    <div class="pf-card-scroll-body pf-animate-slide">
+                        <EditForm Model="@updateModel" OnValidSubmit="HandleChangePassword" class="pf-animate-slide">
+                            <div class="pf-form-group mb-3">
+                                <label class="pf-field-caption">Old password</label>
+                                <InputText type="password" @bind-Value="oldPswd" class="pf-text-field" />
+                            </div>
+
+                            <div class="pf-form-group mb-3">
+                                <label class="pf-field-caption">New password</label>
+                                <InputText type="password" @bind-Value="newPswd1" class="pf-text-field" />
+                            </div>
+
+                            <div class="pf-form-group mb-3">
+                                <label class="pf-field-caption">New password again</label>
+                                <InputText type="password" @bind-Value="newPswd2" class="pf-text-field" />
+                            </div>
+
+                            <div class="pf-form-actions-row">
+                                <button type="button" class="pf-btn-dismiss" @onclick="ToggleChangePassword">Cancel</button>
+                                <button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
+                                    @(isSaving ? "Saving..." : "Save Changes")
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                }
                 else
                 {
                     <div class="pf-static-view pf-animate-slide">
@@ -149,6 +176,9 @@
                         <div class="pf-form-actions-row mt-4">
                             <button type="button" class="pf-btn-submit-action" @onclick="ToggleEdit">
                                 <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                            </button>
+                            <button type="button" class="pf-btn-submit-action" @onclick="ToggleChangePassword">
+                                <i class="bi bi-key-fill"></i> Change password
                             </button>
                         </div>
                     </div>
@@ -241,6 +271,10 @@
 @code {
     private UserDisplayDto? userProfile;
     private UserUpdateDto updateModel = new();
+    private string oldPswd;
+    private string newPswd1;
+    private string newPswd2;
+
     private List<RecipePreviewDto> myRecipes = new();
     private List<RecipePreviewDto> fvRecipes = new();
 
@@ -249,6 +283,7 @@
     private bool moreRecipesToLoad = true;
     private bool isSaving = false;
     private bool isEditing = false;
+    private bool isChangingPswd = false;
 
     private bool isFvRecipesLoading = false;
     private bool moreFvRecipesToLoad = true;
@@ -357,6 +392,62 @@
         }
     }
 
+    private void ToggleChangePassword()
+    {
+        isChangingPswd= !isChangingPswd;
+        if (!isChangingPswd && userProfile != null)
+        {
+            oldPswd = string.Empty;
+            newPswd1 = string.Empty;
+            newPswd2 = string.Empty;
+        }
+    }
+
+    private async Task HandleChangePassword()
+    {
+        isSaving = true;
+        statusMessage = string.Empty;
+
+        if(newPswd1 != newPswd2)
+        {
+            statusMessage = "Passwords are not matching";
+            isChangingPswd = false;
+            isSaving = false;
+            return;
+        }
+
+        if (newPswd1.Length < 5)
+        {
+            statusMessage = "Password has to be atleast 5 characters long";
+            isChangingPswd = false;
+            isSaving = false;
+            return;
+        }
+
+        try
+        {
+            var status = await userService.ChangePasswordAsync(oldPswd, newPswd1);
+
+            if (status)
+            {
+                statusMessage = "Password updated successfully.";
+            }
+            else
+            {
+                statusMessage = "Wrong password.";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Changing password failed: {ex.Message}";
+        }
+        finally
+        {
+            isChangingPswd = false;
+            isSaving = false;
+        }
+    }
+
     private async Task HandleUpdateProfile()
     {
         isSaving = true;
@@ -397,6 +488,7 @@
         {
             if (stream != null) await stream.DisposeAsync();
             isSaving = false;
+            isEditing = false;
         }
     }
 

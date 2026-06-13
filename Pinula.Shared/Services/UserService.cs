@@ -23,9 +23,19 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-        public Task ChangePasswordAsync(string oldPassword, string newPassword)
+        public async Task<bool> ChangePasswordAsync(string oldPassword, string newPassword)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var dto = new ChangePasswordDto { OldPassword = oldPassword, NewPassword = newPassword};
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/changePassword", dto);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while changing psswd: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<UserDisplayDto?> GetCurrentUserAsync()
