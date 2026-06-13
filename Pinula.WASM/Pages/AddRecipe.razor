@@ -15,9 +15,14 @@
 @inject NavigationManager NavManager
 
 <LoadingView IsFullScreen="true" Text="Loading data..." IsLoading="isLoading">
-    <div class="header">
+    <div class="header mt-2">
         <img src="images/icons/back.png" class="back-btn" @onclick="GoBack" />
         <h1>@(IsEditMode ? "Edit Recipe" : "Add Recipe")</h1>
+        <div class="flex-spacer"></div>
+        @if (IsEditMode)
+        {
+            <btn @onclick="ToggleDeletePopup" class="btn-delete-mp">Delete recipe</btn>
+        }
     </div>
 
     @if (userDto is null)
@@ -157,6 +162,32 @@
             <div class="warning-box">@WarningText</div>
         }
 
+        @if (deletePopupOpen)
+        {
+            <div class="modal-overlay">
+                <div class="glass-modal plan-meal-modal">
+
+                    <div class="modal-header">
+                        <img src="images/icons/delete.png" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
+                        <h2 style="display:inline-block">Delete recipe</h2>
+                        <button class="close-modal-btn" @onclick="ToggleDeletePopup">&times;</button>
+                    </div>
+
+                    <div class="modal-body text-center" >
+                        <p>This will PERMANENTLY delete your recipe.</p>
+                        <p>Do you really wish to continue?</p>
+                        <p>@deleteError</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-delete-mp" @onclick="HandleDelete">Permanently delete</button>
+                        <div class="flex-spacer"></div>
+                        <button type="button" class="btn-accent" @onclick="ToggleDeletePopup"> No</button>
+                    </div>
+                </div>
+            </div>
+        }
+
         <div class="actions">
             <button type="button" class="btn-apply" @onclick="FinishRecipe">
                 @(IsEditMode ? "Save changes" : "Create recipe")
@@ -166,7 +197,7 @@
 </LoadingView>
 
 
-@code {
+    @code {
     [Parameter] public Guid? RecipeId { get; set; }
     private bool IsEditMode => RecipeId.HasValue && RecipeId.Value != Guid.Empty;
     private bool isLoading = false;
@@ -191,6 +222,9 @@
 
     private bool WarningEnabled { get; set; }
     private string WarningText { get; set; } = string.Empty;
+
+    private bool deletePopupOpen = false;
+    private string deleteError = string.Empty;
 
     UserDisplayDto? userDto;
 
@@ -451,5 +485,24 @@
         public Category Category { get; set; }
         public bool IsSelected { get; set; }
         public bool IsExpanded { get; set; }
+    }
+
+    private void ToggleDeletePopup()
+    {
+        deletePopupOpen = !deletePopupOpen;
+    }
+
+    private async Task HandleDelete()
+    {
+        var resp = await RecipeService.DeleteRecipeAsync(RecipeId ?? Guid.NewGuid());
+        if (resp)
+        {
+            GoBack();
+        }
+        else
+        {
+            deleteError = "Deleting your's recipe was't succesfull, try again or contact support.";
+        }
+
     }
 }

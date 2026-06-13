@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        <div class="header-actions">
+        <div class="mp-header-actions">
             @if (!isNotInGroup && Members != null && Members.Any())
             {
                 <div class="avatar-row">
@@ -45,8 +45,8 @@
             }
 
             <button class="btn-group-action" @onclick="() => showGroupModal = true">
-                <img src="images/icons/account.png" class="header-icon-box p-2" style=""/>
-                <span>@(isNotInGroup ? "Setup Group" : "Group Settings")</span>
+                <i class="@(isNotInGroup ? "" : "bi bi-gear")"></i>
+                <span>@(isNotInGroup ? "Setup Group" : "")</span>
             </button>
         </div>
     </header>

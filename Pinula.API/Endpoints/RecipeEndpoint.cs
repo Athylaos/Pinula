@@ -32,7 +32,7 @@ namespace Pinula.API.Endpoints
                 }
 
                 return await query.ToListAsync();
-            });
+            }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get previews
             group.MapGet("/getPreviews", async (HttpRequest request, int? amount, PinulaDbContext db) =>
@@ -65,7 +65,7 @@ namespace Pinula.API.Endpoints
                 {
                     return await query.ToListAsync();
                 }
-            });
+            }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get previews filtered
             group.MapGet("/getPreviews/filtered", async (HttpRequest request,[AsParameters] RecipeFilterParameters filter, ClaimsPrincipal user, PinulaDbContext db) =>
@@ -85,6 +85,7 @@ namespace Pinula.API.Endpoints
                 else
                 {
                     query = query.Where(r => r.IsApproved);
+                    query = query.Where(r => !r.IsDeleted);
                 }
 
                 if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
@@ -151,6 +152,7 @@ namespace Pinula.API.Endpoints
                         ServingsAmount = r.ServingsAmount,
                         IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
                         IsApproved = r.IsApproved,
+                        IsDeleted = r.IsDeleted,
                         MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
                     })
                     .ToListAsync();
@@ -460,7 +462,6 @@ namespace Pinula.API.Endpoints
                     await db.RecipeIngredients.Where(ri => ri.RecipeId == id).ExecuteDeleteAsync();
                     await db.RecipeSteps.Where(rs => rs.RecipeId == id).ExecuteDeleteAsync();
 
-                    // 4. Přepis základních dat receptu
                     existingRecipe.Title = dto.Title;
                     existingRecipe.CookingTime = dto.CookingTime;
                     existingRecipe.ServingsAmount = dto.ServingsAmount;
@@ -744,6 +745,23 @@ namespace Pinula.API.Endpoints
 
                 return Results.Ok(new { isApproved = comment.IsApproved });
             }).RequireAuthorization("AdminOnly");
+
+
+            //---------------------------------------------------------------Delete recipe
+            group.MapDelete("/delete/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+
+                var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == recipeId);
+
+                if (recipe is null) return Results.NotFound("Recipe not found");
+                if (recipe.UserId != userId) return Results.Unauthorized();
+
+                recipe.IsDeleted = true;
+
+                await db.SaveChangesAsync();
+                return Results.Ok();
+            });
 
 
         }

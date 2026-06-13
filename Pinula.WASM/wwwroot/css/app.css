@@ -103,8 +103,7 @@ html, * {
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 40px);
-    max-width: 900px;
-
+    max-width: 600px;
     z-index: 1000;
     background: rgba(30, 30, 30, 0.1);
     backdrop-filter: blur(15px);
@@ -2309,7 +2308,6 @@ select.custom-select {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 300px;
 }
 
 .pf-ban-alert {
@@ -2589,6 +2587,7 @@ select.custom-select {
     gap: 8px;
     justify-content: center;
     flex-grow: 1;
+    margin:0px;
 }
 
 .nav-arrow-btn {
@@ -2605,9 +2604,17 @@ select.custom-select {
         color: #000;
     }
 @media (max-width: 480px) {
+    .weekly-navigation-container {
+        width:120%;
+        margin-left:-10%;
+    }
+
     .weekly-strip {
         gap: 4px;
-        margin-bottom: 25px;
+    }
+
+    .nav-arrow-btn {
+        padding: 8px 9px;
     }
 
     .day-bubble {
@@ -2633,7 +2640,7 @@ select.custom-select {
         width: 4px;
         height: 4px;
     }
-}
+    }
 /* #endregion */
 
 /*---------- Mealplann day view ----------*/
@@ -3037,6 +3044,7 @@ select.custom-select {
     box-shadow: 0 8px 32px 0 rgba(0, 29, 4, 0.3);
     margin-bottom: 32px;
     flex-wrap: wrap;
+    width:100%;
 }
 
 .header-brand {
@@ -3072,10 +3080,19 @@ select.custom-select {
     font-family: Nunito;
 }
 
-.header-actions {
+.mp-header-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    overflow:visible;
+    gap:15px;
+}
+
+@media (max-width: 500px) {
+    .mp-header-actions {
+        width:100%;
+        gap:0;
+    }
 }
 
 .avatar-row {
@@ -3121,11 +3138,10 @@ select.custom-select {
 .btn-group-action {
     display: flex;
     align-items: center;
-    gap: 10px;
     background: linear-gradient(135deg, var(--pine-teal), var(--evergreen));
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-porcelain);
-    padding: 10px 20px;
+    padding: 10px 15px;
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;

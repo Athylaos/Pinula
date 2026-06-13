@@ -19,7 +19,8 @@ else
         <thead class="table-dark">
             <tr>
                 <th>Title</th>
-                <th>Status</th>
+                <th>Admin approval</th>
+                <th>Deleted</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
@@ -36,6 +37,16 @@ else
                         else
                         {
                             <span class="badge bg-danger">Hidden / Banned</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!recipe.IsDeleted)
+                        {
+                            <span class="badge bg-success">Visible</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Deleted</span>
                         }
                     </td>
                     <td class="text-end">

@@ -90,6 +90,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(e => e.Rating).HasPrecision(3, 2);
             entity.Property(e => e.RecipeCreated).HasPrecision(0).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsApproved).HasDefaultValue(true);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
             entity.HasOne(d => d.ServingUnit).WithMany(p => p.Recipes).HasForeignKey(d => d.ServingUnitId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.User).WithMany(p => p.Recipes).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);

@@ -49,9 +49,19 @@ namespace Pinula.Shared.Services
             throw new NotImplementedException();
         }
 
-        public Task DeleteRecipeAsync(Guid id)
+        public async Task<bool> DeleteRecipeAsync(Guid id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}/delete/{id}");
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Delete recipe error: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid recipeId)
