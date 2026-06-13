@@ -54,10 +54,11 @@
     <LoadingView IsFullScreen="true" IsLoading="IsLoading" Text="Loading your plans">
         @if (!isNotInGroup)
         {
-            <WeeklyStrip CurrentWeekStart="WeekStartDate"
+            <WeeklyStrip CurrentWeekStart="SelectedWeekStartDate"
                          SelectedDate="SelectedDate"
                          WeeklyPlans="WeeklyPlans"
-                         OnDateSelected="ChangeSelectedDate" />
+                         OnDateSelected="ChangeSelectedDate"
+                         OnWeekChangedForward="ChangeWeekForward" />
 
             <div class="day-view-container">
                 <MealPlanDayView SelectedDate="SelectedDate"
@@ -132,7 +133,11 @@
 @code {
     private bool IsLoading = true;
     private DateTime WeekStartDate;
+    private DateTime SelectedWeekStartDate;
     private DateTime SelectedDate;
+
+    private DateTime _loadedFromDate;
+    private DateTime _loadedToDate;
 
     private List<MealPlanPreviewDto> WeeklyPlans = new();
     private List<UserDisplayDto> Members = new();
@@ -151,6 +156,7 @@
 
         SelectedDate = DateTime.Today;
         WeekStartDate = SelectedDate.AddDays(-(int)SelectedDate.DayOfWeek + (int)DayOfWeek.Monday);
+        SelectedWeekStartDate = WeekStartDate;
         if (SelectedDate.DayOfWeek == DayOfWeek.Sunday) WeekStartDate = WeekStartDate.AddDays(-7);
 
         await LoadData();
@@ -181,7 +187,15 @@
             return;
         }
         isNotInGroup = false;
-        WeeklyPlans = await MealPlanService.GetMyGroupMealPlansAsync(WeekStartDate, WeekStartDate.AddDays(6)) ?? new();
+
+        DateTime from = WeekStartDate < SelectedWeekStartDate ? WeekStartDate : SelectedWeekStartDate;
+        DateTime toMax = WeekStartDate > SelectedWeekStartDate ? WeekStartDate : SelectedWeekStartDate;
+        DateTime to = toMax.AddDays(6);
+
+        _loadedFromDate = from;
+        _loadedToDate = to;
+
+        WeeklyPlans = await MealPlanService.GetMyGroupMealPlansAsync(from, to) ?? new();
         Members = await MealPlanService.GetMembersAsync();
         fvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
         IsLoading = false;
@@ -190,6 +204,36 @@
     private void ChangeSelectedDate(DateTime date)
     {
         SelectedDate = date;
+    }
+
+    private async Task ChangeWeekForward(bool direction) // true forward, false backwards
+    {
+        if (direction)
+        {
+            SelectedWeekStartDate = SelectedWeekStartDate.AddDays(7);
+        }
+        else
+        {
+            SelectedWeekStartDate = SelectedWeekStartDate.AddDays(-7);
+        }
+
+        SelectedDate = SelectedWeekStartDate;
+        DateTime targetWeekEnd = SelectedWeekStartDate.AddDays(6);
+
+        if (direction && SelectedWeekStartDate > _loadedToDate)
+        {
+            var wp = await MealPlanService.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
+            WeeklyPlans.AddRange(wp);
+            _loadedToDate = targetWeekEnd;
+        }
+        else if (!direction && targetWeekEnd < _loadedFromDate)
+        {
+            var wp = await MealPlanService.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
+            WeeklyPlans.AddRange(wp);
+            _loadedFromDate = SelectedWeekStartDate;
+        }
+
+        StateHasChanged();
     }
 
     private IEnumerable<MealPlanPreviewDto> GetPlansForSelectedDate()

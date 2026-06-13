@@ -2516,14 +2516,6 @@ select.custom-select {
 
 /*---------- Weekly strip ----------*/
 /* #region Weekly strip */
-
-.weekly-strip {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 40px;
-}
-
 .day-bubble {
     flex: 1;
     min-width: 0;
@@ -2583,6 +2575,35 @@ select.custom-select {
     border-radius: 50%;
 }
 
+.weekly-navigation-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0 auto;
+    margin-bottom:30px;
+}
+
+.weekly-strip {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.nav-arrow-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px 12px;
+    color: #666;
+    transition: color 0.2s;
+}
+
+    .nav-arrow-btn:hover {
+        color: #000;
+    }
 @media (max-width: 480px) {
     .weekly-strip {
         gap: 4px;

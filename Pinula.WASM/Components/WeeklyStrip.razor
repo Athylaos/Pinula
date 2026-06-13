@@ -1,25 +1,37 @@
 ﻿@using Pinula.Shared.DTOs
+@using System.Globalization
 
-<div class="weekly-strip">
-    @for (int i = 0; i < 7; i++)
-    {
-        var date = CurrentWeekStart.AddDays(i);
-        var isSelected = date.Date == SelectedDate.Date;
-        var isToday = date.Date == DateTime.Today;
-        var hasMeals = WeeklyPlans.Any(p => p.Date == DateOnly.FromDateTime(date.Date));
+<div class="weekly-navigation-container">
+    <button class="nav-arrow-btn" @onclick="() => HandleWeekChange(false)">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-        <div class="day-bubble @(isSelected ? "selected" : "") @(isToday ? "today" : "")" @onclick="() => OnDateSelected.InvokeAsync(date)">
-            <span class="day-name">@date.ToString("ddd")</span>
-            <span class="day-number">@date.Day</span>
+    <div class="weekly-strip">
+        @foreach (var date in _displayedDates)
+        {
+            var isSelected = date.Date == SelectedDate.Date;
+            var isToday = date.Date == DateTime.Today;
+            var hasMeals = WeeklyPlans.Any(p => p.Date == DateOnly.FromDateTime(date.Date));
 
-            <div class="indicator-area">
-                @if (hasMeals)
-                {
-                    <div class="meal-dot"></div>
-                }
+            <div class="day-bubble @(isSelected ? "selected" : "") @(isToday ? "today" : "")"
+                 @onclick="() => OnDateSelected.InvokeAsync(date)">
+
+                <span class="day-name">@date.ToString("ddd", _culture)</span>
+                <span class="day-number">@date.Day</span>
+
+                <div class="indicator-area">
+                    @if (hasMeals)
+                    {
+                        <div class="meal-dot"></div>
+                    }
+                </div>
             </div>
-        </div>
-    }
+        }
+    </div>
+
+    <button class="nav-arrow-btn" @onclick="() => HandleWeekChange(true)">
+        <i class="bi bi-chevron-right"></i>
+    </button>
 </div>
 
 @code {
@@ -27,4 +39,28 @@
     [Parameter] public DateTime SelectedDate { get; set; }
     [Parameter] public List<MealPlanPreviewDto> WeeklyPlans { get; set; } = new();
     [Parameter] public EventCallback<DateTime> OnDateSelected { get; set; }
+    [Parameter] public EventCallback<bool> OnWeekChangedForward { get; set; }
+
+    private List<DateTime> _displayedDates = new();
+    private readonly CultureInfo _culture = CultureInfo.GetCultureInfo("en-US");
+
+    protected override void OnParametersSet()
+    {
+        GenerateWeeklyDays();
+    }
+
+    private void GenerateWeeklyDays()
+    {
+        _displayedDates.Clear();
+        for (int i = 0; i < 7; i++)
+        {
+            _displayedDates.Add(CurrentWeekStart.AddDays(i));
+        }
+    }
+
+    private async Task HandleWeekChange(bool direction)
+    {
+        await OnWeekChangedForward.InvokeAsync(direction);
+
+    }
 }
