@@ -66,8 +66,9 @@
                 <div class="nutrition-header">
                     <h4>Per serving:</h4>
                     <div class="calories">
-                        <i class="bi bi-fire text-danger"></i>
-                        <span class="cal-value">@(recipe.Calories?.ToString("0.#"))</span> kcal
+                        <img class="info-icon opacity-100" src="images/icons/calories.png" />
+                        <span class="cal-value">@(recipe.Calories?.ToString("0.#"))</span>
+                        <span style="margin-bottom:-2px;"> kcal</span>
                     </div>
                 </div>
                 <div class="macros-grid">
@@ -136,7 +137,7 @@
                 else
                 {
                     <div class="comment-input-card">
-                        @if (!alreadyRated)
+                        @if (!recipe.UserAlreadyRated)
                         {
                             <div class="rating-selector">
                                 @for (int i = 1; i <= 5; i++)
@@ -147,7 +148,6 @@
                                          @onclick="() => SetRating(starIndex)"
                                          alt="Star rating" />
                                 }
-                                <span class="rating-label">@GetRatingLabel()</span>
                             </div>
                         }
 
@@ -201,7 +201,8 @@
     private Guid? activeReplyCommentId = null;
     private string replyText = "";
 
-    private bool alreadyRated = false;
+    private Guid? activeEditCommentId = null;
+    private Comment editCommentModel = new Comment();
 
     private UserDisplayDto? userDto;
 
@@ -223,7 +224,6 @@
         {
             isLoading = false;
         }
-        alreadyRated = recipe.Comments.Any(c => c.Rating.HasValue);
     }
 
     private void GoBack()
@@ -247,16 +247,6 @@
         if (newComment.Rating == r) newComment.Rating = null;
         else newComment.Rating = (short)r;
     }
-
-    private string GetRatingLabel() => newComment.Rating switch
-    {
-        1 => "Poor",
-        2 => "Fair",
-        3 => "Good",
-        4 => "Great",
-        5 => "Excellent!",
-        _ => "Optional rating"
-    };
 
     private void StartReply(CommentPreview parent)
     {
@@ -284,7 +274,7 @@
             recipe.Rating = response.NewAverageRating;
             recipe.UsersRated = response.NewUsersRatedCount;
             recipe.Comments.Add(response.NewComment);
-            alreadyRated = response.NewComment.Rating.HasValue;
+            recipe.UserAlreadyRated = response.NewComment.Rating.HasValue;
             ResetForm();
             StateHasChanged();
         }
@@ -358,20 +348,96 @@
         }
     }
 
+    private void OpenEditForm(CommentPreview comment)
+    {
+        activeEditCommentId = comment.Id;
+        activeReplyCommentId = null;
+
+        editCommentModel = new Comment
+        {
+            Id = comment.Id,
+            RecipeId = recipe!.Id,
+            ParentCommentId = comment.ParentCommentId,
+            Text = comment.Text,
+            Rating = comment.Rating
+        };
+    }
+
+    private void CancelEdit()
+    {
+        activeEditCommentId = null;
+    }
+
+    private void SetEditRating(int r)
+    {
+        if (editCommentModel.Rating == r) editCommentModel.Rating = null;
+        else editCommentModel.Rating = (short)r;
+    }
+
+    private async Task HandleUpdateReview(Guid commentId)
+    {
+        var response = await RecipeService.UpdateCommentAsync(editCommentModel);
+        if (response != null)
+        {
+            var targetComment = FindCommentRecursive(recipe!.Comments, commentId);
+            if (targetComment != null)
+            {
+                targetComment.Text = editCommentModel.Text;
+                targetComment.Rating = editCommentModel.Rating;
+                targetComment.IsEdited = true;
+                targetComment.EditedAt = DateTime.UtcNow;
+            }
+
+            recipe.Rating = response.NewAverageRating;
+            recipe.UsersRated = response.NewUsersRatedCount;
+            recipe.UserAlreadyRated = response.UserAlreadyRated;
+
+            CancelEdit();
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task HandleDeleteComment(Guid commentId)
+    {
+        var response = await RecipeService.DeleteCommentAsync(commentId);
+        if (response != null)
+        {
+            var target = FindCommentRecursive(recipe!.Comments, commentId);
+            if (target != null)
+            {
+                target.IsDeleted = true;
+                target.Rating = null;
+            }
+
+            recipe.Rating = response.NewAverageRating;
+            recipe.UsersRated = response.NewUsersRatedCount;
+            recipe.UserAlreadyRated = response.UserAlreadyRated;
+
+            StateHasChanged();
+        }
+    }
+
 
 
     RenderFragment<CommentPreview> DisplayComment => comment => __builder =>
     {
         <div class="comment-thread">
-            <div class="comment-main @(comment.IsApproved ? "" : "comment-moderated-deleted")">           
-                @if (comment.IsApproved)
+            <div class="comment-main @(comment.IsApproved && !comment.IsDeleted ? "" : "comment-moderated-deleted")">
+                @if (comment.IsApproved && !comment.IsDeleted)
                 {
                     <div class="comment-header">
                         <div class="author-meta">
                             <span class="author-name">@comment.UserName @comment.UserSurname</span>
-                            <span class="post-date">@comment.CreatedAt.ToShortDateString()</span>
+                            <span class="post-date">
+                                @comment.CreatedAt.ToShortDateString()
+                                @if (comment.IsEdited && comment.EditedAt.HasValue)
+                                {
+                                    <span class="edited-tag">(Edited @comment.EditedAt.Value.ToShortDateString())</span>
+                                }
+                            </span>
                         </div>
-                        @if (comment.Rating.HasValue)
+                        @if (comment.Rating.HasValue && activeEditCommentId != comment.Id)
                         {
                             <div class="applied-rating">
                                 @for (int i = 1; i <= 5; i++)
@@ -382,10 +448,50 @@
                             </div>
                         }
                     </div>
-                    <p class="comment-body">@comment.Text</p>
-                    @if (userDto.CanComment)
+
+                    @if (activeEditCommentId == comment.Id)
                     {
-                        <button class="btn-reply-link" @onclick="() => OpenReplyForm(comment.Id)">Reply</button>
+                        <div class="inline-reply-form animate-slide-down">
+                            @if (comment.ParentCommentId == null)
+                            {
+                                <div class="rating-selector" style="margin-bottom: 10px;">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        int starIndex = i;
+                                        <img src="@(editCommentModel.Rating >= starIndex ? "images/icons/favorite_full.png" : "images/icons/favorite.png")"
+                                             class="star-icon-small"
+                                             style="cursor: pointer;"
+                                             @onclick="() => SetEditRating(starIndex)" />
+                                    }
+                                </div>
+                            }
+                            <textarea @bind="editCommentModel.Text" @bind:event="oninput"
+                                      class="comment-field reply-field"></textarea>
+                            <div class="input-actions mt-2">
+                                <button class="btn-clear" @onclick="CancelEdit">Cancel</button>
+                                <button class="btn-post"
+                                        disabled="@(string.IsNullOrWhiteSpace(editCommentModel.Text) && editCommentModel.Rating == null)"
+                                        @onclick="() => HandleUpdateReview(comment.Id)">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="comment-body">@comment.Text</p>
+                        <div class="comment-actions">
+                            @if (userDto?.CanComment == true)
+                            {
+                                <button class="btn-action-link" @onclick="() => OpenReplyForm(comment.Id)">Reply</button>
+                            }
+                            @if (isUserLogged && comment.UserId == userDto?.Id)
+                            {
+                                <div class="flex-spacer"></div>
+                                <button class="btn-action-link edit-link" @onclick="() => OpenEditForm(comment)">Edit</button>
+                                <button class="btn-action-link delete-link" @onclick="() => HandleDeleteComment(comment.Id)">Delete</button>
+                            }
+                        </div>
                     }
                 }
                 else
@@ -397,12 +503,19 @@
                         </div>
                     </div>
                     <p class="comment-body" style="color: #888; font-style: italic; margin-bottom: 0;">
-                        This comment has been removed by a moderator.
+                        @if (comment.IsDeleted)
+                        {
+                            <span>This comment has been deleted by the user.</span>
+                        }
+                        else if (!comment.IsApproved)
+                        {
+                            <span>This comment has been removed by a moderator.</span>
+                        }
                     </p>
                 }
             </div>
 
-            @if (comment.IsApproved && activeReplyCommentId == comment.Id)
+            @if (comment.IsApproved && !comment.IsDeleted && activeReplyCommentId == comment.Id)
             {
                 <div class="inline-reply-form animate-slide-down">
                     <textarea @bind="replyText" @bind:event="oninput"

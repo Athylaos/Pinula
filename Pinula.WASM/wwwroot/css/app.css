@@ -1629,6 +1629,10 @@ select.custom-select {
 
 .calories {
     font-size: 1.2rem;
+    display:flex;
+    gap:3px;
+    align-items:center;
+    justify-content:center;
 }
 
 .cal-value {
@@ -1644,7 +1648,7 @@ select.custom-select {
 }
 
 .macro-item {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #aaa;
 }
 
@@ -1653,6 +1657,7 @@ select.custom-select {
         color: var(--text-porcelain);
         font-weight: 600;
         margin-left: 5px;
+        color: #0E811F;
     }
 
 .content-grid {
@@ -2071,6 +2076,42 @@ select.custom-select {
         max-height:28px;
         filter:invert(1) opacity(0.8);
     }
+
+.comment-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 15px;
+}
+
+.btn-action-link {
+    background: none;
+    border: none;
+    font-size: 0.92rem;
+    padding: 0;
+    cursor: pointer;
+    color: #01630E;
+    font-weight: 500;
+}
+
+    .btn-action-link:hover {
+        text-decoration: underline;
+    }
+
+
+.edit-link {
+    color: #004D9E;
+}
+
+.delete-link {
+    color: #850005;
+}
+
+.edited-tag {
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+    margin-left: 8px;
+}
     /* #endregion */
 /*---------- Category page ----------*/
 /* #region Category page */
@@ -3082,6 +3123,7 @@ select.custom-select {
 
 .mp-header-actions {
     display: flex;
+    flex-flow:row;
     align-items: center;
     justify-content: space-between;
     overflow:visible;

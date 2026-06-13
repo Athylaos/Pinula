@@ -54,6 +54,7 @@ namespace Pinula.Shared.DTOs
 
 
         public bool IsFavorite { get; set; }
+        public bool UserAlreadyRated { get; set; } = false;
 
     }
 }

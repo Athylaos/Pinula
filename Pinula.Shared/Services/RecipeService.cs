@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Interface;
 using Pinula.Shared.Models;
 using System.Net.Http.Json;
 using System.Text;
@@ -44,10 +43,6 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public Task<bool> IsFavoriteAsync(Guid recipeId, Guid userId)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<bool> DeleteRecipeAsync(Guid id)
         {
@@ -73,32 +68,6 @@ namespace Pinula.Shared.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error while loading recipe details: {ex.Message}");
-                return null;
-            }
-        }
-
-        public async Task<List<Recipe>> GetRecipesAsync(int amount)
-        {
-            var response = await _httpClient.GetFromJsonAsync<List<Recipe>>($"{BaseUrl}/get?amount={amount}");
-            return response ?? new List<Recipe>();
-        }
-
-        public async Task<PostCommentResponse?> PostCommentAsync(Comment comment)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync<Comment>($"{BaseUrl}/postComment", comment);
-                if (response.IsSuccessStatusCode)
-                {
-                    var c = await response.Content.ReadFromJsonAsync<PostCommentResponse>();
-                    return c;
-                }
-                _logger.LogError($"Error while posting comment: {response.StatusCode}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while posting comment: {ex.Message}");
                 return null;
             }
         }
@@ -132,12 +101,6 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error while creating recipe: {ex.Message}");
                 return null;
             }
-        }
-
-        public async Task<List<RecipePreviewDto>> GetRecipePreviewsAsync(int amount)
-        {
-            var response = await _httpClient.GetFromJsonAsync<List<RecipePreviewDto>>($"{BaseUrl}/getPreviews?amount={amount}");
-            return response ?? new List<RecipePreviewDto>();
         }
 
         public async Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filter, CancellationToken? ct)
@@ -186,40 +149,61 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<PostCommentResponse?> GetRecipeCommentAsync(Guid recipeId, Guid? userId)
+        public async Task<PostCommentResponse?> PostCommentAsync(Comment comment)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BaseUrl}/getUserComment/{recipeId}");
-
+                var response = await _httpClient.PostAsJsonAsync<Comment>($"{BaseUrl}/postComment", comment);
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<PostCommentResponse?>();
+                    return await response.Content.ReadFromJsonAsync<PostCommentResponse>();
                 }
+                _logger.LogError($"Error while posting comment: {response.StatusCode}");
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while getting comment: {ex.Message}");
+                _logger.LogError($"Error while posting comment: {ex.Message}");
                 return null;
             }
         }
 
-        public async Task<DeleteCommentResponse?> DeleteRecipeCommentAsync(Guid recipeId, Guid? userId)
+        public async Task<DeleteCommentResponse?> DeleteCommentAsync(Guid commentId)
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"{BaseUrl}/deleteComment/{recipeId}");
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}/deleteComment/{commentId}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<DeleteCommentResponse>();
                 }
+                _logger.LogError($"Error while removing comment: {response.StatusCode}");
                 return null;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error while removing comment: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<DeleteCommentResponse?> UpdateCommentAsync(Comment comment)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/updateComment/{comment.Id}", comment);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<DeleteCommentResponse>();
+                }
+                _logger.LogError($"Error while updating comment: {response.StatusCode}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while updating comment: {ex.Message}");
                 return null;
             }
         }

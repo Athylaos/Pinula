@@ -54,6 +54,8 @@ public partial class PinulaDbContext : DbContext
         {
             entity.Property(e => e.CreatedAt).HasPrecision(0).HasDefaultValueSql("timezone('utc', now())");
             entity.Property(e => e.IsApproved).HasDefaultValue(true);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsEdited).HasDefaultValue(false);
 
             entity.HasOne(d => d.ParentComment).WithMany(p => p.Replies).HasForeignKey(d => d.ParentCommentId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(d => d.Recipe).WithMany(p => p.Comments).HasForeignKey(d => d.RecipeId).OnDelete(DeleteBehavior.ClientSetNull);

@@ -21,6 +21,12 @@ public partial class Comment
 
     public bool IsApproved { get; set; } = true;
 
+    public bool IsDeleted { get; set; }
+
+    public bool IsEdited { get; set; }
+
+    public DateTime? EditedAt { get; set; }
+
     public virtual ICollection<Comment> Replies { get; set; } = new List<Comment>();
     [JsonIgnore]
     public virtual Comment? ParentComment { get; set; }
