@@ -3,12 +3,17 @@
 @using Pinula.Shared.Interface
 @using Pinula.Shared.Enums
 @using Pinula.WASM.Components
+@using Microsoft.Extensions.Localization
+@using System.Globalization
 @inject IMealPlanService MealPlanService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IRecipeService RecipeService
 @inject IUserService UserService
-@using Microsoft.AspNetCore.Authorization
+@inject IStringLocalizer<App> Localizer
+@inject ILocalStorage LocalStorage
+
+<PageTitle>Pinula - @Localizer["PlannerPage"]</PageTitle>
 
 <div class="planner-container">
     <header class="planner-header-panel">
@@ -20,12 +25,12 @@
                 @if (!isNotInGroup)
                 {
                     <h1 class="page-title">@groupDetail?.Name</h1>
-                    <p class="subtitle">Yours kitchen dashboard</p>
+                    <p class="subtitle">@Localizer["KitchenDashboard"]</p>
                 }
                 else
                 {
-                    <h1 class="page-title">Start Planning</h1>
-                    <p class="subtitle">Organize your meals together</p>
+                    <h1 class="page-title">@Localizer["StartPlanning"]</h1>
+                    <p class="subtitle">@Localizer["StartPlanningSubtitle"]</p>
                 }
             </div>
         </div>
@@ -46,19 +51,20 @@
 
             <button class="btn-group-action" @onclick="() => showGroupModal = true">
                 <i class="@(isNotInGroup ? "" : "bi bi-gear")"></i>
-                <span>@(isNotInGroup ? "Setup Group" : "")</span>
+                <span>@(isNotInGroup ? Localizer["SetupGroup"] : "")</span>
             </button>
         </div>
     </header>
 
-    <LoadingView IsFullScreen="true" IsLoading="IsLoading" Text="Loading your plans">
+    <LoadingView IsFullScreen="true" IsLoading="IsLoading" Text="@Localizer["LoadingPlans"]">
         @if (!isNotInGroup)
         {
             <WeeklyStrip CurrentWeekStart="SelectedWeekStartDate"
                          SelectedDate="SelectedDate"
                          WeeklyPlans="WeeklyPlans"
                          OnDateSelected="ChangeSelectedDate"
-                         OnWeekChangedForward="ChangeWeekForward" />
+                         OnWeekChangedForward="ChangeWeekForward" 
+                         Culture="_culture"/>
 
             <div class="day-view-container">
                 <MealPlanDayView SelectedDate="SelectedDate"
@@ -74,25 +80,25 @@
                 <div class="showcase-art">
                     <div class="glow-sphere"></div>
                 </div>
-                <h2>You are not in a kitchen group yet</h2>
-                <p>To start planning breakfast, lunch, and dinner, you need to cooperate with your household.</p>
+                <h2>@Localizer["NotInGroup"]</h2>
+                <p>@Localizer["NotInGroupSubtitle"]</p>
 
                 <div class="showcase-actions">
                     <div class="action-card">
-                        <h3>Create New Group</h3>
-                        <p>Start a brand new sheet for your home or vacation.</p>
+                        <h3>@Localizer["CreateGroup"]</h3>
+                        <p>@Localizer["CreateGroupSubtitle"]</p>
                         <div class="input-group-custom">
-                            <input type="text" placeholder="e.g. My Awesome Family" @bind="newGroupName" />
-                            <button class="btn-accent" @onclick="CreateGroupFromShowcase">Create</button>
+                            <input type="text" placeholder="@Localizer["CreateGroupPlaceholder"]" @bind="newGroupName" />
+                            <button class="btn-accent" @onclick="CreateGroupFromShowcase">@Localizer["Create"]</button>
                         </div>
                     </div>
 
                     <div class="action-card">
-                        <h3>Join Existing</h3>
-                        <p>Enter the invitation code provided by your partner.</p>
+                        <h3>@Localizer["JoinGroup"]</h3>
+                        <p>@Localizer["JoinGroupSubtitle"]</p>
                         <div class="input-group-custom">
                             <input type="text" placeholder="XXXX-XXXX-XXXX" @bind="joinGroupCode" />
-                            <button class="btn-accent-secondary" @onclick="JoinGroupFromShowcase">Join</button>
+                            <button class="btn-accent-secondary" @onclick="JoinGroupFromShowcase">@Localizer["Join"]</button>
                         </div>
                     </div>
                 </div>
@@ -147,6 +153,7 @@
     private bool isNotInGroup = false;
     private bool showGroupModal = false;
 
+    private CultureInfo _culture;
 
     private string newGroupName = "";
     private string joinGroupCode = "";
@@ -159,6 +166,7 @@
         SelectedWeekStartDate = WeekStartDate;
         if (SelectedDate.DayOfWeek == DayOfWeek.Sunday) WeekStartDate = WeekStartDate.AddDays(-7);
 
+        await SetCulture();
         await LoadData();
 
 
@@ -199,6 +207,20 @@
         Members = await MealPlanService.GetMembersAsync();
         fvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
         IsLoading = false;
+    }
+
+    private async Task SetCulture()
+    {
+        var culture = await LocalStorage.GetStringAsync("culture");
+        if (string.IsNullOrWhiteSpace(culture))
+        {
+            _culture = CultureInfo.GetCultureInfo("en-US");
+        }
+        else
+        {
+            _culture = CultureInfo.GetCultureInfo(culture);
+        }
+
     }
 
     private void ChangeSelectedDate(DateTime date)

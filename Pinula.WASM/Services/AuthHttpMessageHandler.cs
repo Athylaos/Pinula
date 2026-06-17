@@ -6,9 +6,9 @@ namespace Pinula.WASM.Services
 {
     public class AuthHttpMessageHandler : DelegatingHandler
     {
-        private readonly ITokenStorage _tokenStorage;
+        private readonly ILocalStorage _tokenStorage;
 
-        public AuthHttpMessageHandler(ITokenStorage tokenStorage)
+        public AuthHttpMessageHandler(ILocalStorage tokenStorage)
         {
             _tokenStorage = tokenStorage;
         }

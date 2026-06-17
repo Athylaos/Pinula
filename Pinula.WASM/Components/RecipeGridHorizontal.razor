@@ -1,4 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
 
 <div class="horizontal-section-wrapper">
     <div class="section-header-minor">
@@ -29,7 +31,7 @@
                         }
                         else
                         {
-                            <span>Show more</span>
+                            <span>@Localizer["ShowMoreRecipes"]</span>
                         }
                     </div>
                 </button>

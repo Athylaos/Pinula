@@ -7,16 +7,16 @@ namespace Pinula.WASM.Services
 {
     public class ApiAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly ITokenStorage _tokenStorage;
+        private readonly ILocalStorage _localStorage;
 
-        public ApiAuthenticationStateProvider(ITokenStorage tokenStorage)
+        public ApiAuthenticationStateProvider(ILocalStorage localStorage)
         {
-            _tokenStorage = tokenStorage;
+            _localStorage = localStorage;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var token = await _tokenStorage.GetTokenAsync();
+            var token = await _localStorage.GetTokenAsync();
 
             if (string.IsNullOrWhiteSpace(token))
             {

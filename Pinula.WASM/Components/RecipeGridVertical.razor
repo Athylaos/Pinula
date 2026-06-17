@@ -1,4 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
 
 <div class="recipe-grid-wrapper">
     <div class="recipe-vertical-grid">
@@ -15,11 +17,11 @@
                 @if (IsLoading)
                 {
                     <span class="spinner-border spinner-border-sm" role="status"></span>
-                    <span>Loading...</span>
+                    <span>@Localizer["Loading..."]</span>
                 }
                 else
                 {
-                    <span>Show more recipes</span>
+                    <span>@Localizer["ShowMoreRecipes"]</span>
                 }
             </button>
         </div>

@@ -1,6 +1,7 @@
 ﻿@using Pinula.Shared.DTOs
-@using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<App> Localizer
 
 <div class="modal-overlay" @onclick="CloseGroupModalInternal">
     <div class="glass-modal" @onclick:stopPropagation>
@@ -13,10 +14,10 @@
             @if (!isNotInGroup && groupDetail != null)
             {
                 <div class="modal-section">
-                    <label class="section-label">Group Name</label>
+                    <label class="section-label">@Localizer["GroupName"]</label>
                     <div class="inline-edit-box">
                         <input type="text" @bind="groupDetail.Name" class="modal-input" />
-                        <button class="btn-save-name" @onclick="UpdateGroupNameInternal">Edit</button>
+                        <button class="btn-save-name" @onclick="UpdateGroupNameInternal">@Localizer["Edit"]</button>
                     </div>
                 </div>
 
@@ -25,7 +26,7 @@
                     <div class="code-copy-panel" @onclick="CopyInviteCode">
                         <span class="invite-code-text">@groupDetail.InviteCode</span>
                         <span class="copy-badge">
-                            @(isCopied ? "Copied!" : "Copy")
+                            @(isCopied ? @Localizer["Copied"] : @Localizer["Copy"])
                         </span>
                     </div>
                 </div>
@@ -41,7 +42,7 @@
                                     <img src="@member.AvatarUrl" class="member-row-avatar" />
                                     <div class="member-row-info">
                                         <span class="member-row-name">@member.Name @member.Surname</span>
-                                        <span class="member-row-role">Member</span>
+                                        <span class="member-row-role">@Localizer["Member"]</span>
                                     </div>
                                 </div>
                             }
@@ -51,7 +52,7 @@
 
                 <div class="modal-footer-danger">
                     <button class="btn-leave-group" @onclick="LeaveGroupInternal">
-                        Leave Group
+                        @Localizer["LeaveGroup"]
                     </button>
                 </div>
             }
@@ -59,15 +60,15 @@
             {
                 <div class="modal-no-group-tabs">
                     <div class="action-card-modal">
-                        <h3>Setup Household</h3>
-                        <input type="text" placeholder="Group Name..." @bind="newGroupName" class="modal-input-spaced" />
-                        <button class="btn-accent w-100" @onclick="CreateGroupInternal">Confirm & Create</button>
+                        <h3>@Localizer["SetupGroup"]</h3>
+                        <input type="text" placeholder="@Localizer["GroupName"]" @bind="newGroupName" class="modal-input-spaced" />
+                        <button class="btn-accent w-100" @onclick="CreateGroupInternal">@Localizer["ConfirmAndCreate"]</button>
                     </div>
-                    <div class="divider-text">OR</div>
+                    <div class="divider-text">@Localizer["OR"]</div>
                     <div class="action-card-modal">
-                        <h3>Enter Invitation Key</h3>
+                        <h3>@Localizer["EnterInvitationKey"]</h3>
                         <input type="text" placeholder="XXXX-XXXX-XXXX" @bind="joinGroupCode" class="modal-input-spaced" />
-                        <button class="btn-accent-secondary w-100" @onclick="JoinGroupInternal">Confirm & Join</button>
+                        <button class="btn-accent-secondary w-100" @onclick="JoinGroupInternal">@Localizer["ConfirmAndJoin"]</button>
                     </div>
                 </div>
             }

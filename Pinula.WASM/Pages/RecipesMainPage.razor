@@ -4,13 +4,15 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Models
 @using Pinula.WASM.Components
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
 @inject IRecipeService recipeService
 @inject ICategoryService categoryService
 @inject IUserService userService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 
-<PageTitle>Pinula - Recipes</PageTitle>
+<PageTitle>Pinula - @Localizer["Recipes"]</PageTitle>
 
 <div class="recipes-container">
     
@@ -20,8 +22,8 @@
         @if (isActuallySearching)
         {
             <div class="search-results-header">
-                <h3 class="d-inline">Search Results (@searchedRecipes.Count)</h3>
-                <button class="btn-cancel" @onclick="ClearAll">Cancel filters</button>
+                <h3 class="d-inline">@Localizer["SearchResults"] (@searchedRecipes.Count)</h3>
+                <button class="btn-cancel" @onclick="ClearAll">@Localizer["CancelFilters"]</button>
             </div>
             
             <div class="recipes-grid">
@@ -32,14 +34,14 @@
                 else
                 {
                     <div class="flex-column pt-5">
-                        <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.6rem; font-style:italic;">No recipes found matching your filters.</p>
+                        <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.6rem; font-style:italic;">@Localizer["NoRecipesFound"]</p>
                     </div>
                 }
             </div>
         }
         else
         {
-            <LoadingView IsLoading="@(isLoading)" Text="Searching for the best recipes..." IsFullScreen="true">
+            <LoadingView IsLoading="@(isLoading)" Text="@Localizer["SearchingForRecipes"]" IsFullScreen="true">
 
                 @if (categories.Any())
                 {
@@ -73,11 +75,11 @@
                             <div class="hero-overlay">
                                 <div class="hero-content">
                                     <span class="hero-badge">
-                                        Recipe of the day
+                                        @Localizer["RecipeOfTheDay"]
                                     </span>
                                     <h2 class="hero-title">@recipeOfTheDay.Title</h2>
                                     <button class="btn-cook" @onclick="() => RecipeClicked(recipeOfTheDay)">
-                                        Cook Now
+                                        @Localizer["CookNow"]
                                     </button>
                                 </div>
                             </div>
@@ -87,28 +89,28 @@
 
                 @if (favouriteRecipes != null && favouriteRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="Your Favorites" Subtitle="The meals you love the most" HasMoreToLoad="moreFavouriteToLoad" IsLoading="isFavouriteLoading" OnLoadMore="LoadMoreFavourite" OnRecipeSelected="RecipeClicked" Recipes="favouriteRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["MyFavorites"]" Subtitle="@Localizer["MyFavoritesSubtitle"]" HasMoreToLoad="moreFavouriteToLoad" IsLoading="isFavouriteLoading" OnLoadMore="LoadMoreFavourite" OnRecipeSelected="RecipeClicked" Recipes="favouriteRecipes"></RecipeGridHorizontal>
                 }
 
                 @if (fastRecipes != null && fastRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="Speedy Meals" Subtitle="Spend less time cooking, more time eating" HasMoreToLoad="moreFastToLoad" IsLoading="isFastLoading" OnLoadMore="LoadMoreFast" OnRecipeSelected="RecipeClicked" Recipes="fastRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["SpeedyMeals"]" Subtitle="@Localizer["SpeedyMealsSubtitle"]" HasMoreToLoad="moreFastToLoad" IsLoading="isFastLoading" OnLoadMore="LoadMoreFast" OnRecipeSelected="RecipeClicked" Recipes="fastRecipes"></RecipeGridHorizontal>
                 }
 
                 @if (bestRecipes != null && bestRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="Trending Now" Subtitle="Fresh recipes with a high rating" HasMoreToLoad="moreBestToLoad" IsLoading="isBestLoading" OnLoadMore="LoadMoreBest" OnRecipeSelected="RecipeClicked" Recipes="bestRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["TrendingNow"]" Subtitle="@Localizer["TrendingNow"]" HasMoreToLoad="moreBestToLoad" IsLoading="isBestLoading" OnLoadMore="LoadMoreBest" OnRecipeSelected="RecipeClicked" Recipes="bestRecipes"></RecipeGridHorizontal>
                 }
 
                 @if (mineRecipes != null && mineRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="My Recipes" Subtitle="Recipes designed and shared by you" HasMoreToLoad="moreMineToLoad" IsLoading="isMineLoading" OnLoadMore="LoadMoreMine" OnRecipeSelected="RecipeClicked" Recipes="mineRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["MyRecipes"]" Subtitle="@Localizer["MyReciepsSubtitle"]" HasMoreToLoad="moreMineToLoad" IsLoading="isMineLoading" OnLoadMore="LoadMoreMine" OnRecipeSelected="RecipeClicked" Recipes="mineRecipes"></RecipeGridHorizontal>
                 }
 
                 <div class="section-divider">
                     <div class="title-block">
-                        <span class="subtitle">Discovery</span>
-                        <h2>Other recipes</h2>
+                        <span class="subtitle">@Localizer["Discovery"]</span>
+                        <h2>@Localizer["OtherRecipes"]</h2>
                     </div>
                     <div class="line"></div>
                 </div>

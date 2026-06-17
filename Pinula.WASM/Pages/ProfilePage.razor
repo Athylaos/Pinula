@@ -3,15 +3,19 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Models
 @using Pinula.WASM.Components
+@using Microsoft.Extensions.Localization
+@using System.Globalization
 @inject IUserService userService
 @inject IRecipeService recipeService
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<App> Localizer
+@inject ILocalStorage LocalStorage
 
 <PageTitle>Pinula - @(userProfile?.Name ?? "My Profile")</PageTitle>
 
 <div class="pf-page-wrapper">
-    <LoadingView IsLoading="@isLoading" Text="Loading your profile" IsFullScreen="true">
+    <LoadingView IsLoading="@isLoading" Text="@Localizer["LoadingProfile"]" IsFullScreen="true">
         
         <div class="pf-main-header">
             <div class="pf-user-meta">
@@ -25,8 +29,8 @@
             </div>
             
             <div class="pf-header-actions">
-                <button class="pf-icon-action-btn pf-logout-accent" @onclick="HandleLogout" title="Log Out">
-                    Log Out
+                <button class="pf-icon-action-btn pf-logout-accent" @onclick="HandleLogout" title="@Localizer["LogOut"]">
+                    @Localizer["LogOut"]
                 </button>
                 @if(userProfile.Role == "admin")
                 {
@@ -34,6 +38,14 @@
                         ADMIN
                     </button>
                 }
+                <div class="culture-toggle-container">
+                    <button class="btn-culture-toggle @(CurrentCulture == "en" ? "active" : "")" @onclick='() => ChangeCulture("en")'>
+                        EN
+                    </button>
+                    <button class="btn-culture-toggle @(CurrentCulture == "cs" ? "active" : "")" @onclick='() => ChangeCulture("cs")'>
+                        CZ
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -44,7 +56,7 @@
                 </div>
                 <div class="pf-metric-details">
                     <span class="pf-metric-value">@userProfile?.PostedRecipes</span>
-                    <span class="pf-metric-label">Recipes Posted</span>
+                    <span class="pf-metric-label">@Localizer["RecipesPosted"]</span>
                 </div>
             </div>
 
@@ -54,7 +66,7 @@
                 </div>
                 <div class="pf-metric-details">
                     <span class="pf-metric-value">@(userProfile?.AvgRating.ToString("0.0") ?? "0.0")</span>
-                    <span class="pf-metric-label">Avg Rating</span>
+                    <span class="pf-metric-label">@Localizer["AvgRating"]</span>
                 </div>
             </div>
 
@@ -64,7 +76,7 @@
                 </div>
                 <div class="pf-metric-details">
                     <span class="pf-metric-value">@userProfile?.PostedComments</span>
-                    <span class="pf-metric-label">Comments</span>
+                    <span class="pf-metric-label">@Localizer["Comments"]</span>
                 </div>
             </div>
 
@@ -74,7 +86,7 @@
                 </div>
                 <div class="pf-metric-details">
                     <span class="pf-metric-value">@userProfile?.UserCreated.ToString("MMM yyyy")</span>
-                    <span class="pf-metric-label">Member Since</span>
+                    <span class="pf-metric-label">@Localizer["MemberSince"]</span>
                 </div>
             </div>
         </div>
@@ -84,7 +96,7 @@
             <div class="pf-alert-toast pf-animate-slide" style="border-left: 4px solid var(--pine-teal);">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>@statusMessage</span>
-                    <button class="pf-btn-dismiss" @onclick="() => statusMessage = string.Empty">Dismiss</button>
+                    <button class="pf-btn-dismiss" @onclick="() => statusMessage = string.Empty">@Localizer["Dismiss"]</button>
                 </div>
             </div>
         }
@@ -93,7 +105,7 @@
             
             <div class="pf-content-card">
                 <div class="pf-card-header-block">
-                    <h4>Account Information</h4>
+                    <h4>@Localizer["AccountInformations"]</h4>
                 </div>
                 
                 @if (isEditing)
@@ -101,21 +113,21 @@
                     <div class="pf-card-scroll-body pf-animate-slide">
 						<EditForm Model="@updateModel" OnValidSubmit="HandleUpdateProfile" class="pf-animate-slide">
 							<div class="pf-form-group mb-3">
-								<label class="pf-field-caption">First Name</label>
+                                <label class="pf-field-caption">@Localizer["FirstName"]</label>
 								<InputText @bind-Value="@updateModel.Name" class="pf-text-field" />
 							</div>
 							<div class="pf-form-group mb-3">
-								<label class="pf-field-caption">Last Name</label>
+                                <label class="pf-field-caption">@Localizer["LastName"]</label>
 								<InputText @bind-Value="@updateModel.Surname" class="pf-text-field" />
 							</div>
 
 							<div class="pf-form-group mb-4">
-								<label class="pf-field-caption">Avatar Photo</label>
+                                <label class="pf-field-caption">@Localizer["AvatarPhoto"]</label>
 								<div class="pf-upload-zone">
 									<InputFile OnChange="HandleFileSelected" class="pf-text-field pf-file-picker" accept="image/*" />
 									@if (selectedFile != null)
 									{
-										<span class="pf-upload-indicator pf-animate-slide">📸 Ready: @selectedFile.Name</span>
+                                        <span class="pf-upload-indicator pf-animate-slide">@Localizer["Ready"]: @selectedFile.Name</span>
 									}
 								</div>
 							</div>
@@ -123,7 +135,7 @@
 							<div class="pf-form-actions-row">
 								<button type="button" class="pf-btn-dismiss" @onclick="ToggleEdit">Cancel</button>
 								<button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
-									@(isSaving ? "Saving..." : "Save Changes")
+                                    @(isSaving ? Localizer["Saving"] : Localizer["SaveChanges"])
 								</button>
 							</div>
 						</EditForm>
@@ -134,24 +146,24 @@
                     <div class="pf-card-scroll-body pf-animate-slide">
                         <EditForm Model="@updateModel" OnValidSubmit="HandleChangePassword" class="pf-animate-slide">
                             <div class="pf-form-group mb-3">
-                                <label class="pf-field-caption">Old password</label>
+                                <label class="pf-field-caption">@Localizer["OldPassword"]</label>
                                 <InputText type="password" @bind-Value="oldPswd" class="pf-text-field" />
                             </div>
 
                             <div class="pf-form-group mb-3">
-                                <label class="pf-field-caption">New password</label>
+                                <label class="pf-field-caption">@Localizer["NewPassword"]</label>
                                 <InputText type="password" @bind-Value="newPswd1" class="pf-text-field" />
                             </div>
 
                             <div class="pf-form-group mb-3">
-                                <label class="pf-field-caption">New password again</label>
+                                <label class="pf-field-caption">@Localizer["NewPasswordAgain"]</label>
                                 <InputText type="password" @bind-Value="newPswd2" class="pf-text-field" />
                             </div>
 
                             <div class="pf-form-actions-row">
-                                <button type="button" class="pf-btn-dismiss" @onclick="ToggleChangePassword">Cancel</button>
+                                <button type="button" class="pf-btn-dismiss" @onclick="ToggleChangePassword">@Localizer["Cancel"]</button>
                                 <button type="submit" class="pf-btn-submit-action" disabled="@isSaving">
-                                    @(isSaving ? "Saving..." : "Save Changes")
+                                    @(isSaving ? Localizer["Saving"] : Localizer["SaveChanges"])
                                 </button>
                             </div>
                         </EditForm>
@@ -161,24 +173,24 @@
                 {
                     <div class="pf-static-view pf-animate-slide">
                         <div class="pf-info-row">
-                            <span class="pf-info-title">First Name:</span>
+                            <span class="pf-info-title">@Localizer["FirstName"]</span>
                             <span class="pf-info-data">@userProfile?.Name</span>
                         </div>
                         <div class="pf-info-row">
-                            <span class="pf-info-title">Last Name:</span>
+                            <span class="pf-info-title">@Localizer["LastName"]</span>
                             <span class="pf-info-data">@userProfile?.Surname</span>
                         </div>
                         <div class="pf-info-row">
-                            <span class="pf-info-title">Email:</span>
+                            <span class="pf-info-title">Email</span>
                             <span class="pf-info-data">@userProfile?.Email</span>
                         </div>
                         
                         <div class="pf-form-actions-row mt-4">
                             <button type="button" class="pf-btn-submit-action" @onclick="ToggleEdit">
-                                <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                                <i class="bi bi-pencil-fill me-1"></i>@Localizer["EditProfile"]
                             </button>
                             <button type="button" class="pf-btn-submit-action" @onclick="ToggleChangePassword">
-                                <i class="bi bi-key-fill"></i> Change password
+                                <i class="bi bi-key-fill"></i> @Localizer["ChangePassword"]
                             </button>
                         </div>
                     </div>
@@ -187,15 +199,15 @@
 
             <div class="pf-content-card">
                 <div class="pf-card-header-block">
-                    <h4>Dashboard</h4>
+                    <h4>@Localizer["Dashboard"]</h4>
                 </div>
 
                 <div class="pf-card-scroll-body">
                     @if (userProfile.CanComment && userProfile.CanCreateRecipes)
                     {
                         <div class="pf-invites-empty-state">
-                            <h5>No news</h5>
-                            <p class="pf-field-caption text-center">All your inbox, activities and notices will appear right here.</p>
+                            <h5>@Localizer["NoNews"]</h5>
+                            <p class="pf-field-caption text-center">@Localizer["NoNewsSubtitle"]</p>
                         </div>
                     }
                     else
@@ -204,8 +216,8 @@
                         {
                             <div class="pf-ban-alert">
                                 <div class="prompt-content">
-                                    <h5>You have been banned from commenting</h5>
-                                    <p>Your right to post comments has been revoked by the administrator. You can appeal this decision through our support team.</p>
+                                    <h5>@Localizer["YouAreBannedComments"]</h5>
+                                    <p>@Localizer["YouAreBannedCommentsDescription"]</p>
                                 </div>
                             </div>
                         }
@@ -213,8 +225,8 @@
                         {
                             <div class="pf-ban-alert">
                                 <div class="prompt-content">
-                                    <h5>You have been banned from creating recipes</h5>
-                                    <p>Your right to post recipes has been revoked by the administrator. You can appeal this decision through our support team.</p>
+                                    <h5>@Localizer["YouAreBannedRecipes"]</h5>
+                                    <p>@Localizer["YouAreBannedRecipesDescription"]</p>
                                 </div>
                             </div>
                         }
@@ -225,7 +237,7 @@
         </div>
 
         <div class="pf-bottom-fullwidth-section">
-            <h3 class="pf-section-heading">My Favourite</h3>
+            <h3 class="pf-section-heading">@Localizer["MyFavorites"]</h3>
             
             @if (fvRecipes != null && fvRecipes.Any())
             {
@@ -239,12 +251,12 @@
             else
             {
                 <div class="pf-empty-recipes-fallback">
-                    <p>Your favourite list is empty. You haven't added to it any recipes yet.</p>
+                    <p>@Localizer["MyFavoritesEmpty"]</p>
                 </div>
             }
         </div>
         <div class="pf-bottom-fullwidth-section">
-            <h3 class="pf-section-heading">My Creations</h3>
+            <h3 class="pf-section-heading">@Localizer["MyRecipes"]</h3>
 
             @if (myRecipes != null && myRecipes.Any())
             {
@@ -260,7 +272,7 @@
             else
             {
                 <div class="pf-empty-recipes-fallback">
-                    <p>Your cooking journal is empty. You haven't submitted any recipes yet.</p>
+                    <p>@Localizer["MyRecipesEmpty"]</p>
                 </div>
             }
         </div>
@@ -410,7 +422,7 @@
 
         if(newPswd1 != newPswd2)
         {
-            statusMessage = "Passwords are not matching";
+            statusMessage = Localizer["PasswordsNotMatching"];
             isChangingPswd = false;
             isSaving = false;
             return;
@@ -418,7 +430,7 @@
 
         if (newPswd1.Length < 5)
         {
-            statusMessage = "Password has to be atleast 5 characters long";
+            statusMessage = Localizer["ToShortPassword"];
             isChangingPswd = false;
             isSaving = false;
             return;
@@ -430,16 +442,16 @@
 
             if (status)
             {
-                statusMessage = "Password updated successfully.";
+                statusMessage = @Localizer["PasswordUpdateSucess"];
             }
             else
             {
-                statusMessage = "Wrong password.";
+                statusMessage = Localizer["WrongPassword"];
             }
         }
         catch (Exception ex)
         {
-            statusMessage = $"Changing password failed: {ex.Message}";
+            statusMessage = Localizer["ChangingPasswordError"];
         }
         finally
         {
@@ -470,19 +482,19 @@
 
             if (success)
             {
-                statusMessage = "Profile updated successfully.";
+                statusMessage = Localizer["ProfileUpdatedSucess"];
                 isEditing = false;
                 selectedFile = null;
                 await LoadProfileData();
             }
             else
             {
-                statusMessage = "Server rejected profile update configuration.";
+                statusMessage = Localizer["ProfileUpdateFail"];
             }
         }
         catch (Exception ex)
         {
-            statusMessage = $"Processing failed: {ex.Message}";
+            statusMessage = Localizer["ProfileUpdateProcessFail"];
         }
         finally
         {
@@ -498,7 +510,18 @@
         NavManager.NavigateTo("/recipes", forceLoad: true);
     }
 
+    private string CurrentCulture => CultureInfo.CurrentCulture.Name;
+
+    private async Task ChangeCulture(string cultureCode)
+    {
+        if (CurrentCulture == cultureCode) return;
+        await LocalStorage.SetStringAsync("culture", cultureCode);
+
+       NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+    }
+
     private void HandleAdmin() => NavManager.NavigateTo("/admin");
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
     private void RecipeEditClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/edit/{r.Id}");
+
 }

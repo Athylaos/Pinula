@@ -12,11 +12,11 @@ namespace Pinula.Shared.Services
     public class UserService : IUserService
     {
         private readonly HttpClient _httpClient;
-        private readonly ITokenStorage _tokenStorage;
+        private readonly ILocalStorage _tokenStorage;
         private readonly ILogger _logger;
         private const string BaseUrl = "users";
 
-        public UserService(HttpClient httpClient, ITokenStorage tokenStorage, ILogger logger)
+        public UserService(HttpClient httpClient, ILocalStorage tokenStorage, ILogger logger)
         {
             _httpClient = httpClient;
             _tokenStorage = tokenStorage;

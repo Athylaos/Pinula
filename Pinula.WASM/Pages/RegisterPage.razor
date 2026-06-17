@@ -2,25 +2,29 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @using System.Net.Mail
+@using Microsoft.Extensions.Localization
 @inject IUserService UserService
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<App> Localizer
+
+<PageTitle>Pinula - </PageTitle>
 
 <div class="login-page">
     <div class="login-container">
         
         <div class="header-section">
-            <h1 class="login-title">Register</h1>
-            <p class="login-subtitle">Join us!</p>
+            <h1 class="login-title">@Localizer["Register"]</h1>
+            <p class="login-subtitle">@Localizer["JoinUs"]</p>
         </div>
 
         <div class="form-section">
             <div class="input-group">
-                <input type="text" placeholder="Name" @bind="nameEntry" class="custom-input" />
+                <input type="text" placeholder="@Localizer["FirstName"]" @bind="nameEntry" class="custom-input" />
             </div>
 
             <div class="input-group">
-                <input type="text" placeholder="Surname" @bind="surnameEntry" class="custom-input" />
+                <input type="text" placeholder="@Localizer["LastName"]" @bind="surnameEntry" class="custom-input" />
             </div>
 
             <div class="input-group">
@@ -28,11 +32,11 @@
             </div>
 
             <div class="input-group">
-                <input type="password" placeholder="Password" @bind="password1" class="custom-input" />
+                <input type="password" placeholder="@Localizer["Password"]" @bind="password1" class="custom-input" />
             </div>
 
             <div class="input-group">
-                <input type="password" placeholder="Confirm Password" @bind="password2" class="custom-input" />
+                <input type="password" placeholder="@Localizer["PasswordAgain"]" @bind="password2" class="custom-input" />
             </div>
 
             @if (indicatorVisibility)
@@ -55,12 +59,12 @@
         </div>
 
         <div class="footer-section">
-            <button class="btn-link" @onclick="LoginBtn">Login to existing account</button>
+            <button class="btn-link" @onclick="LoginBtn">@Localizer["LoginToExisting"]</button>
         </div>
 
         <div class="bottom-controls">
-            <button class="btn-skip" @onclick="BackBtn">Back</button>
-            <button class="btn-skip" @onclick="SkipBtn">Skip</button>
+            <button class="btn-skip" @onclick="BackBtn">@Localizer["Back"]</button>
+            <button class="btn-skip" @onclick="SkipBtn">@Localizer["Skip"]</button>
         </div>
     </div>
 </div>
@@ -80,25 +84,25 @@
     {
         if (string.IsNullOrWhiteSpace(nameEntry) || string.IsNullOrWhiteSpace(surnameEntry) || string.IsNullOrWhiteSpace(emailEntry))
         {
-            ShowError("Please fill in all fields");
+            ShowError(Localizer["FillAllFields"]);
             return;
         }
 
         if (!IsValidEmail(emailEntry))
         {
-            ShowError("Invalid email format");
+            ShowError(Localizer["InvalidEmailForamt"]);
             return;
         }
 
         if (password1 != password2)
         {
-            ShowError("Passwords don't match");
+            ShowError(Localizer["PasswordsNotMatching"]);
             return;
         }
 
         if (password1.Length < 6)
         {
-            ShowError("Password has to be atleast 5 characters long");
+            ShowError(Localizer["ToShortPassword"]);
             return;
         }
 
@@ -119,7 +123,7 @@
             var success = await UserService.RegisterAsync(registrationDto);
             if (!success)
             {
-                ShowError("This email is already registered, please login");
+                ShowError(Localizer["EmailAlreadyRegistred"]);
                 return;
             }
 
@@ -138,7 +142,7 @@
         }
         catch (Exception)
         {
-            ShowError("An error occurred during registration");
+            ShowError(Localizer["RegistrationError"]);
         }
         finally
         {

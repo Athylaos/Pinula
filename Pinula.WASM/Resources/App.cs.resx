@@ -1,0 +1,684 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddRecipe" xml:space="preserve">
+    <value>Vytvořit recept</value>
+  </data>
+  <data name="CancelFilters" xml:space="preserve">
+    <value>Zrušit filtry</value>
+  </data>
+  <data name="Ingredients" xml:space="preserve">
+    <value>Ingredience</value>
+  </data>
+  <data name="CookNow" xml:space="preserve">
+    <value>Uvařit</value>
+  </data>
+  <data name="DeleteRecipe" xml:space="preserve">
+    <value>Odstranit recept</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+    <value>Obtížnost</value>
+  </data>
+  <data name="Discovery" xml:space="preserve">
+    <value>Objevit</value>
+  </data>
+  <data name="EditRecipe" xml:space="preserve">
+    <value>Upravit recept</value>
+  </data>
+  <data name="Loading..." xml:space="preserve">
+    <value>Načítání...</value>
+  </data>
+  <data name="MyRecipes" xml:space="preserve">
+    <value>Moje recepty</value>
+  </data>
+  <data name="MyRecipesSubtitle" xml:space="preserve">
+    <value>Recepty vytvořené a sdílené vámi</value>
+  </data>
+  <data name="NoImageSelected" xml:space="preserve">
+    <value>Obrázek nevybrán</value>
+  </data>
+  <data name="NoRecipesFound" xml:space="preserve">
+    <value>Nebyli nalezeny žádné recepty s těmito filtry.</value>
+  </data>
+  <data name="OtherRecipes" xml:space="preserve">
+    <value>Další recepty</value>
+  </data>
+  <data name="RecipeName" xml:space="preserve">
+    <value>Název receptu</value>
+  </data>
+  <data name="RecipeNamePlaceholder" xml:space="preserve">
+    <value>např. Boloňské Špagety</value>
+  </data>
+  <data name="RecipeOfTheDay" xml:space="preserve">
+    <value>Recept dne</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Uložit změny</value>
+  </data>
+  <data name="SearchingForRecipes" xml:space="preserve">
+    <value>Vyhledávání nejlepších receptů...</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>Výsledky vyhledávání</value>
+  </data>
+  <data name="SelectImage" xml:space="preserve">
+    <value>Vybrat obrázek</value>
+  </data>
+  <data name="Servings" xml:space="preserve">
+    <value>Porce</value>
+  </data>
+  <data name="ShowMoreRecipes" xml:space="preserve">
+    <value>Načíst další recepty</value>
+  </data>
+  <data name="SpeedyMeals" xml:space="preserve">
+    <value>Rychlovky</value>
+  </data>
+  <data name="SpeedyMealsSubtitle" xml:space="preserve">
+    <value>Méně času u vaření, více času pro jezení</value>
+  </data>
+  <data name="TimeMinutes" xml:space="preserve">
+    <value>Čas (Minuty)</value>
+  </data>
+  <data name="TrendingNow" xml:space="preserve">
+    <value>Právě v kurzu</value>
+  </data>
+  <data name="TrendingNowSubtitle" xml:space="preserve">
+    <value>Žhavé novinky se skvělým hodnocením</value>
+  </data>
+  <data name="YouAreBanned" xml:space="preserve">
+    <value>Účet byl omezen</value>
+  </data>
+  <data name="YouAreBannedRecipesDescription" xml:space="preserve">
+    <value>Administrátor vám zakázal vytvářet recepty. Můžete se odvolat na naší podpoře.</value>
+  </data>
+  <data name="MyFavorites" xml:space="preserve">
+    <value>Oblíbené</value>
+  </data>
+  <data name="MyFavoritesSubtitle" xml:space="preserve">
+    <value>Jídla která máte nejraději</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Přidat</value>
+  </data>
+  <data name="CookingProcess" xml:space="preserve">
+    <value>Postup vaření</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Odebrat</value>
+  </data>
+  <data name="DescribeStepPlaceholder" xml:space="preserve">
+    <value>Popište tento krok...</value>
+  </data>
+  <data name="DeleteRecipeText1" xml:space="preserve">
+    <value>Tímto NAVŽDY odstraníte tento recept.</value>
+  </data>
+  <data name="DoYouWishToContinue" xml:space="preserve">
+    <value>Opravdu si přejete pokračovat?</value>
+  </data>
+  <data name="PermanentlyDelete" xml:space="preserve">
+    <value>Navždy smazat</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Ne</value>
+  </data>
+  <data name="CreateRecipe" xml:space="preserve">
+    <value>Vytvořit recept</value>
+  </data>
+  <data name="CWarningTitle" xml:space="preserve">
+    <value>Název je povinný</value>
+  </data>
+  <data name="CWarningTime" xml:space="preserve">
+    <value>Čas je povinný a nemůže být 0</value>
+  </data>
+  <data name="CWarningServings" xml:space="preserve">
+    <value>Počet porcí je povinný a nemůže být 0</value>
+  </data>
+  <data name="CWarningCategory" xml:space="preserve">
+    <value>Recept musí mít alespoň jednu kategori</value>
+  </data>
+  <data name="CWarningIngredients" xml:space="preserve">
+    <value>Recept musí obsahovat alespoň jednu ingredienci</value>
+  </data>
+  <data name="CWarningIngredientsQuantity" xml:space="preserve">
+    <value>Ingredience nesmí mít množství 0</value>
+  </data>
+  <data name="CWarningSteps" xml:space="preserve">
+    <value>Krok postupu vaření nemůže být prázdný</value>
+  </data>
+  <data name="DeleteRecipeErrorMsg" xml:space="preserve">
+    <value>Odstranění receptu neproběhlo úspěšně, zkuste to znovu, nebo kontaktujte podporu.</value>
+  </data>
+  <data name="ResultsIn" xml:space="preserve">
+    <value>Výsledky v</value>
+  </data>
+  <data name="LoadingCategory" xml:space="preserve">
+    <value>Načítám recepty kategorie</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="TopRated" xml:space="preserve">
+    <value>Nejlépe hodnocené</value>
+  </data>
+  <data name="TopRatedSubtitle" xml:space="preserve">
+    <value>Nejlepší recepty dle hodnocení</value>
+  </data>
+  <data name="QuickBites" xml:space="preserve">
+    <value>Rychle k zakousnutí</value>
+  </data>
+  <data name="QuickBitesSubtitle" xml:space="preserve">
+    <value>Ihned k zakousnutí</value>
+  </data>
+  <data name="AllRecipes" xml:space="preserve">
+    <value>Všechny recepty</value>
+  </data>
+  <data name="AllRecipesSubtitle" xml:space="preserve">
+    <value>Další delikatesy</value>
+  </data>
+  <data name="NoRecipesYet" xml:space="preserve">
+    <value>Aktuálně sbíráme recepty do této sekce. Zůstaňte s námi!</value>
+  </data>
+  <data name="LoginPage" xml:space="preserve">
+    <value>Přihlášení</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Přihlásit se</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Vítej zpátky</value>
+  </data>
+  <data name="EmailPlaceholder" xml:space="preserve">
+    <value>priklad@email.com</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Heslo</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Pokračovat</value>
+  </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>Vytvořit účet</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Zapomenuté heslo</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Přeskočit</value>
+  </data>
+  <data name="WrongLogin" xml:space="preserve">
+    <value>Špatný email nebo heslo</value>
+  </data>
+  <data name="LoginError" xml:space="preserve">
+    <value>Během přihlašování nastala chyba</value>
+  </data>
+  <data name="PasswordResetMsg" xml:space="preserve">
+    <value>Pro resetování hesla prosíme kontaktujte podporu</value>
+  </data>
+  <data name="PlannerPage" xml:space="preserve">
+    <value>Plánovač</value>
+  </data>
+  <data name="KitchenDashboard" xml:space="preserve">
+    <value>Přehled vaší kuchyně</value>
+  </data>
+  <data name="StartPlanning" xml:space="preserve">
+    <value>Začněte plánovat</value>
+  </data>
+  <data name="StartPlanningSubtitle" xml:space="preserve">
+    <value>Organizujte společně vaše vaření</value>
+  </data>
+  <data name="SetupGroup" xml:space="preserve">
+    <value>Nastavit skupinu</value>
+  </data>
+  <data name="LoadingPlans" xml:space="preserve">
+    <value>Načítám tvoje plány</value>
+  </data>
+  <data name="NotInGroup" xml:space="preserve">
+    <value>Zatím nejste ve skupině</value>
+  </data>
+  <data name="NotInGroupSubtitle" xml:space="preserve">
+    <value>Připoj se, nebo vytvoř skupinu pro kooperaci ve vaší domácnosti</value>
+  </data>
+  <data name="CreateGroup" xml:space="preserve">
+    <value>Vytvoř novou skupinu</value>
+  </data>
+  <data name="CreateGroupSubtitle" xml:space="preserve">
+    <value>Vytvoř zcela novou skupinu pro vaší domácnost</value>
+  </data>
+  <data name="CreateGroupPlaceholder" xml:space="preserve">
+    <value>např. Moje skvělá rodina</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Vytvořit</value>
+  </data>
+  <data name="JoinGroup" xml:space="preserve">
+    <value>Připoj se ke skupině</value>
+  </data>
+  <data name="JoinGroupSubtitle" xml:space="preserve">
+    <value>Zadej zvací kód od svého parťáka</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>Připojit se</value>
+  </data>
+  <data name="LoadingProfile" xml:space="preserve">
+    <value>Načítám tvůj profil</value>
+  </data>
+  <data name="LogOut" xml:space="preserve">
+    <value>Odhlásit se</value>
+  </data>
+  <data name="RecipesPosted" xml:space="preserve">
+    <value>Sdíleno receptů</value>
+  </data>
+  <data name="AvgRating" xml:space="preserve">
+    <value>Prům. hodnocení</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Komentáře</value>
+  </data>
+  <data name="MemberSince" xml:space="preserve">
+    <value>Členem od</value>
+  </data>
+  <data name="AccountInformations" xml:space="preserve">
+    <value>Detail účtu</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>Křestní jméno</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Příjmení</value>
+  </data>
+  <data name="AvatarPhoto" xml:space="preserve">
+    <value>Profilový obrázek</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Připraveno</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>Ukládání...</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>Staré heslo</value>
+  </data>
+  <data name="NewPasswordAgain" xml:space="preserve">
+    <value>Nové heslo znovu</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Nové heslo</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Zrušit</value>
+  </data>
+  <data name="EditProfile" xml:space="preserve">
+    <value>Upravit profil</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Změnit heslo</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Přehled</value>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>Žádné novinky</value>
+  </data>
+  <data name="NoNewsSubtitle" xml:space="preserve">
+    <value>Veškerá pošta, aktivity a oznámení se objeví zde</value>
+  </data>
+  <data name="YouAreBannedRecipes" xml:space="preserve">
+    <value>Vytváření receptů zakázáno</value>
+  </data>
+  <data name="YouAreBannedComments" xml:space="preserve">
+    <value>Sdílení komentářů zakázáno</value>
+  </data>
+  <data name="YouAreBannedCommentsDescription" xml:space="preserve">
+    <value>Administrátor vám zakázal sdílet komentáře. Můžete se odvolat na naší podpoře.</value>
+  </data>
+  <data name="MyFavoritesEmpty" xml:space="preserve">
+    <value>Tvůj list oblíbených je prázdný. Přidej nějaké recepty!</value>
+  </data>
+  <data name="MyRecipesEmpty" xml:space="preserve">
+    <value>Tvoje kuchařka je prázdná. Přidej nové recepty!</value>
+  </data>
+  <data name="PasswordsNotMatching" xml:space="preserve">
+    <value>Hesla se neschodují</value>
+  </data>
+  <data name="ToShortPassword" xml:space="preserve">
+    <value>Heslo musí být alespoň 5 znaků dlouhé</value>
+  </data>
+  <data name="PasswordUpdateSucess" xml:space="preserve">
+    <value>Heslo bylo úspěšně změněno</value>
+  </data>
+  <data name="WrongPassword" xml:space="preserve">
+    <value>Špatné heslo</value>
+  </data>
+  <data name="ChangingPasswordError" xml:space="preserve">
+    <value>Změna hesla selhala</value>
+  </data>
+  <data name="ProfileUpdatedSucess" xml:space="preserve">
+    <value>Profil úspěšně upraven</value>
+  </data>
+  <data name="ProfileUpdateFail" xml:space="preserve">
+    <value>Změny na profilu byly odmítnuty</value>
+  </data>
+  <data name="ProfileUpdateProcessFail" xml:space="preserve">
+    <value>Zpracování selhalo. Obrázek může být typu: .jpg, .jpeg, .png, .webp</value>
+  </data>
+  <data name="LoadingRecipe" xml:space="preserve">
+    <value>Připravuji tento recept</value>
+  </data>
+  <data name="Reviews" xml:space="preserve">
+    <value>hodnocení</value>
+  </data>
+  <data name="PrepTime" xml:space="preserve">
+    <value>Čas vaření</value>
+  </data>
+  <data name="CommunityReviews" xml:space="preserve">
+    <value>Uživatelská hodnocení</value>
+  </data>
+  <data name="JoinConversation" xml:space="preserve">
+    <value>Připoj se do debaty</value>
+  </data>
+  <data name="JoinConversationSubtitle" xml:space="preserve">
+    <value>Pouze přihlášení kuchaři mohou psát hodnocení a sdílet jejich zkušenosti.</value>
+  </data>
+  <data name="LogInToReview" xml:space="preserve">
+    <value>Přihlásit se a hodnotit</value>
+  </data>
+  <data name="CommentPlaceholder" xml:space="preserve">
+    <value>Sdílej svoje myšlenky nebo ohodnoť tento recept...</value>
+  </data>
+  <data name="PostComment" xml:space="preserve">
+    <value>Zveřejnit komentář</value>
+  </data>
+  <data name="Plan" xml:space="preserve">
+    <value>Naplánovat</value>
+  </data>
+  <data name="Edited" xml:space="preserve">
+    <value>Upraveno</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>Odpovědět</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Upravit</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Smazat</value>
+  </data>
+  <data name="ContentRemoved" xml:space="preserve">
+    <value>[Obsah odstraněn]</value>
+  </data>
+  <data name="RemovedByUser" xml:space="preserve">
+    <value>Tento komentář byl odstraněn uživatelem.</value>
+  </data>
+  <data name="RemovedByAdmin" xml:space="preserve">
+    <value>Tento komentář byl odstraněn moderátorem.</value>
+  </data>
+  <data name="ReplyTo" xml:space="preserve">
+    <value>Odpovězte uživateli</value>
+  </data>
+  <data name="PostReply" xml:space="preserve">
+    <value>Zveřejnit odpověď</value>
+  </data>
+  <data name="Recipes" xml:space="preserve">
+    <value>Recepty</value>
+  </data>
+  <data name="PasswordAgain" xml:space="preserve">
+    <value>Heslo znovu</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Registrace</value>
+  </data>
+  <data name="JoinUs" xml:space="preserve">
+    <value>Přidej se k nám!</value>
+  </data>
+  <data name="LoginToExisting" xml:space="preserve">
+    <value>Přihlásit se k existujícímu účtu</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Zpátky</value>
+  </data>
+  <data name="FillAllFields" xml:space="preserve">
+    <value>Prosíme vyplňte všechna pole</value>
+  </data>
+  <data name="InvalidEmailFormat" xml:space="preserve">
+    <value>Nesprávný formát emailu, použijte např. priklad@email.com</value>
+  </data>
+  <data name="EmailAlreadyRegistred" xml:space="preserve">
+    <value>Email je již zaregistrován, prosíme přihlaste se</value>
+  </data>
+  <data name="RegistrationError" xml:space="preserve">
+    <value>Došlo k problému při vytváření účtu, zkuste to později znovu.</value>
+  </data>
+  <data name="Recipe" xml:space="preserve">
+    <value>Recept</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Portions" xml:space="preserve">
+    <value>porce</value>
+  </data>
+  <data name="WhoIsEating" xml:space="preserve">
+    <value>Kdo bude jíst?</value>
+  </data>
+  <data name="DeleteFromPlan" xml:space="preserve">
+    <value>Odstranit s plánu</value>
+  </data>
+  <data name="GroupName" xml:space="preserve">
+    <value>Název skupiny</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Zkopírovat</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Zkopírováno!</value>
+  </data>
+  <data name="Member" xml:space="preserve">
+    <value>Člen</value>
+  </data>
+  <data name="LeaveGroup" xml:space="preserve">
+    <value>Opustit skupinu</value>
+  </data>
+  <data name="ConfirmAndCreate" xml:space="preserve">
+    <value>Potvrdit a vytvořit</value>
+  </data>
+  <data name="OR" xml:space="preserve">
+    <value>NEBO</value>
+  </data>
+  <data name="EnterInvitationKey" xml:space="preserve">
+    <value>Zadejte zvací kód</value>
+  </data>
+  <data name="ConfirmAndJoin" xml:space="preserve">
+    <value>Potvrdit a připojit se</value>
+  </data>
+  <data name="EditMealPlan" xml:space="preserve">
+    <value>Upravit plán</value>
+  </data>
+  <data name="NoRecipeSelected" xml:space="preserve">
+    <value>Není vybrán žádný recept</value>
+  </data>
+  <data name="ClickToPlan" xml:space="preserve">
+    <value>Klikněte pro plánování</value>
+  </data>
+  <data name="AddToPlan" xml:space="preserve">
+    <value>Přidat do plánu</value>
+  </data>
+  <data name="MealTime" xml:space="preserve">
+    <value>Čas jídla</value>
+  </data>
+  <data name="RecipeSelectedFromDetailPage" xml:space="preserve">
+    <value>Recept je vybrán ze stránky podrobností.</value>
+  </data>
+  <data name="SelectFavoriteRecipe" xml:space="preserve">
+    <value>Vyberte svůj oblíbený recept</value>
+  </data>
+  <data name="SavePlan" xml:space="preserve">
+    <value>Uložit plán</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Čas</value>
+  </data>
+  <data name="Calories" xml:space="preserve">
+    <value>Kalorie</value>
+  </data>
+  <data name="Author" xml:space="preserve">
+    <value>Autor</value>
+  </data>
+  <data name="Macros" xml:space="preserve">
+    <value>Makra</value>
+  </data>
+  <data name="SearchRecipesPlaceholder" xml:space="preserve">
+    <value>Hledejte recepty...</value>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Hodnocení</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Vyčistit</value>
+  </data>
+  <data name="OnlyFavorite" xml:space="preserve">
+    <value>Pouze oblíbené</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Použít</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Zavřít</value>
+  </data>
+  <data name="By" xml:space="preserve">
+    <value>Od</value>
+  </data>
+  <data name="PerServing" xml:space="preserve">
+    <value>Na porci</value>
+  </data>
+  <data name="Carbs" xml:space="preserve">
+    <value>Sacharidy</value>
+  </data>
+  <data name="Protein" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="Fat" xml:space="preserve">
+    <value>Tuky</value>
+  </data>
+  <data name="Fiber" xml:space="preserve">
+    <value>Vláknina</value>
+  </data>
+</root>

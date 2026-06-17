@@ -1,5 +1,7 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer 
 
 @if (IsVisible)
 {
@@ -16,7 +18,7 @@
                 <div class="preselected-recipe-card modal-spacer-md">
                     <div class="recipe-info">
                         <div>
-                            <small class="recipe-label-sub">Recipe</small>
+                            <small class="recipe-label-sub">@Localizer["Recipe"]</small>
                             <span>@RecipeName</span>
                         </div>
                     </div>
@@ -24,11 +26,11 @@
 
                 <div class="form-row-2 modal-spacer-md">
                     <div class="modal-section">
-                        <label class="section-label">Date</label>
+                        <label class="section-label">@Localizer["Date"]</label>
                         <input type="date" class="modal-input" @bind="EditDate" />
                     </div>
                     <div class="modal-section">
-                        <label class="section-label">Meal Type</label>
+                        <label class="section-label">@Localizer["MealTime"]</label>
                         <select class="modal-input" @bind="EditMealType">
                             @foreach (var type in Enum.GetValues<MealType>())
                             {
@@ -39,15 +41,15 @@
                 </div>
 
                 <div class="section-header-flex modal-spacer-sm">
-                    <label class="section-label">Servings</label>
+                    <label class="section-label">@Localizer["Servings"]</label>
                     <div class="servings-selector">
                         <input type="number" min="1" max="20" class="input-servings" @bind="EditServings" />
-                        <span>portions</span>
+                        <span>@Localizer["Portions"]</span>
                     </div>
                 </div>
 
                 <div class="modal-section modal-spacer-top-lg">
-                    <label class="section-label section-label-block">Who's eating?</label>
+                    <label class="section-label section-label-block">@Localizer["WhoIsEating"]</label>
                     <div class="eaters-selection">
                         @foreach (var member in AllGroupMembers)
                         {
@@ -69,9 +71,9 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn-delete-mp" @onclick="HandleDelete">Delete from plan</button>
+                <button type="button" class="btn-delete-mp" @onclick="HandleDelete">@Localizer["DeleteFromPlan"]</button>
                 <div class="flex-spacer"></div>
-                <button type="button" class="btn-accent" @onclick="HandleSave" disabled="@(!SelectedUserIds.Any())"> Save Changes</button>
+                <button type="button" class="btn-accent" @onclick="HandleSave" disabled="@(!SelectedUserIds.Any())">@Localizer["SaveChanges"]</button>
             </div>
         </div>
     </div>

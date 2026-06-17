@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
-@using Pinula.Shared.Models
-@using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
 
 <div class="recipe-detailed-card" @onclick="() => OnRecipeSelected.InvokeAsync(Recipe)">
     <div class="card-image-section">
@@ -22,7 +22,7 @@
             </div>
             @if (EnableEdit)
             {
-                <button class="edit-badge" @onclick="() => OnRecipeEditSelected.InvokeAsync(Recipe)" title="Edit recipe">
+                <button class="edit-badge" @onclick="() => OnRecipeEditSelected.InvokeAsync(Recipe)" title="@Localizer["EditRecipe"]">
                     <img src="images/icons/pencil.png" style="margin-top:-3px" class="time-icon" />
                 </button>
             }
@@ -34,7 +34,7 @@
             <div class="info-item">
                 <img src="images/icons/time.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Time</span>
+                    <span class="label">@Localizer["Time"]</span>
                     <span class="value">@Recipe.CookingTime min</span>
                 </div>
             </div>
@@ -42,7 +42,7 @@
             <div class="info-item">
                 <img src="images/icons/difficulty.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Level</span>
+                    <span class="label">@Localizer["Difficulty"]</span>
                     <span class="value">@Recipe.Difficulty</span>
                 </div>
             </div>
@@ -50,7 +50,7 @@
             <div class="info-item">
                 <img src="images/icons/spoon_fork.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Servings</span>
+                    <span class="label">@Localizer["Servings"]</span>
                     <span class="value">@Recipe.ServingsAmount</span>
                 </div>
             </div>
@@ -58,7 +58,7 @@
             <div class="info-item">
                 <img src="images/icons/calories.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Energy</span>
+                    <span class="label">@Localizer["Calories"]</span>
                     <span class="value">@Recipe.Calories?.ToString("F0") kcal</span>
                 </div>
             </div>
@@ -66,7 +66,7 @@
             <div class="info-item">
                 <img src="images/icons/account.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Author</span>
+                    <span class="label">@Localizer["Author"]</span>
                     <span class="value author">@Recipe.UserName</span>
                 </div>
             </div>
@@ -74,7 +74,7 @@
             <div class="info-item">
                 <img src="images/icons/fridge.png" class="info-icon" />
                 <div class="info-text">
-                    <span class="label">Macros</span>
+                    <span class="label">@Localizer["Macros"]</span>
                     <span class="value">@Recipe.MacrosLabel</span>
                 </div>
             </div>

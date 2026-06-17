@@ -1,5 +1,7 @@
 ﻿@using Pinula.Shared.DTOs
 @using System.Globalization
+@using Pinula.Shared.Interface
+@inject ILocalStorage LocalStorage
 
 <div class="weekly-navigation-container">
     <button class="nav-arrow-btn" @onclick="() => HandleWeekChange(false)">
@@ -16,7 +18,7 @@
             <div class="day-bubble @(isSelected ? "selected" : "") @(isToday ? "today" : "")"
                  @onclick="() => OnDateSelected.InvokeAsync(date)">
 
-                <span class="day-name">@date.ToString("ddd", _culture)</span>
+                <span class="day-name">@date.ToString("ddd", Culture)</span>
                 <span class="day-number">@date.Day</span>
 
                 <div class="indicator-area">
@@ -40,9 +42,12 @@
     [Parameter] public List<MealPlanPreviewDto> WeeklyPlans { get; set; } = new();
     [Parameter] public EventCallback<DateTime> OnDateSelected { get; set; }
     [Parameter] public EventCallback<bool> OnWeekChangedForward { get; set; }
+    [Parameter] public CultureInfo Culture { get; set; }
 
     private List<DateTime> _displayedDates = new();
-    private readonly CultureInfo _culture = CultureInfo.GetCultureInfo("en-US");
+
+
+
 
     protected override void OnParametersSet()
     {

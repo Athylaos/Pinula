@@ -1,24 +1,26 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
 @using Pinula.Shared.Interface
+@using Microsoft.Extensions.Localization
 @inject IRecipeService RecipeService
+@inject IStringLocalizer<App> Localizer
 
 <div class="modal-overlay" @onclick="Cancel">
     <div class="glass-modal plan-meal-modal" @onclick:stopPropagation>
         <div class="modal-header">
             <img src="images/icons/calendar.png" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
-            <h2 style ="display:inline-block"> Add to Plan</h2>
+            <h2 style="display:inline-block">@Localizer["AddToPlan"]</h2>
             <button class="close-modal-btn" @onclick="Cancel">&times;</button>
         </div>
 
         <div class="modal-body">
             <div class="form-row-2">
                 <div class="modal-section">
-                    <label class="section-label">Date</label>
+                    <label class="section-label">@Localizer["Date"]</label>
                     <input type="date" @bind="PlanDate" class="modal-input" />
                 </div>
                 <div class="modal-section">
-                    <label class="section-label">Meal</label>
+                    <label class="section-label">@Localizer["MealTime"]</label>
                     <select @bind="SelectedMealType" class="modal-input">
                         @foreach (var type in Enum.GetValues<MealType>())
                         {
@@ -29,19 +31,19 @@
             </div>
 
             <div class="modal-section">
-                <label class="section-label">Recipe</label>
+                <label class="section-label">@Localizer["Recipe"]</label>
                 @if (PreselectedRecipeId.HasValue)
                 {
                     <div class="preselected-recipe-card">
                         <div class="recipe-info">
-                            <span>Recipe is selected from detail page.</span>
+                            <span>@Localizer["RecipeSelectedFromDetailPage"]</span>
                         </div>
                     </div>
                 }
                 else
                 {
                     <select @bind="SelectedRecipeId" class="modal-input">
-                        <option value="">-- Select your favorite recipe --</option>
+                        <option value="">-- @Localizer["SelectFavoriteRecipe"] --</option>
                         @foreach (var recipe in FvRecipes)
                         {
                             <option value="@recipe.Id">@recipe.Title</option>
@@ -52,9 +54,9 @@
 
             <div class="modal-section">
                 <div class="section-header-flex">
-                    <label class="section-label">Who is eating?</label>
+                    <label class="section-label">@Localizer["WhoIsEating"]</label>
                     <div class="servings-selector">
-                        <label>Servings:</label>
+                        <label>@Localizer["Servings"]:</label>
                         <input type="number" min="1" @bind="Servings" class="input-servings" />
                     </div>
                 </div>
@@ -75,9 +77,9 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn-cancel-mp" @onclick="Cancel">Cancel</button>
+                <button class="btn-cancel-mp" @onclick="Cancel">@Localizer["Cancel"]</button>
                 <button class="btn-accent" disabled="@(!IsValid)" @onclick="ConfirmSave">
-                    Save Plan
+                    @Localizer["SavePlan"]
                 </button>
             </div>
         </div>

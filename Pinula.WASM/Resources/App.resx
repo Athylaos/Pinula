@@ -1,0 +1,684 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddRecipe" xml:space="preserve">
+    <value>Add recipe</value>
+  </data>
+  <data name="CancelFilters" xml:space="preserve">
+    <value>Cancel filters</value>
+  </data>
+  <data name="Ingredients" xml:space="preserve">
+    <value>Ingrediets</value>
+  </data>
+  <data name="CookNow" xml:space="preserve">
+    <value>Cook now</value>
+  </data>
+  <data name="DeleteRecipe" xml:space="preserve">
+    <value>Delete recipe</value>
+  </data>
+  <data name="Difficulty" xml:space="preserve">
+    <value>Difficulty</value>
+  </data>
+  <data name="Discovery" xml:space="preserve">
+    <value>Discovery</value>
+  </data>
+  <data name="EditRecipe" xml:space="preserve">
+    <value>Edit recipe</value>
+  </data>
+  <data name="Loading..." xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="MyRecipes" xml:space="preserve">
+    <value>My recipes</value>
+  </data>
+  <data name="MyRecipesSubtitle" xml:space="preserve">
+    <value>Recipes designed and shared by you</value>
+  </data>
+  <data name="NoImageSelected" xml:space="preserve">
+    <value>No image selecte</value>
+  </data>
+  <data name="NoRecipesFound" xml:space="preserve">
+    <value>No recipes found matching your filters.</value>
+  </data>
+  <data name="OtherRecipes" xml:space="preserve">
+    <value>Other recipes</value>
+  </data>
+  <data name="RecipeName" xml:space="preserve">
+    <value>Recipe name</value>
+  </data>
+  <data name="RecipeNamePlaceholder" xml:space="preserve">
+    <value>e. g. Spaghetti Bolognese</value>
+  </data>
+  <data name="RecipeOfTheDay" xml:space="preserve">
+    <value>Recipe of the day</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="SearchingForRecipes" xml:space="preserve">
+    <value>Searching for the best recipes...</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="SelectImage" xml:space="preserve">
+    <value>Select image</value>
+  </data>
+  <data name="Servings" xml:space="preserve">
+    <value>Servings</value>
+  </data>
+  <data name="ShowMoreRecipes" xml:space="preserve">
+    <value>Show more recieps</value>
+  </data>
+  <data name="SpeedyMeals" xml:space="preserve">
+    <value>Speedy meals</value>
+  </data>
+  <data name="SpeedyMealsSubtitle" xml:space="preserve">
+    <value>Spend less time cooking, more time eating</value>
+  </data>
+  <data name="TimeMinutes" xml:space="preserve">
+    <value>Time (Minutes)</value>
+  </data>
+  <data name="TrendingNow" xml:space="preserve">
+    <value>Trending now</value>
+  </data>
+  <data name="TrendingNowSubtitle" xml:space="preserve">
+    <value>Fresh recipes with high rating</value>
+  </data>
+  <data name="YouAreBanned" xml:space="preserve">
+    <value>You have been banned</value>
+  </data>
+  <data name="YouAreBannedRecipesDescription" xml:space="preserve">
+    <value>Your right to post recipes has been revoked by the administrator. You can appeal this decision through our support team.</value>
+  </data>
+  <data name="MyFavorites" xml:space="preserve">
+    <value>My favorites</value>
+  </data>
+  <data name="MyFavoritesSubtitle" xml:space="preserve">
+    <value>The meals you love the most</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="CookingProcess" xml:space="preserve">
+    <value>Cooking process</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="DescribeStepPlaceholder" xml:space="preserve">
+    <value>Describe this step...</value>
+  </data>
+  <data name="DeleteRecipeText1" xml:space="preserve">
+    <value>This will PERMANENTLY delete your recipe.</value>
+  </data>
+  <data name="DoYouWishToContinue" xml:space="preserve">
+    <value>Do you really wish to continue?</value>
+  </data>
+  <data name="PermanentlyDelete" xml:space="preserve">
+    <value>Permanently delete</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="CreateRecipe" xml:space="preserve">
+    <value>Create recipe</value>
+  </data>
+  <data name="CWarningTitle" xml:space="preserve">
+    <value>Title is mandatory</value>
+  </data>
+  <data name="CWarningTime" xml:space="preserve">
+    <value>Time is mandatory and can't be 0</value>
+  </data>
+  <data name="CWarningServings" xml:space="preserve">
+    <value>Number of servings is mandatory and can't be é</value>
+  </data>
+  <data name="CWarningCategory" xml:space="preserve">
+    <value>Recipe must have at least one category</value>
+  </data>
+  <data name="CWarningIngredients" xml:space="preserve">
+    <value>Recipe must have at least one ingredient</value>
+  </data>
+  <data name="CWarningIngredientsQuantity" xml:space="preserve">
+    <value>Ingredient can't have zero quantity</value>
+  </data>
+  <data name="CWarningSteps" xml:space="preserve">
+    <value>Cooking step can't be empty</value>
+  </data>
+  <data name="DeleteRecipeErrorMsg" xml:space="preserve">
+    <value>Deleting your's recipe was't succesfull, try again or contact support.</value>
+  </data>
+  <data name="ResultsIn" xml:space="preserve">
+    <value>Results in</value>
+  </data>
+  <data name="LoadingCategory" xml:space="preserve">
+    <value>Loading recipes by category</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="TopRated" xml:space="preserve">
+    <value>Top rated</value>
+  </data>
+  <data name="TopRatedSubtitle" xml:space="preserve">
+    <value>Highest user rated recipes</value>
+  </data>
+  <data name="QuickBites" xml:space="preserve">
+    <value>Quick bites</value>
+  </data>
+  <data name="QuickBitesSubtitle" xml:space="preserve">
+    <value>Ready before you know it</value>
+  </data>
+  <data name="AllRecipes" xml:space="preserve">
+    <value>All recipes</value>
+  </data>
+  <data name="AllRecipesSubtitle" xml:space="preserve">
+    <value>Other delicacies</value>
+  </data>
+  <data name="NoRecipesYet" xml:space="preserve">
+    <value>We are currently gathering recipes for this section. Stay tuned!</value>
+  </data>
+  <data name="LoginPage" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Welcome back</value>
+  </data>
+  <data name="EmailPlaceholder" xml:space="preserve">
+    <value>example@email.com</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>Create account</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Forgot password</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="WrongLogin" xml:space="preserve">
+    <value>Wrong email or password</value>
+  </data>
+  <data name="LoginError" xml:space="preserve">
+    <value>An error occured during login</value>
+  </data>
+  <data name="PasswordResetMsg" xml:space="preserve">
+    <value>For password reset please contact support</value>
+  </data>
+  <data name="PlannerPage" xml:space="preserve">
+    <value>Planner</value>
+  </data>
+  <data name="KitchenDashboard" xml:space="preserve">
+    <value>Your kitchen dashboard</value>
+  </data>
+  <data name="StartPlanning" xml:space="preserve">
+    <value>Start planning</value>
+  </data>
+  <data name="StartPlanningSubtitle" xml:space="preserve">
+    <value>Organize your meals together</value>
+  </data>
+  <data name="SetupGroup" xml:space="preserve">
+    <value>Setup group</value>
+  </data>
+  <data name="LoadingPlans" xml:space="preserve">
+    <value>Loading your plans</value>
+  </data>
+  <data name="NotInGroup" xml:space="preserve">
+    <value>You are not in group yet</value>
+  </data>
+  <data name="NotInGroupSubtitle" xml:space="preserve">
+    <value>Join or create group to start cooperate with your household</value>
+  </data>
+  <data name="CreateGroup" xml:space="preserve">
+    <value>Create new group</value>
+  </data>
+  <data name="CreateGroupSubtitle" xml:space="preserve">
+    <value>Create brand new group for your household</value>
+  </data>
+  <data name="CreateGroupPlaceholder" xml:space="preserve">
+    <value>e. g. My awesome family</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="JoinGroup" xml:space="preserve">
+    <value>Join existing group</value>
+  </data>
+  <data name="JoinGroupSubtitle" xml:space="preserve">
+    <value>Enter invitation code provided by your partner</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>Join</value>
+  </data>
+  <data name="LoadingProfile" xml:space="preserve">
+    <value>Loading your profile</value>
+  </data>
+  <data name="LogOut" xml:space="preserve">
+    <value>Log out</value>
+  </data>
+  <data name="RecipesPosted" xml:space="preserve">
+    <value>Recipes posted</value>
+  </data>
+  <data name="AvgRating" xml:space="preserve">
+    <value>Avg. rating</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="MemberSince" xml:space="preserve">
+    <value>Member since</value>
+  </data>
+  <data name="AccountInformations" xml:space="preserve">
+    <value>Account informations</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="AvatarPhoto" xml:space="preserve">
+    <value>Avatar photo</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>Saving...</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>Old password</value>
+  </data>
+  <data name="NewPasswordAgain" xml:space="preserve">
+    <value>New password again</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="EditProfile" xml:space="preserve">
+    <value>Edit profile</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>No news</value>
+  </data>
+  <data name="NoNewsSubtitle" xml:space="preserve">
+    <value>All your inbox, activities and notivces will appear hear.</value>
+  </data>
+  <data name="YouAreBannedRecipes" xml:space="preserve">
+    <value>You have been banned from creating recipes</value>
+  </data>
+  <data name="YouAreBannedComments" xml:space="preserve">
+    <value>You have been banned from posting comments</value>
+  </data>
+  <data name="YouAreBannedCommentsDescription" xml:space="preserve">
+    <value>Your right to post comments has been revoked by the administrator. You can appeal this decision trough our support team.</value>
+  </data>
+  <data name="MyFavoritesEmpty" xml:space="preserve">
+    <value>Your favorite list is empty. Add some recipes!</value>
+  </data>
+  <data name="MyRecipesEmpty" xml:space="preserve">
+    <value>Your cooking journal is empty. Create some new recipes!</value>
+  </data>
+  <data name="PasswordsNotMatching" xml:space="preserve">
+    <value>Passwords are not matching</value>
+  </data>
+  <data name="ToShortPassword" xml:space="preserve">
+    <value>Password has to be at least 5 characters long</value>
+  </data>
+  <data name="PasswordUpdateSucess" xml:space="preserve">
+    <value>Password has been changed sucesfully</value>
+  </data>
+  <data name="WrongPassword" xml:space="preserve">
+    <value>Wrong password</value>
+  </data>
+  <data name="ChangingPasswordError" xml:space="preserve">
+    <value>Changing password failed</value>
+  </data>
+  <data name="ProfileUpdatedSucess" xml:space="preserve">
+    <value>Profile updated sucesfully</value>
+  </data>
+  <data name="ProfileUpdateFail" xml:space="preserve">
+    <value>Profile update was rejected</value>
+  </data>
+  <data name="ProfileUpdateProcessFail" xml:space="preserve">
+    <value>Processing changes failed. Photo can be type: .jpg, .jpeg, .png, .webp</value>
+  </data>
+  <data name="LoadingRecipe" xml:space="preserve">
+    <value>Prepering this recipe</value>
+  </data>
+  <data name="Reviews" xml:space="preserve">
+    <value>reviews</value>
+  </data>
+  <data name="PrepTime" xml:space="preserve">
+    <value>Prep time</value>
+  </data>
+  <data name="CommunityReviews" xml:space="preserve">
+    <value>Community reviews</value>
+  </data>
+  <data name="JoinConversation" xml:space="preserve">
+    <value>Join the conversation</value>
+  </data>
+  <data name="JoinConversationSubtitle" xml:space="preserve">
+    <value>Only logged-in chefs can write a reviews and share their experience.</value>
+  </data>
+  <data name="LogInToReview" xml:space="preserve">
+    <value>Log in to review</value>
+  </data>
+  <data name="CommentPlaceholder" xml:space="preserve">
+    <value>Share your thoughts or rate this recipe...</value>
+  </data>
+  <data name="PostComment" xml:space="preserve">
+    <value>Post comment</value>
+  </data>
+  <data name="Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Edited" xml:space="preserve">
+    <value>Edited</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ContentRemoved" xml:space="preserve">
+    <value>[Content removed]</value>
+  </data>
+  <data name="RemovedByUser" xml:space="preserve">
+    <value>This comment has been deleted by his author.</value>
+  </data>
+  <data name="RemovedByAdmin" xml:space="preserve">
+    <value>This comment has been removed by moderator.</value>
+  </data>
+  <data name="ReplyTo" xml:space="preserve">
+    <value>Reply to</value>
+  </data>
+  <data name="PostReply" xml:space="preserve">
+    <value>Post reply</value>
+  </data>
+  <data name="Recipes" xml:space="preserve">
+    <value>Recipes</value>
+  </data>
+  <data name="PasswordAgain" xml:space="preserve">
+    <value>Password again</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="JoinUs" xml:space="preserve">
+    <value>Join us!</value>
+  </data>
+  <data name="LoginToExisting" xml:space="preserve">
+    <value>Login to existing account</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="FillAllFields" xml:space="preserve">
+    <value>Please fill in all fields</value>
+  </data>
+  <data name="InvalidEmailFormat" xml:space="preserve">
+    <value>Invalid email format, use e. g. example@email.com</value>
+  </data>
+  <data name="EmailAlreadyRegistred" xml:space="preserve">
+    <value>Email already in use, please log in</value>
+  </data>
+  <data name="RegistrationError" xml:space="preserve">
+    <value>Registration failed, try it again later.</value>
+  </data>
+  <data name="Recipe" xml:space="preserve">
+    <value>Recipe</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Portions" xml:space="preserve">
+    <value>portions</value>
+  </data>
+  <data name="WhoIsEating" xml:space="preserve">
+    <value>Who's eating?</value>
+  </data>
+  <data name="DeleteFromPlan" xml:space="preserve">
+    <value>Delete from plan</value>
+  </data>
+  <data name="GroupName" xml:space="preserve">
+    <value>Group name</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Copied!</value>
+  </data>
+  <data name="Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="LeaveGroup" xml:space="preserve">
+    <value>Leave group</value>
+  </data>
+  <data name="ConfirmAndCreate" xml:space="preserve">
+    <value>Confirm &amp; create</value>
+  </data>
+  <data name="OR" xml:space="preserve">
+    <value>OR</value>
+  </data>
+  <data name="EnterInvitationKey" xml:space="preserve">
+    <value>Enter invitation key</value>
+  </data>
+  <data name="ConfirmAndJoin" xml:space="preserve">
+    <value>Confirm &amp; join</value>
+  </data>
+  <data name="EditMealPlan" xml:space="preserve">
+    <value>Edit plan</value>
+  </data>
+  <data name="NoRecipeSelected" xml:space="preserve">
+    <value>No recipe selected</value>
+  </data>
+  <data name="ClickToPlan" xml:space="preserve">
+    <value>Click to plan</value>
+  </data>
+  <data name="AddToPlan" xml:space="preserve">
+    <value>Add to plan</value>
+  </data>
+  <data name="MealTime" xml:space="preserve">
+    <value>Meal time</value>
+  </data>
+  <data name="RecipeSelectedFromDetailPage" xml:space="preserve">
+    <value>Recipe is selected from details page.</value>
+  </data>
+  <data name="SelectFavoriteRecipe" xml:space="preserve">
+    <value>Select your favorite recipe</value>
+  </data>
+  <data name="SavePlan" xml:space="preserve">
+    <value>Save plan</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Calories" xml:space="preserve">
+    <value>Calories</value>
+  </data>
+  <data name="Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="Macros" xml:space="preserve">
+    <value>Macros</value>
+  </data>
+  <data name="SearchRecipesPlaceholder" xml:space="preserve">
+    <value>Search recipes...</value>
+  </data>
+  <data name="Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="OnlyFavorite" xml:space="preserve">
+    <value>Only favorite</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="By" xml:space="preserve">
+    <value>By</value>
+  </data>
+  <data name="PerServing" xml:space="preserve">
+    <value>Per serving</value>
+  </data>
+  <data name="Carbs" xml:space="preserve">
+    <value>Carbs</value>
+  </data>
+  <data name="Protein" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="Fat" xml:space="preserve">
+    <value>Fat</value>
+  </data>
+  <data name="Fiber" xml:space="preserve">
+    <value>Fiber</value>
+  </data>
+</root>

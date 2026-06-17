@@ -3,10 +3,12 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Models
 @using Pinula.WASM.Components
+@using Microsoft.Extensions.Localization
 @inject IRecipeService recipeService
 @inject ICategoryService categoryService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
+@inject IStringLocalizer<App> Localizer
 
 <PageTitle>Pinula - @(currentCategory?.Name ?? "Category")</PageTitle>
 
@@ -18,8 +20,8 @@
         @if (isActuallySearching)
         {
             <div class="search-results-header">
-                <h3 class="d-inline">Results in @currentCategory?.Name (@searchedRecipes.Count)</h3>
-                <button class="btn-cancel" @onclick="ClearAll">Cancel filters</button>
+                <h3 class="d-inline">@Localizer["ResultsIn"] @currentCategory?.Name (@searchedRecipes.Count)</h3>
+                <button class="btn-cancel" @onclick="ClearAll">@Localizer["CancelFilters"]</button>
             </div>
             
             <div class="recipes-grid">
@@ -31,7 +33,7 @@
                 {
                     <div class="flex-column pt-5">
                         <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.6rem; font-style:italic;">
-                            No recipes found matching your filters in this category.
+                            @Localizer["NoRecipesFound"]
                         </p>
                     </div>
                 }
@@ -39,7 +41,7 @@
         }
         else
         {
-            <LoadingView IsLoading="@(isLoading)" Text="Loading category delicacies..." IsFullScreen="true">
+            <LoadingView IsLoading="@(isLoading)" Text="@Localizer["LoadingCategory"]" IsFullScreen="true">
 
                 @if (currentCategory != null)
                 {
@@ -47,7 +49,7 @@
                         <div class="category-hero-card" style="background-image: url('@currentCategory.PictureUrl');">
                             <div class="category-hero-overlay">
                                 <div class="category-hero-content">
-                                    <span class="category-badge">Category</span>
+                                    <span class="category-badge">@Localizer["Category"]</span>
                                     <h1 class="category-hero-title">@currentCategory.Name</h1>
                                 </div>
                             </div>
@@ -67,8 +69,8 @@
 
                 @if (bestInCategoryRecipes != null && bestInCategoryRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="Top Rated"
-                                          Subtitle="Highest rated masterpieces here"
+                    <RecipeGridHorizontal Title="@Localizer["TopRated"]"
+                                          Subtitle="@Localizer["TopRatedSubtitle"]"
                                           HasMoreToLoad="moreBestToLoad"
                                           IsLoading="isBestLoading"
                                           OnLoadMore="LoadMoreBest"
@@ -79,8 +81,8 @@
 
                 @if (fastInCategoryRecipes != null && fastInCategoryRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="Quick Bites"
-                                          Subtitle="Ready before you know it"
+                    <RecipeGridHorizontal Title="@Localizer["QuickBites"]"
+                                          Subtitle="@Localizer["QuickBitesSubtitle"]"
                                           HasMoreToLoad="moreFastToLoad"
                                           IsLoading="isFastLoading"
                                           OnLoadMore="LoadMoreFast"
@@ -91,8 +93,8 @@
 
                 <div class="section-divider">
                     <div class="title-block">
-                        <span class="subtitle">Collection</span>
-                        <h2>All Recipes</h2>
+                        <span class="subtitle">@Localizer["AllRecipesSubtitle"]</span>
+                        <h2>@Localizer["AllRecipes"]</h2>
                     </div>
                     <div class="line"></div>
                 </div>
@@ -110,7 +112,7 @@
                 {
                     <div class="flex-column pt-4">
                         <p style="text-align:center; font-family:Nunito, Roboto; font-size:1.2rem; font-style:italic; color: #666;">
-                            We are currently gathering recipes for this section. Stay tuned!
+                            @Localizer["NoRecipesYet"]
                         </p>
                     </div>
                 }

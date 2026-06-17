@@ -2,18 +2,30 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @using Pinula.WASM.Services
+@using Microsoft.Extensions.Localization
+@using System.Globalization
 @inject IUserService UserService
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
 @inject ApiAuthenticationStateProvider AuthStateProvider
-@inject ITokenStorage TokenStorage
+@inject ILocalStorage LocalStorage
+@inject IStringLocalizer<App> Localizer
+
+<PageTitle>@Localizer["LoginPage"]</PageTitle>
 
 <div class="login-page">
+    <div class="culture-toggle-container position-absolute login-language-container">
+        <button class="btn-culture-toggle @(CurrentCulture == "en" ? "active" : "")" @onclick='() => ChangeCulture("en")'>
+            EN
+        </button>
+        <button class="btn-culture-toggle @(CurrentCulture == "cs" ? "active" : "")" @onclick='() => ChangeCulture("cs")'>
+            CZ
+        </button>
+    </div>
     <div class="login-container">
-        
         <div class="header-section">
-            <h1 class="login-title">Login</h1>
-            <p class="login-subtitle">Welcome back</p>
+            <h1 class="login-title">@Localizer["Login"]</h1>
+            <p class="login-subtitle">@Localizer["WelcomeBack"]</p>
         </div>
 
         <div class="form-section">
@@ -26,7 +38,7 @@
 
             <div class="input-group">
                 <input type="password"
-                       placeholder="Password"
+                       placeholder="@Localizer["Password"]"
                        @bind="password"
                        class="custom-input" />
             </div>
@@ -45,17 +57,17 @@
                 }
                 else
                 {
-                    <span>Continue</span>
+                    <span>@Localizer["Continue"]</span>
                 }
             </button>
         </div>
 
         <div class="footer-section">
-            <button class="btn-link" @onclick="CreateAccountBtn">Create Account</button>
-            <button class="btn-link" @onclick="ForgotPasswordBtn">Forgot password</button>
+            <button class="btn-link" @onclick="CreateAccountBtn">@Localizer["CreateAccount"]</button>
+            <button class="btn-link" @onclick="ForgotPasswordBtn">@Localizer["ForgotPassword"]</button>
         </div>
 
-        <button class="btn-skip" @onclick="SkipBtn">Skip</button>
+        <button class="btn-skip" @onclick="SkipBtn">@Localizer["Skip"]</button>
     </div>
 </div>
 
@@ -78,13 +90,13 @@
 
             if (result == null)
             {
-                indicatorText = "Wrong email or password";
+                indicatorText = Localizer["WrongLogin"];
                 indicatorVisibility = true;
             }
             else
             {
                 var customAuthStateProvider = (ApiAuthenticationStateProvider)AuthStateProvider;
-                customAuthStateProvider.MarkUserAsAuthenticated(await TokenStorage.GetTokenAsync());
+                customAuthStateProvider.MarkUserAsAuthenticated(await LocalStorage.GetTokenAsync());
                 try
                 {
                     await JSRuntime.InvokeVoidAsync("history.back");
@@ -97,7 +109,7 @@
         }
         catch (Exception ex)
         {
-            indicatorText = "An error occurred during login";
+            indicatorText = Localizer["LoginError"];
             indicatorVisibility = true;
         }
         finally
@@ -106,11 +118,21 @@
         }
     }
 
+    private string CurrentCulture => CultureInfo.CurrentCulture.Name;
+
+    private async Task ChangeCulture(string cultureCode)
+    {
+        if (CurrentCulture == cultureCode) return;
+        await LocalStorage.SetStringAsync("culture", cultureCode);
+
+        NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+    }
+
     private void CreateAccountBtn() => NavManager.NavigateTo("/register");
 
     private void ForgotPasswordBtn()
     {
-        indicatorText = "For password reset please contact support";
+        indicatorText = Localizer["PasswordResetMsg"];
         indicatorVisibility = true;
     }
 

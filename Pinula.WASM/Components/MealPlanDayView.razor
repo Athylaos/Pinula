@@ -1,5 +1,7 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
 
 <div class="day-content">
 
@@ -11,7 +13,7 @@
             <div class="meal-section-header">
                 <h3>@mealType.ToString()</h3>
                 <button class="btn-icon-add" @onclick="() => OnAddMeal.InvokeAsync(mealType)">
-                    + Add
+                    + @Localizer["Add"]
                 </button>
             </div>
 
@@ -24,7 +26,7 @@
                             <button class="btn-card-edit"
                                     @onclick="() => OnEditMeal.InvokeAsync(meal.Id)"
                                     @onclick:stopPropagation="true"
-                                    title="Edit meal plan">
+                                    title="@Localizer["EditMealPlan"]">
                                 <img src="images/icons/pencil.png" style="filter:invert(1); width:13px; height:13px;"/>
                             </button>
 
@@ -32,7 +34,7 @@
                             <div class="meal-info">
                                 <h4>@meal.RecipeName</h4>
                                 <div class="meal-meta">
-                                    <span> @meal.Servings portions.</span>
+                                    <span> @meal.Servings @Localizer["Portions"].</span>
                                 </div>
                                 <div class="meal-eaters">
                                     @foreach (var user in meal.UsersPreviews)
@@ -48,8 +50,8 @@
             else
             {
                 <div class="empty-meal-slot" @onclick="() => OnAddMeal.InvokeAsync(mealType)">
-                    <p>No recipe selected</p>
-                    <span>Click to plan</span>
+                    <p>@Localizer["NoRecipeSelected"]</p>
+                    <span>@Localizer["ClickToPlan"]</span>
                 </div>
             }
         </div>

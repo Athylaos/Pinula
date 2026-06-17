@@ -2,17 +2,17 @@
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @using Pinula.Shared.Models
-@using Pinula.Shared.Services
 @using Pinula.WASM.Components
+@using Microsoft.Extensions.Localization
 @inject NavigationManager NavManager
 @inject IRecipeService RecipeService
 @inject IUserService UserService
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<App> Localizer
 
+<PageTitle>Pinula - @Localizer["Recipe"]</PageTitle>
 
-
-
-<LoadingView IsLoading="isLoading" IsFullScreen="true" Text="Preparing your recipe">
+<LoadingView IsLoading="isLoading" IsFullScreen="true" Text="@Localizer["LoadingRecipe"]">
     <div class="recipe-page-container">
         <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
             <div class="hero-content">
@@ -22,10 +22,9 @@
                     <button class="icon-btn"><img src="images/icons/share.png" class="info-icon" /></button>
                 </div>
                 <h1 class="recipe-title">@recipe.Title</h1>
-                <div class="author-info">By @recipe.UserName @recipe.UserSurname</div>
+                <div class="author-info">@Localizer["By"] @recipe.UserName @recipe.UserSurname</div>
             </div>
         </div>
-
         <div class="recipe-body">
             
             <div class="recipe-info-grid">
@@ -33,7 +32,7 @@
                     <div class="details-info-icon rating"><img src="images/icons/favorite_full.png" class="info-icon opacity-100 px-1 py-1" /></div>
                     <div class="details-info-text">
                         <span class="info-value">@(recipe.Rating?.ToString("0.#") ?? "0.0")</span>
-                        <span class="info-label">@(recipe.UsersRated ?? 0) reviews</span>
+                        <span class="info-label">@(recipe.UsersRated ?? 0) @Localizer["Reviews"]</span>
                     </div>
                 </div>
     
@@ -41,7 +40,7 @@
                     <div class="details-info-icon difficulty"><img src="images/icons/difficulty.png" class="info-icon opacity-100 px-1 py-1" /></div>
                     <div class="details-info-text">
                         <span class="info-value">@recipe.Difficulty.ToString()</span>
-                        <span class="info-label">Difficulty</span>
+                        <span class="info-label">@Localizer["Difficulty"]</span>
                     </div>
                 </div>
 
@@ -49,7 +48,7 @@
                     <div class="details-info-icon time"><img src="images/icons/time.png" class="info-icon opacity-100 px-1 py-1" /></div>
                     <div class="details-info-text">
                         <span class="info-value">@recipe.CookingTime min</span>
-                        <span class="info-label">Prep time</span>
+                        <span class="info-label">@Localizer["PrepTime"]</span>
                     </div>
                 </div>
 
@@ -57,14 +56,14 @@
                     <div class="details-info-icon servings"><img src="images/icons/spoon_fork.png" class="info-icon opacity-100 px-1 py-1" /></div>
                     <div class="details-info-text">
                         <span class="info-value">@recipe.ServingsAmount @recipe.ServingUnit.Name</span>
-                        <span class="info-label">Servings</span>
+                        <span class="info-label">@Localizer["Servings"]</span>
                     </div>
                 </div>
             </div>
 
             <div class="nutrition-card">
                 <div class="nutrition-header">
-                    <h4>Per serving:</h4>
+                    <h4>@Localizer["PerServing"]:</h4>
                     <div class="calories">
                         <img class="info-icon opacity-100" src="images/icons/calories.png" />
                         <span class="cal-value">@(recipe.Calories?.ToString("0.#"))</span>
@@ -72,17 +71,17 @@
                     </div>
                 </div>
                 <div class="macros-grid">
-                    <div class="macro-item">Protein <span>@recipe.Proteins?.ToString("0.#") g</span></div>
-                    <div class="macro-item">Carbs <span>@recipe.Carbohydrates?.ToString("0.#") g</span></div>
-                    <div class="macro-item">Fat <span>@recipe.Fats?.ToString("0.#") g</span></div>
-                    <div class="macro-item">Fiber <span>@recipe.Fiber?.ToString("0.#") g</span></div>
+                    <div class="macro-item">@Localizer["Protein"] <span>@recipe.Proteins?.ToString("0.#") g</span></div>
+                    <div class="macro-item">@Localizer["Carbs"] <span>@recipe.Carbohydrates?.ToString("0.#") g</span></div>
+                    <div class="macro-item">@Localizer["Fat"] <span>@recipe.Fats?.ToString("0.#") g</span></div>
+                    <div class="macro-item">@Localizer["Fiber"] <span>@recipe.Fiber?.ToString("0.#") g</span></div>
                 </div>
             </div>
 
             <div class="content-grid">
                 
                 <div class="ingredients-section">
-                    <h2 class="section-title">Ingredients:</h2>
+                    <h2 class="section-title">@Localizer["Ingredients"]:</h2>
                     <ul class="ingredient-list">
                         @foreach (var ing in recipe.RecipeIngredients)
                         {
@@ -96,7 +95,7 @@
                 </div>
 
                 <div class="steps-section">
-                    <h2 class="section-title">Steps:</h2>
+                    <h2 class="section-title">@Localizer["CookingProcess"]:</h2>
                     <div class="timeline">
                         @foreach (var step in recipe.RecipeSteps.OrderBy(s => s.StepNumber))
                         {
@@ -113,15 +112,15 @@
 
 
             <div class="reviews-section">
-                <h2 class="section-title">Community Reviews</h2>
+                <h2 class="section-title">@Localizer["CommunityReviews"]</h2>
 
                 @if(!isUserLogged)
                 {
                     <div class="comment-input-card">
                         <div class="prompt-content">
-                            <h5>Join the Conversation</h5>
-                            <p>Only logged-in chefs can write a review and share their experience.</p>
-                            <button @onclick="LoginBtn" class="btn-prompt-login">Log In to Review</button>
+                            <h5>@Localizer["JoinConversation"]</h5>
+                            <p>@Localizer["JoinConversationSubtitle"]</p>
+                            <button @onclick="LoginBtn" class="btn-prompt-login">@Localizer["LogInToReview"]</button>
                         </div>
                     </div>
                 }
@@ -129,8 +128,8 @@
                 {
                     <div class="comment-input-card">
                         <div class="prompt-content">
-                            <h5>You have been banned</h5>
-                            <p>Your right to post comments has been revoked by the administrator. You can appeal this decision through our support team.</p>
+                            <h5>@Localizer["YouAreBanned"]</h5>
+                            <p>@Localizer["YouAreBannedCommentsDescription"]</p>
                         </div>
                     </div>
                 }
@@ -152,7 +151,7 @@
                         }
 
                         <textarea @bind="newComment.Text" @bind:event="oninput"
-                                  placeholder="Share your thoughts or rate this recipe..."
+                                  placeholder="@Localizer["CommentPlaceholder"]"
                                   class="comment-field"></textarea>
 
                         <div class="input-actions">
@@ -160,7 +159,7 @@
                             <button class="btn-post"
                                     disabled="@(string.IsNullOrWhiteSpace(newComment.Text) && newComment.Rating == null)"
                                     @onclick="HandlePostReview">
-                                Post Review
+                                @Localizer["PostComment"]
                             </button>
                         </div>
                     </div>
@@ -181,7 +180,7 @@
     <div class="floating-action-bar">
         <button class="btn-add-to-calendar" @onclick="NavigateToPlannerWithRecipe">
             <img src="images/icons/plus.png" class="fas fa-calendar-plus"/>
-            <span>Plan</span>
+            <span>@Localizer["Plan"]</span>
         </button>
     </div>
 </LoadingView>
@@ -433,7 +432,7 @@
                                 @comment.CreatedAt.ToShortDateString()
                                 @if (comment.IsEdited && comment.EditedAt.HasValue)
                                 {
-                                    <span class="edited-tag">(Edited @comment.EditedAt.Value.ToShortDateString())</span>
+                                    <span class="edited-tag">(@Localizer["Edited"] @comment.EditedAt.Value.ToShortDateString())</span>
                                 }
                             </span>
                         </div>
@@ -468,11 +467,11 @@
                             <textarea @bind="editCommentModel.Text" @bind:event="oninput"
                                       class="comment-field reply-field"></textarea>
                             <div class="input-actions mt-2">
-                                <button class="btn-clear" @onclick="CancelEdit">Cancel</button>
+                                <button class="btn-clear" @onclick="CancelEdit">@Localizer["Cancel"]</button>
                                 <button class="btn-post"
                                         disabled="@(string.IsNullOrWhiteSpace(editCommentModel.Text) && editCommentModel.Rating == null)"
                                         @onclick="() => HandleUpdateReview(comment.Id)">
-                                    Save Changes
+                                    @Localizer["SaveChanges"]
                                 </button>
                             </div>
                         </div>
@@ -483,13 +482,13 @@
                         <div class="comment-actions">
                             @if (userDto?.CanComment == true)
                             {
-                                <button class="btn-action-link" @onclick="() => OpenReplyForm(comment.Id)">Reply</button>
+                                <button class="btn-action-link" @onclick="() => OpenReplyForm(comment.Id)">@Localizer["Reply"]</button>
                             }
                             @if (isUserLogged && comment.UserId == userDto?.Id)
                             {
                                 <div class="flex-spacer"></div>
-                                <button class="btn-action-link edit-link" @onclick="() => OpenEditForm(comment)">Edit</button>
-                                <button class="btn-action-link delete-link" @onclick="() => HandleDeleteComment(comment.Id)">Delete</button>
+                                <button class="btn-action-link edit-link" @onclick="() => OpenEditForm(comment)">@Localizer["Edit"]</button>
+                                <button class="btn-action-link delete-link" @onclick="() => HandleDeleteComment(comment.Id)">@Localizer["Delete"]</button>
                             }
                         </div>
                     }
@@ -498,18 +497,18 @@
                 {
                     <div class="comment-header">
                         <div class="author-meta">
-                            <span class="author-name" style="color: #888; font-style: italic;">[Content Removed]</span>
+                            <span class="author-name" style="color: #888; font-style: italic;">@Localizer["ContentRemoved"]</span>
                             <span class="post-date text-muted">@comment.CreatedAt.ToShortDateString()</span>
                         </div>
                     </div>
                     <p class="comment-body" style="color: #888; font-style: italic; margin-bottom: 0;">
                         @if (comment.IsDeleted)
                         {
-                            <span>This comment has been deleted by the user.</span>
+                            <span>@Localizer["RemovedByUser"]</span>
                         }
                         else if (!comment.IsApproved)
                         {
-                            <span>This comment has been removed by a moderator.</span>
+                            <span>@Localizer["RemovedByAdmin"]</span>
                         }
                     </p>
                 }
@@ -519,14 +518,14 @@
             {
                 <div class="inline-reply-form animate-slide-down">
                     <textarea @bind="replyText" @bind:event="oninput"
-                              placeholder="Write your reply to @comment.UserName..."
+                              placeholder="@Localizer["ReplyTo"] @comment.UserName..."
                               class="comment-field reply-field"></textarea>
                     <div class="input-actions">
-                        <button class="btn-clear" @onclick="CancelReply">Cancel</button>
+                        <button class="btn-clear" @onclick="CancelReply">@Localizer["Cancel"]</button>
                         <button class="btn-post"
                                 disabled="@string.IsNullOrWhiteSpace(replyText)"
                                 @onclick="() => HandlePostReply(comment.Id)">
-                            Post Reply
+                            @Localizer["PostReply"]
                         </button>
                     </div>
                 </div>

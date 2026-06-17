@@ -3,12 +3,12 @@ using Pinula.Shared.Interface;
 
 namespace Pinula.WASM.Services
 {
-    public class BlazorTokenStorage : ITokenStorage
+    public class BlazorLocalStorage : ILocalStorage
     {
         private readonly IJSRuntime _js;
         private const string TokenKey = "auth_token";
 
-        public BlazorTokenStorage(IJSRuntime js)
+        public BlazorLocalStorage(IJSRuntime js)
         {
             _js = js;
         }
@@ -26,6 +26,16 @@ namespace Pinula.WASM.Services
         public async Task RemoveTokenAsync()
         {
             await _js.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+        }
+
+        public async Task SetStringAsync(string key, string value)
+        {
+            await _js.InvokeVoidAsync("localStorage.setItem", key, value);
+        }
+
+        public async Task<string?> GetStringAsync(string key)
+        {
+            return await _js.InvokeAsync<string?>("localStorage.getItem", key);
         }
     }
 }

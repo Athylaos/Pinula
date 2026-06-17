@@ -1,14 +1,16 @@
 ﻿@using System.Timers
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject NavigationManager NavManager
 @inject IJSRuntime JS
+@inject IStringLocalizer<App> Localizer
 
 <div class="header-actions">
     <img src="favicon.png" class="header-logo"/>
     <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Search recipes..." value="@searchTerm" @oninput="HandleSearchInput" />
+        <input type="text" class="search-input" placeholder="@Localizer["SearchRecipesPlaceholder"]" value="@searchTerm" @oninput="HandleSearchInput" />
         <img src="images/icons/search.png" />
     </div>
     <button class="btn-icon btn-filter" @onclick="ToggleFilter">
@@ -31,7 +33,7 @@
 
             <div class="modal-body">
                 <div class="filter-row">
-                    <label>Cooking time</label>
+                    <label>@Localizer["PrepTime"]</label>
                     <input type="checkbox" class="custom-checkbox" @bind="cookingTimeOn" />
                 </div>
                 <div class="slider-row @(!cookingTimeOn ? "disabled" : "")">
@@ -40,7 +42,7 @@
                 </div>
 
                 <div class="filter-row mt-4">
-                    <label>Calories</label>
+                    <label>@Localizer["Calories"]</label>
                     <input type="checkbox" class="custom-checkbox" @bind="caloriesOn" />
                 </div>
                 <div class="slider-row @(!caloriesOn ? "disabled" : "")">
@@ -49,8 +51,8 @@
                 </div>
 
                 <div class="filter-row mt-4">
-                    <label>Rating</label>
-                    <span class="btn-clear" @onclick="ClearRating">Clear</span>
+                    <label>@Localizer["Rating"]</label>
+                    <span class="btn-clear" @onclick="ClearRating">@Localizer["Clear"]</span>
                 </div>
                 <div class="rating-stars">
                     @for (int i = 1; i <= 5; i++)
@@ -62,7 +64,7 @@
                 </div>
 
                 <div class="filter-row mt-4">
-                    <label>Difficulty</label>
+                    <label>@Localizer["Difficulty"]</label>
                 </div>
                 <div class="difficulty-grid">
                     @foreach (var diff in Enum.GetValues<DifficultyLevel>())
@@ -75,12 +77,12 @@
                 </div>
 
                 <div class="filter-row mt-4 mb-4">
-                    <label>Only favorite</label>
+                    <label>@Localizer["OnlyFavorite"]</label>
                     <input type="checkbox" class="custom-checkbox" @bind="filterParams.OnlyFavorites" />
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn-apply" @onclick="ApplyFilters">Apply</button>
+                    <button class="btn-apply" @onclick="ApplyFilters">@Localizer["Apply"]</button>
                 </div>
             </div>         
         </div>
