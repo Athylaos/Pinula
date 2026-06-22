@@ -1,8 +1,10 @@
-﻿using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
+﻿using DeepL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Pinula.API.Context;
+using Pinula.Shared.DTOs;
+using Pinula.Shared.Models;
+using System.Globalization;
 using System.Security.Claims;
 
 namespace Pinula.API.Endpoints
@@ -16,7 +18,8 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get servingUnits
             group.MapGet("/getServing", async (PinulaDbContext db) =>
             {
-                var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Name }).ToListAsync();
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
 
                 return Results.Ok(units) ;
             });
@@ -24,28 +27,26 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get units
             group.MapGet("/get", async (PinulaDbContext db) =>
             {
-                var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Name }).ToListAsync();
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
 
                 return Results.Ok(units);
-            });
-
-            group.MapGet("/getRecipeUnits/{ingredientId:guid}", async (Guid ingredientId, ClaimsPrincipal user, PinulaDbContext db) =>
-            {
-
-
-
             });
 
             //---------------------------------------------------------------Create unit
             group.MapPost("/create", async (Unit unit, ClaimsPrincipal user, PinulaDbContext db) =>
             {
-                if (string.IsNullOrWhiteSpace(unit.Name))
-                    return Results.BadRequest("Unit name is mandatory");            
+                if (string.IsNullOrWhiteSpace(unit.Names["en"]) || string.IsNullOrWhiteSpace(unit.Names["cs"]))
+                    return Results.BadRequest("Unit names is mandatory");
+
+                if (string.IsNullOrWhiteSpace(unit.Code))
+                    return Results.BadRequest("Code is mandatory");
 
                 var newUnit = new Unit
                 {
                     Id = Guid.NewGuid(),
-                    Name = unit.Name,
+                    Code = unit.Code,
+                    Names = unit.Names,
                     IsServingUnit = unit.IsServingUnit
                 };
 
@@ -71,6 +72,14 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.NoContent();
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Get units
+            group.MapGet("/getAdmin", async (PinulaDbContext db) =>
+            {
+                var units = await db.Units.AsNoTracking().ToListAsync();
+
+                return Results.Ok(units);
             }).RequireAuthorization("AdminOnly");
 
         }

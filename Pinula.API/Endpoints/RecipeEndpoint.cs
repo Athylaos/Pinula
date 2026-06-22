@@ -1,16 +1,21 @@
-﻿using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
+﻿using DeepL;
+using DeepL.Model;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
+using Pinula.API.Context;
+using Pinula.Shared.DTOs;
+using Pinula.Shared.Enums;
+using Pinula.Shared.Interface;
+using Pinula.Shared.Models;
+using Pinula.Shared.Services;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.Buffers.Text;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text.Json;
-using Pinula.Shared.Enums;
 
 namespace Pinula.API.Endpoints
 {
@@ -26,6 +31,7 @@ namespace Pinula.API.Endpoints
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
                 var defaultImage = "default_recipe.png";
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 Guid? currentUserId = user.GetUserId();
                 var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == currentUserId);
@@ -43,7 +49,7 @@ namespace Pinula.API.Endpoints
                 }
 
                 if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-                    query = query.Where(r => r.Title.ToLower().Contains(filter.SearchTerm.ToLower()));
+                    query = query.Where(r => r.Titles.GetValueOrDefault(languageCode).ToLower().Contains(filter.SearchTerm.ToLower()));
 
                 if (filter.CategoryId.HasValue)
                     query = query.Where(r => r.Categories.Any(c => c.Id == filter.CategoryId));
@@ -96,7 +102,7 @@ namespace Pinula.API.Endpoints
                     .Select(r => new RecipePreviewDto
                     {
                         Id = r.Id,
-                        Title = r.Title,
+                        Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
                         PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
                         CookingTime = r.CookingTime,
                         Difficulty = (DifficultyLevel)r.Difficulty,
@@ -150,13 +156,15 @@ namespace Pinula.API.Endpoints
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
                 var defaultImage = "default_recipe.png";
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 Guid? currentUserId = user.GetUserId();
 
                 var recipe = await db.Recipes.AsNoTracking().Where(r => r.Id == recipeId).Select(r => new RecipeDetailsDto()
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Title = r.Title,
+                    OriginalLanguage = languageCode,
+                    Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
                     PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
                     CookingTime = r.CookingTime,
                     ServingsAmount = r.ServingsAmount,
@@ -173,15 +181,28 @@ namespace Pinula.API.Endpoints
                     {
                         Quantity = ri.Quantity ?? 0,
                         IngredientName = ri.Ingredient.Name,
-                        UnitName = ri.Unit.Name,
+                        UnitName = ri.Unit.Names.GetValueOrDefault(languageCode) ?? ri.Unit.Names.GetValueOrDefault("en") ?? "Unit",
                         IngredientId = ri.Ingredient.Id,
                         UnitId = ri.Unit.Id,
                     }).ToList(),
-                    RecipeSteps = r.RecipeSteps,
-                    ServingUnit = r.ServingUnit,
+                    RecipeSteps = r.RecipeSteps.Select(rs => new RecipeStepDisplayDto
+                    {
+                        Id = rs.Id,
+                        RecipeId = rs.Id,
+                        StepNumber = rs.StepNumber,
+                        Description = rs.Descriptions.GetValueOrDefault(languageCode) ?? rs.Descriptions.GetValueOrDefault("en") ?? "Step description",
+                    }).ToList(),
+                    ServingUnit = new UnitPreviewDto() { Name = r.ServingUnit.Names.GetValueOrDefault(languageCode) ?? r.ServingUnit.Names.GetValueOrDefault("en") ?? "UnitName", Id = r.ServingUnit.Id },
                     UserName = r.User.Name,
                     UserSurname = r.User.Surname,
-                    Categories = r.Categories,
+                    Categories = r.Categories.Select(c => new CategoryDisplayDto
+                    {
+                        Id = c.Id,
+                        SortOrder = c.SortOrder,
+                        Name = c.Names.GetValueOrDefault(languageCode) ?? c.Names.GetValueOrDefault("en") ?? "Category",
+                        PictureUrl = c.PictureUrl,
+                        ParentCategoryId = c.ParentCategoryId,
+                    }).ToList(),
 
                     IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
                     UserAlreadyRated = currentUserId != Guid.Empty && db.Comments.Any(c => c.RecipeId == r.Id && c.UserId == currentUserId && c.Rating != null && c.IsApproved)
@@ -231,9 +252,10 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Create recipe
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService) =>
             {
                 var userId = user.GetUserId();
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (dbUser is null) return Results.NotFound("User not found.");
@@ -296,11 +318,18 @@ namespace Pinula.API.Endpoints
 
                 var dbCategories = await db.Categories.Where(x => dto.CategoriesIds.Contains(x.Id)).ToListAsync();
 
+                string targetLanguage = languageCode == "en" ? "cs" : "en";
+
+                var titleTranslated = await translationService.TranslateTextAsync(dto.Title, targetLanguage) ?? dto.Title;
+                var titles = new Dictionary<string, string> { { languageCode, dto.Title }, { targetLanguage, titleTranslated } };
+
+
                 var newRecipe = new Recipe()
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
-                    Title = dto.Title,
+                    OriginalLanguage = languageCode,
+                    Titles = titles,
                     PhotoUrl = finalPhotoUrl,
                     CookingTime = dto.CookingTime,
                     ServingsAmount = dto.ServingsAmount,
@@ -349,11 +378,14 @@ namespace Pinula.API.Endpoints
 
                 foreach (var step in dto.RecipeSteps)
                 {
+                    var descriptionTranslated = await translationService.TranslateTextAsync(step.Description, targetLanguage) ?? step.Description;
+                    var descriptions = new Dictionary<string, string> { { languageCode, step.Description }, { targetLanguage, descriptionTranslated } };
+
                     newRecipe.RecipeSteps.Add(new RecipeStep
                     {
                         Id = Guid.NewGuid(),
                         RecipeId = newRecipe.Id,
-                        Description = step.Description,
+                        Descriptions = descriptions,
                         StepNumber = step.StepNumber
                     });
                 }
@@ -372,12 +404,13 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Update recipe
-            group.MapPut("/update/{id:guid}", async (Guid id, HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapPut("/update/{id:guid}", async (Guid id, HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService) =>
             {
                 var userId = user.GetUserId();
                 var existingRecipe = await db.Recipes
                     .Include(r => r.Categories)
                     .FirstOrDefaultAsync(r => r.Id == id);
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 if (existingRecipe is null) return Results.NotFound("Recipe not found.");
                 if (existingRecipe.UserId != userId) return Results.Forbid();
@@ -420,9 +453,19 @@ namespace Pinula.API.Endpoints
                 try
                 {
                     await db.RecipeIngredients.Where(ri => ri.RecipeId == id).ExecuteDeleteAsync();
+
+                    var oldSteps = await db.RecipeSteps.Where(rs => rs.RecipeId == id).ToListAsync();
                     await db.RecipeSteps.Where(rs => rs.RecipeId == id).ExecuteDeleteAsync();
 
-                    existingRecipe.Title = dto.Title;
+                    string targetLanguage = languageCode == "en" ? "cs" : "en";
+
+                    if (existingRecipe.Titles.GetValueOrDefault(languageCode) != dto.Title)
+                    {
+                        var titleTranslated = await translationService.TranslateTextAsync(dto.Title, targetLanguage) ?? dto.Title;
+                        existingRecipe.Titles[languageCode] = dto.Title;
+                        existingRecipe.Titles[targetLanguage] = titleTranslated;
+                    }
+
                     existingRecipe.CookingTime = dto.CookingTime;
                     existingRecipe.ServingsAmount = dto.ServingsAmount;
                     existingRecipe.ServingUnitId = dto.ServingUnit;
@@ -491,13 +534,37 @@ namespace Pinula.API.Endpoints
                     var newSteps = new List<RecipeStep>();
                     foreach (var step in dto.RecipeSteps)
                     {
-                        newSteps.Add(new RecipeStep
+                        var newStep = new RecipeStep()
                         {
                             Id = Guid.NewGuid(),
                             RecipeId = existingRecipe.Id,
-                            Description = step.Description,
-                            StepNumber = step.StepNumber
-                        });
+                            StepNumber = step.StepNumber,
+                            Descriptions = new Dictionary<string, string>()
+                        };
+
+
+                        var oldStep = oldSteps.FirstOrDefault(s => s.StepNumber == step.StepNumber);
+
+                        if (oldStep != null)
+                        {
+                            if (step.Description != oldStep.Descriptions.GetValueOrDefault(languageCode))
+                            {
+                                var descriptionTranslated = await translationService.TranslateTextAsync(step.Description, targetLanguage) ?? step.Description;
+                                newStep.Descriptions[languageCode] = step.Description;
+                                newStep.Descriptions[targetLanguage] = descriptionTranslated;
+                            }
+                            else
+                            {
+                                newStep.Descriptions = oldStep.Descriptions;
+                            }
+                        }
+                        else
+                        {
+                            var descriptionTranslated = await translationService.TranslateTextAsync(step.Description, targetLanguage) ?? step.Description;
+                            newStep.Descriptions[languageCode] = step.Description;
+                            newStep.Descriptions[targetLanguage] = descriptionTranslated;
+                        }
+                        newSteps.Add(newStep);
                     }
                     db.RecipeSteps.AddRange(newSteps);
 
@@ -526,6 +593,7 @@ namespace Pinula.API.Endpoints
                 {
                     return Results.Forbid();
                 }
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 var exists = await db.Recipes.AnyAsync(r => r.Id == comment.RecipeId);
                 bool isNewRating = comment.Rating.HasValue;
@@ -545,6 +613,7 @@ namespace Pinula.API.Endpoints
 
                 comment.UserId = userId;
                 comment.CreatedAt = DateTime.UtcNow;
+                comment.LanguageCode = languageCode;
                 comment.IsApproved = true;
                 db.Comments.Add(comment);
                 await db.SaveChangesAsync();
@@ -724,6 +793,8 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get all comments
             group.MapGet("/admin/allComments", async (PinulaDbContext db) =>
             {
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+
                 var comments = await db.Comments
                     .Include(c => c.Recipe)
                     .Include(c => c.User)
@@ -737,7 +808,7 @@ namespace Pinula.API.Endpoints
                         CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
                         IsApproved = c.IsApproved,
                         RecipeId = c.RecipeId,
-                        RecipeName = c.Recipe.Title
+                        RecipeName = c.Recipe.Titles.GetValueOrDefault(languageCode) ?? c.Recipe.Titles.GetValueOrDefault("en") ?? "recipe title"
                     })
                     .ToListAsync();
 

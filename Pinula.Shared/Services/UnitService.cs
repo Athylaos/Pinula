@@ -38,11 +38,6 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public Task<List<UnitPreviewDto>> GetIngredientUnitsAsync(Guid ingredientId)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<bool> CreateUnitAsync(Unit unit)
         {
             try
@@ -76,6 +71,21 @@ namespace Pinula.Shared.Services
             {
                 _logger.LogError($"Error while deleting unit {unitId}: {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<List<Unit>> GetAllUnitsAdminAsync()
+        {
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<Unit>>($"{BaseUrl}/getAdmin");
+                return response ?? new List<Unit>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while getting all units: {ex.Message}");
+                return new List<Unit>();
             }
         }
     }

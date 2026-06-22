@@ -1,7 +1,8 @@
-﻿using Pinula.API.Context;
+﻿using Microsoft.EntityFrameworkCore;
+using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Security.Claims;
 
 namespace Pinula.API.Endpoints
@@ -15,6 +16,8 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get previews
             group.MapGet("/getPreviews", async (int? amount, PinulaDbContext db) =>
             {
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+
                 var query = db.Ingredients
                     .AsNoTracking()
                     .Select(i => new IngredientPreview
@@ -26,7 +29,7 @@ namespace Pinula.API.Endpoints
                         IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
                         {
                             Id = iu.UnitId,
-                            Name = iu.Unit.Name,
+                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "UnitName",
                             ConversionFactor = iu.ToDefaultUnit
                         }).ToList()
                     });
@@ -42,6 +45,7 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get filtered previews
             group.MapGet("/getFilteredPreviews", async (string searchTerm, int? amount, PinulaDbContext db) =>
             {
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var query = db.Ingredients
                     .AsNoTracking()
                     .Where(i => i.Name.ToLower().Contains(searchTerm.ToLower()))
@@ -54,7 +58,7 @@ namespace Pinula.API.Endpoints
                         IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
                         {
                             Id = iu.UnitId,
-                            Name = iu.Unit.Name,
+                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "UnitName",
                             ConversionFactor = iu.ToDefaultUnit
                         }).ToList()
                     });

@@ -130,7 +130,7 @@
     private bool isActuallySearching;
     private bool isLoading = true;
     private List<RecipePreviewDto> searchedRecipes = new();
-    private List<Category> categories = new();
+    private List<CategoryDisplayDto> categories = new();
     private RecipePreviewDto recipeOfTheDay = new();
     private UserDisplayDto? currentUser;
 
@@ -261,5 +261,5 @@
     }
 
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
-    private void CategoryClicked(Category c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
+    private void CategoryClicked(CategoryDisplayDto c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
 }

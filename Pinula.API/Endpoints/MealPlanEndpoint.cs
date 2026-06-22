@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration.UserSecrets;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
+using System.Globalization;
 using System.Security.Claims;
 
 namespace Pinula.API.Endpoints
@@ -23,6 +24,8 @@ namespace Pinula.API.Endpoints
 
                 var userImageBaseUrl = $"{request.Scheme}://{request.Host}/images/avatars/";
                 var userDefaultImage = "default_avatar.png";
+
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 var userId = user.GetUserId();
                 var userDb = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
@@ -46,7 +49,7 @@ namespace Pinula.API.Endpoints
                         MealType = mp.MealType,
                         Servings = mp.Servings,
                         RecipeId = mp.RecipeId,
-                        RecipeName = mp.Recipe.Title,
+                        RecipeName = mp.Recipe.Titles.GetValueOrDefault(languageCode) ?? mp.Recipe.Titles.GetValueOrDefault("en") ?? "Recipe title",
                         RecipePhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(mp.Recipe.PhotoUrl) ? defaultImage : mp.Recipe.PhotoUrl)}",
                         UsersPreviews = mp.Users.Select(u => new UserDisplayDto
                         {

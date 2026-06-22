@@ -25,6 +25,8 @@ public partial class Comment
 
     public bool IsEdited { get; set; }
 
+    public string LanguageCode { get; set; } = string.Empty;
+
     public DateTime? EditedAt { get; set; }
 
     public virtual ICollection<Comment> Replies { get; set; } = new List<Comment>();

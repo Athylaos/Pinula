@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DeepL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -15,21 +17,41 @@ namespace Pinula.API.Endpoints
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/categories");
-
             //---------------------------------------------------------------Get all categories
             group.MapGet("/getAll", async (HttpRequest request, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
-                return await db.Categories.AsNoTracking().Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(c => new Category() { 
-                    ChildCategories = c.ChildCategories,
-                    ParentCategoryId = c.ParentCategoryId,
-                    Id = c.Id,
-                    Name = c.Name,
-                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(c.PictureUrl) ? defaultImage : c.PictureUrl)}",
-                    SortOrder = c.SortOrder
-                }).ToListAsync();
+                var allCategories = await db.Categories.AsNoTracking().ToListAsync();
+
+                var rootCategories = allCategories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.SortOrder).ToList();
+
+                List<CategoryDisplayDto> BuildCategoryTree(List<Category> currentLevelItems)
+                {
+                    var resultList = new List<CategoryDisplayDto>();
+
+                    foreach (var cat in currentLevelItems)
+                    {
+                        var dto = new CategoryDisplayDto()
+                        {
+                            Id = cat.Id,
+                            ParentCategoryId = cat.ParentCategoryId,
+                            Name = cat.Names.GetValueOrDefault(languageCode) ?? cat.Names.GetValueOrDefault("en") ?? "Category",
+                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? defaultImage : cat.PictureUrl)}",
+                            SortOrder = cat.SortOrder,
+                            ChildCategories = BuildCategoryTree(allCategories.Where(sub => sub.ParentCategoryId == cat.Id).OrderBy(sub => sub.SortOrder).ToList())
+                        };
+
+                        resultList.Add(dto);
+                    }
+
+                    return resultList;
+                }
+
+                var finalTree = BuildCategoryTree(rootCategories);
+                return Results.Ok(finalTree);
             });
 
 
@@ -38,15 +60,26 @@ namespace Pinula.API.Endpoints
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
-                return await db.Categories.AsNoTracking().Where(c => c.ParentCategoryId == null).Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(c => new Category()
+                return await db.Categories.AsNoTracking().Where(c => c.ParentCategoryId == null).Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(category => new CategoryDisplayDto()
                 {
-                    ChildCategories = c.ChildCategories,
-                    ParentCategoryId = c.ParentCategoryId,
-                    Id = c.Id,
-                    Name = c.Name,
-                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(c.PictureUrl) ? defaultImage : c.PictureUrl)}",
-                    SortOrder = c.SortOrder
+                    Id = category.Id,
+                    ParentCategoryId = category.ParentCategoryId,
+                    Name = category.Names.GetValueOrDefault(languageCode) ?? category.Names.GetValueOrDefault("en") ?? "Category",
+                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(category.PictureUrl) ? defaultImage : category.PictureUrl)}",
+                    SortOrder = category.SortOrder,
+                    ChildCategories = category.ChildCategories
+                        .OrderBy(sub => sub.SortOrder)
+                        .Select(sub => new CategoryDisplayDto()
+                        {
+                            Id = sub.Id,
+                            ParentCategoryId = sub.ParentCategoryId,
+                            Name = sub.Names.GetValueOrDefault(languageCode) ?? sub.Names.GetValueOrDefault("en") ?? "Subcategory",
+                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? defaultImage : sub.PictureUrl)}",
+                            SortOrder = sub.SortOrder,
+                            ChildCategories = new List<CategoryDisplayDto>()
+                        }).ToList()
                 }).ToListAsync();
             });
 
@@ -55,27 +88,39 @@ namespace Pinula.API.Endpoints
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 var defaultImage = "default_category.png";
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 var category = await db.Categories.AsNoTracking().Include(c => c.ChildCategories).FirstOrDefaultAsync(c => c.Id == categoryId);
 
-                if(category is null)
+                if (category is null) return Results.NotFound("Category not found");
+
+                var categoryDto = new CategoryDisplayDto()
                 {
-                    return Results.BadRequest(category);
-                }
-                else
-                {
-                    category.PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(category.PictureUrl) ? defaultImage : category.PictureUrl)}";
-                    foreach(var sub in category.ChildCategories)
-                    {
-                        sub.PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? defaultImage : sub.PictureUrl)}";
-                    }
-                    return Results.Ok(category);
-                }
+                    Id = category.Id,
+                    ParentCategoryId = category.ParentCategoryId,
+                    Name = category.Names.GetValueOrDefault(languageCode) ?? category.Names.GetValueOrDefault("en") ?? "Category",
+                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(category.PictureUrl) ? defaultImage : category.PictureUrl)}",
+                    SortOrder = category.SortOrder,
+                    ChildCategories = category.ChildCategories
+                        .OrderBy(sub => sub.SortOrder)
+                        .Select(sub => new CategoryDisplayDto()
+                        {
+                            Id = sub.Id,
+                            ParentCategoryId = sub.ParentCategoryId,
+                            Name = sub.Names.GetValueOrDefault(languageCode) ?? sub.Names.GetValueOrDefault("en") ?? "Subcategory",
+                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? defaultImage : sub.PictureUrl)}",
+                            SortOrder = sub.SortOrder,
+                            ChildCategories = new List<CategoryDisplayDto>()
+                        }).ToList()
+                };
+
+                return Results.Ok(categoryDto);
             });
 
             //---------------------------------------------------------------Create category
             group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
             {
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var form = await request.ReadFormAsync();
                 var dtoStr = form["categoryData"];
 
@@ -127,7 +172,7 @@ namespace Pinula.API.Endpoints
                 var newCategory = new Category
                 {
                     Id = Guid.NewGuid(),
-                    Name = dto.Name,
+                    Names = dto.Names,
                     SortOrder = dto.SortOrder,
                     ParentCategoryId = dto.ParentCategory,
                     PictureUrl = finalPhotoUrl
@@ -165,6 +210,46 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.NoContent();
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Get all categories admin (Flattened with Level)
+            group.MapGet("/getAllAdmin", async (HttpRequest request, PinulaDbContext db) =>
+            {
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
+                var defaultImage = "default_category.png";
+
+                var allCategories = await db.Categories.AsNoTracking().ToListAsync();
+
+                var rootCategories = allCategories.Where(c => c.ParentCategoryId == null || c.ParentCategoryId == Guid.Empty).OrderBy(c => c.SortOrder).ToList();
+
+                var rootList = new List<AdminCategoryDisplayDto>();
+
+                void RootCategoryTree(List<Category> currentLevelItems, int level)
+                {
+                    foreach (var cat in currentLevelItems)
+                    {
+                        var dto = new AdminCategoryDisplayDto()
+                        {
+                            Id = cat.Id,
+                            ParentCategoryId = cat.ParentCategoryId,
+                            Names = cat.Names, // Posíláme celý Dictionary se všemi překlady
+                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? defaultImage : cat.PictureUrl)}",
+                            SortOrder = cat.SortOrder,
+                            Level = level
+                        };
+                        rootList.Add(dto);
+
+                        var children = allCategories.Where(sub => sub.ParentCategoryId == cat.Id).OrderBy(sub => sub.SortOrder).ToList();
+
+                        if (children.Any())
+                        {
+                            RootCategoryTree(children, level + 1);
+                        }
+                    }
+                }
+
+                RootCategoryTree(rootCategories, 0);
+                return Results.Ok(rootList);
             }).RequireAuthorization("AdminOnly");
 
 

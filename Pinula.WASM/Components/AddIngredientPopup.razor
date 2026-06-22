@@ -117,7 +117,7 @@
                             {
                                 <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
                                     <div class="d-flex align-items-center gap-3">
-                                        <strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
+										<!--<strong class="value fs-5">1x @(opt.Unit.Name) =</strong>-->
                                         <div class="w-50">
                                             <input type="number" class="custom-input"
                                                    @bind="opt.ToDefaultUnit"
@@ -246,7 +246,7 @@
                     additionalUnits.Add(new IngredientUnit
                     {
                         UnitId = unit.Id,
-                        Unit = new Unit() { Id = unit.Id, Name = unit.Name },
+                        //Unit = new Unit() { Id = unit.Id, Name = unit.Name },
                         ToDefaultUnit = unit.Name.ToLower() == "g" ? 1 : 0
                     });
                 }
@@ -274,7 +274,7 @@
             additionalUnits.Add(new IngredientUnit
             {
                 UnitId = unit.Id,
-                Unit = new(){Id = unit.Id, Name = unit.Name},
+                //Unit = new(){Id = unit.Id, Name = unit.Name},
                 ToDefaultUnit = unit.Name.ToLower() == "g" ? 1 : 0
             });
 
@@ -360,7 +360,7 @@
             Quantity = quantity,
             UnitId = unit.Id,
             Ingredient = new Ingredient { Name = selectedIngredient.Name },
-            Unit = new Unit { Name = unit.Name }
+            //Unit = new Unit { Name = unit.Name }
         };
 
         await OnIngredientAdded.InvokeAsync(result);
@@ -398,7 +398,7 @@
         {
             newIngDto.AdditionalUnits.Add(new() { UnitId = unit.UnitId, ToDefaultUnit = unit.ToDefaultUnit });
         }
-        if(additionalUnits.FirstOrDefault(u => u.Unit.Name == "g") is null)
+        if(additionalUnits.FirstOrDefault(u => u.Unit.Code == "g") is null)
         {
             var g = allUnits.FirstOrDefault(u => u.Name == "g");
             newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });

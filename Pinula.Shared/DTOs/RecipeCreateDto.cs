@@ -21,7 +21,7 @@ namespace Pinula.Shared.DTOs
 
         public List<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 
-        public List<RecipeStep> RecipeSteps { get; set; } = new List<RecipeStep>();
+        public List<RecipeStepDisplayDto> RecipeSteps { get; set; } = new List<RecipeStepDisplayDto>();
 
         public List<Guid> CategoriesIds { get; set; } = new List<Guid>();
 

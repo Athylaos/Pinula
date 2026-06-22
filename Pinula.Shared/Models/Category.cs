@@ -8,7 +8,7 @@ public partial class Category
 {
     public Guid Id { get; set; }
 
-    public required string Name { get; set; }
+    public required Dictionary<string, string> Names { get; set; } = new();
 
     public required string PictureUrl { get; set; } = "default_category_picture.png";
 

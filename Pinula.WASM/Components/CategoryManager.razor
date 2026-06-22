@@ -10,7 +10,8 @@
     
     <div class="row g-2">
         <div class="col-12">
-            <input type="text" class="form-control" placeholder="Category Name" @bind="newCategoryName" />
+            <input type="text" class="form-control" placeholder="Category Name English" @bind="newCategoryNameEn" />
+            <input type="text" class="form-control" placeholder="Category Name Czech" @bind="newCategoryNameCs" />
         </div>
 
         <div class="col-8">
@@ -20,9 +21,8 @@
                 {
                     @foreach (var cat in displayCategories)
                     {
-                        var level = GetLevel(cat.Id);
                         <option value="@cat.Id">
-                            @(new string('—', level * 2)) @cat.Name
+                            @(new string('—', cat.Level * 2)) @cat.Names.GetValueOrDefault("en")
                         </option>
                     }
                 }
@@ -65,15 +65,15 @@ else
             <tr>
                 <th style="width: 60px;">Order</th>
                 <th style="width: 80px;">Image</th>
-                <th>Name (Hierarchical Structure)</th>
+                <th>Name EN</th>
+                <th>Name CS</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var category in displayCategories)
             {
-                var level = GetLevel(category.Id);
-                <tr class="@(level == 0 ? "fw-bold" : level == 1 ? "table-light" : "")">
+                <tr class="@(category.Level == 0 ? "fw-bold" : category.Level == 1 ? "table-light" : "")">
                     <td class="text-center text-muted">@category.SortOrder</td>
                     <td>
                         @if (!string.IsNullOrEmpty(category.PictureUrl) && category.PictureUrl != "default_category_picture.png")
@@ -83,13 +83,17 @@ else
                         }
                     </td>
                     <td>
-                        <div style="padding-left: @(level * 30)px">
-                            @if (level > 0)
+                        <div style="padding-left: @(category.Level * 30)px">
+                            @if (category.Level > 0)
                             {
                                 <span class="text-muted me-1">↳</span>
                             }
-                            @category.Name
+                            @category.Names.GetValueOrDefault("en")
                         </div>
+                    </td>
+                    <td>
+
+                        @category.Names.GetValueOrDefault("cs")
                     </td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-danger" @onclick="() => HandleDelete(category.Id)">
@@ -103,10 +107,10 @@ else
 }
 
 @code {
-    private List<Category>? displayCategories;
-    private Dictionary<Guid, int> categoryLevels = new();
-    
-    private string newCategoryName = "";
+    private List<AdminCategoryDisplayDto>? displayCategories;
+
+    private string newCategoryNameEn = "";
+    private string newCategoryNameCs = "";
     private Guid? selectedParentId;
     private short newSortOrder = 0;
     private string statusMessage = "";
@@ -118,57 +122,26 @@ else
         await LoadCategories();
     }
 
-    private int GetLevel(Guid id) => categoryLevels.ContainsKey(id) ? categoryLevels[id] : 0;
-
     private async Task LoadCategories()
     {
-        var allData = await CategoryService.GetAllCategoriesAsync();
-        
-        if (allData == null) return;
-
-        var result = new List<Category>();
-        categoryLevels.Clear();
-
-        var roots = allData
-            .Where(c => c.ParentCategoryId == null || c.ParentCategoryId == Guid.Empty)
-            .OrderBy(c => c.SortOrder)
-            .ToList();
-
-        foreach (var root in roots)
-        {
-            AddToTreeRecursive(root, allData, 0, result);
-        }
-
-        displayCategories = result;
+        displayCategories = await CategoryService.GetAllCategoriesAdminAsync();
         StateHasChanged();
-    }
-
-    private void AddToTreeRecursive(Category current, List<Category> allData, int level, List<Category> resultList)
-    {
-        categoryLevels[current.Id] = level;
-        resultList.Add(current);
-
-        var children = allData
-            .Where(c => c.ParentCategoryId == current.Id)
-            .OrderBy(c => c.SortOrder)
-            .ToList();
-
-        foreach (var child in children)
-        {
-            AddToTreeRecursive(child, allData, level + 1, resultList);
-        }
     }
 
     private void LoadPhoto(InputFileChangeEventArgs e) { selectedFile = e.File; selectedFileName = e.File.Name; }
 
     private async Task HandleCreate()
     {
-        if (string.IsNullOrWhiteSpace(newCategoryName)) return;
-        var dto = new CategoryCreateDto { Name = newCategoryName, ParentCategory = selectedParentId, SortOrder = newSortOrder };
+        if (string.IsNullOrWhiteSpace(newCategoryNameEn)) return;
+        if (string.IsNullOrWhiteSpace(newCategoryNameCs)) return;
+
+        var newNames = new Dictionary<string, string> { { "en", newCategoryNameEn }, { "cs", newCategoryNameCs } };
+
+        var dto = new CategoryCreateDto { Names = newNames, ParentCategory = selectedParentId, SortOrder = newSortOrder };
         Stream? stream = null;
         if (selectedFile != null) stream = selectedFile.OpenReadStream(5 * 1024 * 1024);
         var resultId = await CategoryService.SaveCategoryAsync(dto, stream, selectedFile?.Name, selectedFile?.ContentType);
-        if (resultId != null) { newCategoryName = ""; selectedParentId = null; newSortOrder = 0; selectedFile = null; selectedFileName = ""; await LoadCategories(); }
+        if (resultId != null) { newCategoryNameEn = ""; newCategoryNameCs = ""; selectedParentId = null; newSortOrder = 0; selectedFile = null; selectedFileName = ""; await LoadCategories(); }
         else { statusMessage = "Failed to create category."; }
     }
 

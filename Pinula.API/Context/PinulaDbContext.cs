@@ -45,6 +45,7 @@ public partial class PinulaDbContext : DbContext
     {
         modelBuilder.Entity<Category>(entity =>
         {
+            entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
             entity.Property(e => e.PictureUrl).HasDefaultValue("default_category_picture.png");
 
             entity.HasOne(d => d.ParentCategory).WithMany(p => p.ChildCategories).HasForeignKey(d => d.ParentCategoryId);
@@ -84,6 +85,8 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<Recipe>(entity =>
         {
+            entity.Property(e => e.Titles).HasColumnType("jsonb").IsRequired();
+
             entity.Property(e => e.Calories).HasPrecision(10, 3);
             entity.Property(e => e.Carbohydrates).HasPrecision(10, 3);
             entity.Property(e => e.Fats).HasPrecision(10, 3);
@@ -113,6 +116,7 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<RecipeStep>(entity =>
         {
+            entity.Property(e => e.Descriptions).HasColumnType("jsonb").IsRequired();
             entity.Property(e => e.StepNumber).HasDefaultValue((short)1);
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.RecipeSteps).HasForeignKey(d => d.RecipeId).OnDelete(DeleteBehavior.ClientSetNull);
@@ -120,7 +124,7 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<RecipeUser>(entity =>
         {
-            entity.HasKey(e => new { e.RecipeId, e.UserId });
+            entity.HasKey(e => new { e.RecipeId, e.UserId }); 
 
             entity.HasOne(d => d.Recipes).WithMany(p => p.RecipeUsers).HasForeignKey(d => d.RecipeId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.Users).WithMany(p => p.RecipeUsers).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);
@@ -128,7 +132,8 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<Unit>(entity =>
         {
-            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
         });
 
         modelBuilder.Entity<User>(entity =>

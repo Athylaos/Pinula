@@ -6,7 +6,9 @@
 <h3>Manage Units</h3>
 
 <div class="mb-4" style="max-width: 400px;">
-    <input type="text" class="form-control" placeholder="New unit name" @bind="newUnitName" />
+    <input type="text" class="form-control" placeholder="New unit code" @bind="newUnitCode" />
+    <input type="text" class="form-control" placeholder="New unit name english" @bind="newUnitNameEn" />
+    <input type="text" class="form-control" placeholder="New unit name czech" @bind="newUnitNameCs" />
     <div class="flex-row align-items-center">
         <p class="d-inline">Is serving unit?</p>
         <input type="checkbox" class="form-check" @bind="newUnitServing" />
@@ -29,7 +31,9 @@ else
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
-                <th>Name</th>
+                <th>Code</th>
+                <th>Name EN</th>
+                <th>Name CS</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
@@ -38,7 +42,9 @@ else
             {
                 <tr>
                     <td class="small text-muted">@unit.Id</td>
-                    <td><strong>@unit.Name</strong></td>
+                    <td><strong>@unit.Code</strong></td>
+                    <td>@unit.Names["en"]</td>
+                    <td>@unit.Names["cs"]</td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-danger"
                                 @onclick="() => HandleDelete(unit.Id)">
@@ -52,8 +58,10 @@ else
 }
 
 @code {
-    private List<UnitPreviewDto>? units;
-    private string newUnitName = "";
+    private List<Unit>? units;
+    private string newUnitNameEn = "";
+    private string newUnitNameCs = "";
+    private string newUnitCode = "";
     private bool newUnitServing;
     private string statusMessage = "";
 
@@ -64,18 +72,21 @@ else
 
     private async Task LoadUnits()
     {
-        var result = await UnitService.GetAllUnitsAsync();
+        var result = await UnitService.GetAllUnitsAdminAsync();
         units = result.ToList();
     }
 
     private async Task HandleCreate()
     {
-        if (string.IsNullOrWhiteSpace(newUnitName)) return;
+        if (string.IsNullOrWhiteSpace(newUnitNameCs) || string.IsNullOrWhiteSpace(newUnitNameEn) || string.IsNullOrWhiteSpace(newUnitCode)) return;
 
-        var success = await UnitService.CreateUnitAsync(new Unit { Name = newUnitName, IsServingUnit = newUnitServing });
+        var success = await UnitService.CreateUnitAsync(new Unit { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
         if (success)
         {
-            newUnitName = "";
+            newUnitCode = "";
+            newUnitNameCs = "";
+            newUnitNameEn = "";
+            newUnitServing = false;
             statusMessage = "";
             await LoadUnits();
         }

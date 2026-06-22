@@ -9,7 +9,9 @@ public partial class Recipe
 
     public Guid UserId { get; set; }
 
-    public required string Title { get; set; } = null!;
+    public string OriginalLanguage { get; set; } = "en";
+
+    public Dictionary<string, string> Titles { get; set; } = new();
 
     public required string PhotoUrl { get; set; } = null!;
 

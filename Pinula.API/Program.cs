@@ -1,18 +1,27 @@
-using Pinula.API.Context;
-using Pinula.API.Endpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
+using Pinula.API.Context;
+using Pinula.API.Endpoints;
+using Pinula.Shared.Interface;
+using Pinula.Shared.Services;
 using Scalar.AspNetCore;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.EnableDynamicJson();
+var dataSource = dataSourceBuilder.Build();
+
+
 builder.Services.AddDbContext<PinulaDbContext>(options =>
-    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
+    options.UseNpgsql(dataSource).UseSnakeCaseNamingConvention());
 
 builder.Services.AddOpenApi(options =>
 {
@@ -65,7 +74,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
 });
 
-
+builder.Services.AddLocalization();
+builder.Services.AddSingleton<ITranslationService, TranslationService>();
 
 var app = builder.Build();
 
@@ -74,6 +84,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+var supportedCultures = new[] { "cs", "en" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("en")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 //app.UseHttpsRedirection();
 app.UseStaticFiles();

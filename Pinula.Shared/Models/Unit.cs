@@ -7,8 +7,8 @@ namespace Pinula.Shared.Models;
 public partial class Unit
 {
     public Guid Id { get; set; }
-
-    public required string Name { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public Dictionary<string, string> Names { get; set; } = new();
 
     public bool IsServingUnit { get; set; }
     [JsonIgnore]

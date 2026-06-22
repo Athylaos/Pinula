@@ -1,4 +1,4 @@
-﻿@using Pinula.Shared.Models
+﻿@using Pinula.Shared.DTOs
 
 <div class="category-card" @onclick="OnClick">
     <img src="@Category.PictureUrl" alt="@Category.Name" />
@@ -7,8 +7,8 @@
 </div>
 
 @code {
-    [Parameter] public Category Category { get; set; } = null!;
-    [Parameter] public EventCallback<Category> OnCategorySelected { get; set; }
+    [Parameter] public CategoryDisplayDto Category { get; set; } = null!;
+    [Parameter] public EventCallback<CategoryDisplayDto> OnCategorySelected { get; set; }
 
     private async Task OnClick() => await OnCategorySelected.InvokeAsync(Category);
 }

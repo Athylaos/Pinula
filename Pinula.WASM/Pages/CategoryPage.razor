@@ -129,11 +129,11 @@
     private bool isActuallySearching;
     private bool isLoading = true;
 
-    private Category? currentCategory;
-    private List<Category> subCategories = new();
+    private CategoryDisplayDto? currentCategory;
+    private List<CategoryDisplayDto> subCategories = new();
     private List<RecipePreviewDto> searchedRecipes = new();
 
-    #region Filtrované Seznamy Receptů
+    #region Recipe lists filters
     private List<RecipePreviewDto> bestInCategoryRecipes = new();
     private List<RecipePreviewDto> fastInCategoryRecipes = new();
     private List<RecipePreviewDto> allCategoryRecipes = new();
@@ -257,5 +257,5 @@
     }
 
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
-    private void CategoryClicked(Category c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
+    private void CategoryClicked(CategoryDisplayDto c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
 }

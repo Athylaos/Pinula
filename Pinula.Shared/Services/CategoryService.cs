@@ -21,31 +21,31 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-        public async Task<List<Category>> GetAllCategoriesAsync()
+        public async Task<List<CategoryDisplayDto>> GetAllCategoriesAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/getAll");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<List<Category>>() ?? new();
+                    return await response.Content.ReadFromJsonAsync<List<CategoryDisplayDto>>() ?? new();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"error while loading categories: {ex.Message}");
             }
-            return new List<Category>();
+            return new List<CategoryDisplayDto>();
         }
 
-        public async Task<Category?> GetCategoryByIdAsync(Guid id)
+        public async Task<CategoryDisplayDto?> GetCategoryByIdAsync(Guid id)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/get/{id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<Category>();
+                    return await response.Content.ReadFromJsonAsync<CategoryDisplayDto>();
                 }
             }
             catch (Exception ex)
@@ -55,32 +55,23 @@ namespace Pinula.Shared.Services
             return null;
         }
 
-        public Task<List<Category>> GetChildCategoriesAsync(Guid parentId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<Category>> GetMainCategoriesAsync()
+        public async Task<List<CategoryDisplayDto>> GetMainCategoriesAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/getMain");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<List<Category>>() ?? new();
+                    return await response.Content.ReadFromJsonAsync<List<CategoryDisplayDto>>() ?? new();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"error while loading categories: {ex.Message}");
             }
-            return new List<Category>();
+            return new List<CategoryDisplayDto>();
         }
 
-        public Task<List<Category>> GetRecepieCategoriesAsync(Guid recepieId)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<Guid?> SaveCategoryAsync(CategoryCreateDto dto, Stream? photoStream, string? photoName, string? contentType)
         {
@@ -136,6 +127,23 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error while deleting category {id}: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task<List<AdminCategoryDisplayDto>> GetAllCategoriesAdminAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{BaseUrl}/getAllAdmin");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<List<AdminCategoryDisplayDto>>() ?? new();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"error while loading categories: {ex.Message}");
+            }
+            return new List<AdminCategoryDisplayDto>();
         }
     }
 }

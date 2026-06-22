@@ -12,6 +12,8 @@ namespace Pinula.Shared.DTOs
 
         public Guid UserId { get; set; }
 
+        public string OriginalLanguage { get; set; } = string.Empty;
+
         public string Title { get; set; }
 
         public string PhotoUrl { get; set; }
@@ -42,14 +44,14 @@ namespace Pinula.Shared.DTOs
 
         public virtual ICollection<RecipeIngredientDetailDto> RecipeIngredients { get; set; } = new List<RecipeIngredientDetailDto>();
 
-        public virtual ICollection<RecipeStep> RecipeSteps { get; set; } = new List<RecipeStep>();
+        public virtual ICollection<RecipeStepDisplayDto> RecipeSteps { get; set; } = new List<RecipeStepDisplayDto>();
 
-        public virtual Unit ServingUnit { get; set; } = null!;
+        public virtual UnitPreviewDto ServingUnit { get; set; } = null!;
 
         public required string UserName { get; set; } = string.Empty;
         public required string UserSurname { get; set; } = string.Empty;
 
-        public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
+        public virtual ICollection<CategoryDisplayDto> Categories { get; set; } = new List<CategoryDisplayDto>();
 
 
 

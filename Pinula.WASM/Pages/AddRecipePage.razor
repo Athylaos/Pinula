@@ -132,7 +132,7 @@
                     {
                         <div class="ingredient-row">
                             <input type="number" class="custom-input qty" @bind="ing.Quantity" />
-                            <span class="unit">@ing.Unit?.Name</span>
+                            <span class="unit"><!--@ing.Unit?.Name-->UNIT NAME</span>
                             <span class="name">@ing.Ingredient?.Name</span>
                             <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
                         </div>
@@ -216,7 +216,7 @@
     private List<UnitPreviewDto> ServingUnits { get; set; } = new();
     private List<CategorySelectableBlazor> Categories { get; set; } = new();
     private List<RecipeIngredient> Ingredients { get; set; } = new();
-    private List<RecipeStep> RecipeSteps { get; set; } = new();
+    private List<RecipeStepDisplayDto> RecipeSteps { get; set; } = new();
 
     private bool showIngredientPopup = false;
     private List<IngredientPreview> allIngredients = new();
@@ -268,7 +268,7 @@
                     UnitId = ingDto.UnitId,
                     Quantity = ingDto.Quantity,
                     Ingredient = new Ingredient { Name = ingDto.IngredientName },
-                    Unit = new Unit { Name = ingDto.UnitName }
+                    //Unit = new Unit { Name = ingDto.UnitName }
                 }).ToList();
                 RecipeSteps = existingRecipe.RecipeSteps.OrderBy(s => s.StepNumber).ToList();
 
@@ -311,7 +311,7 @@
 
     private void AddStep()
     {
-        RecipeSteps.Add(new RecipeStep { StepNumber = (short)(RecipeSteps.Count + 1), Description = string.Empty });
+        RecipeSteps.Add(new RecipeStepDisplayDto { StepNumber = (short)(RecipeSteps.Count + 1), Description = string.Empty });
     }
 
     private void RemoveStep()
@@ -486,7 +486,7 @@
 
     public class CategorySelectableBlazor
     {
-        public Category Category { get; set; }
+        public CategoryDisplayDto Category { get; set; }
         public bool IsSelected { get; set; }
         public bool IsExpanded { get; set; }
     }
