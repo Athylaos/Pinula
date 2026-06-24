@@ -9,7 +9,7 @@ public partial class IngredientUnit
 
     public Guid IngredientId { get; set; }
 
-    public decimal ToDefaultUnit { get; set; }
+    public decimal AmountInGrams { get; set; }
 
     public virtual Ingredient Ingredient { get; set; } = null!;
 

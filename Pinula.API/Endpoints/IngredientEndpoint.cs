@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DeepL;
+using Microsoft.EntityFrameworkCore;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Models;
 using System.Globalization;
 using System.Security.Claims;
+using static System.Net.WebRequestMethods;
 
 namespace Pinula.API.Endpoints
 {
@@ -13,104 +15,144 @@ namespace Pinula.API.Endpoints
         {
             var group = app.MapGroup("/ingredients");
 
-            //---------------------------------------------------------------Get previews
-            group.MapGet("/getPreviews", async (int? amount, PinulaDbContext db) =>
-            {
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-
-                var query = db.Ingredients
-                    .AsNoTracking()
-                    .Select(i => new IngredientPreview
-                    {
-                        Id = i.Id,
-                        Name = i.Name,
-                        DefaultUnit = i.DefaultUnit,
-
-                        IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
-                        {
-                            Id = iu.UnitId,
-                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "UnitName",
-                            ConversionFactor = iu.ToDefaultUnit
-                        }).ToList()
-                    });
-
-                if (amount.HasValue && amount > 0)
-                {
-                    query = query.Take(amount.Value);
-                }
-
-                return Results.Ok(await query.ToListAsync());
-            });
-
             //---------------------------------------------------------------Get filtered previews
-            group.MapGet("/getFilteredPreviews", async (string searchTerm, int? amount, PinulaDbContext db) =>
+            group.MapGet("/getFilteredPreviews", async ([AsParameters] IngredientFilterParameters filter, PinulaDbContext db) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                filter.Amount = (filter.Amount > 0) ? filter.Amount : 20;
+
                 var query = db.Ingredients
                     .AsNoTracking()
-                    .Where(i => i.Name.ToLower().Contains(searchTerm.ToLower()))
+                    .Include(i => i.DefaultUnit)
+                    .Include(i => i.IngredientUnits)
+                    .ThenInclude(iu => iu.Unit)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(filter.Barcode))
+                {
+                    query = query.Where(i => i.Barcode == filter.Barcode);
+                }
+                else if (string.IsNullOrWhiteSpace(filter.SearchTerm))
+                {
+                    return Results.Ok(new List<IngredientPreview>());
+                }
+
+                var rawIngredients = await query.ToListAsync();
+
+                if (string.IsNullOrWhiteSpace(filter.Barcode) && !string.IsNullOrWhiteSpace(filter.SearchTerm))
+                {
+                    string term = filter.SearchTerm.ToLower();
+
+                    rawIngredients = rawIngredients.Where(i =>
+                        (i.Names.TryGetValue(languageCode, out var nameCs) && nameCs.ToLower().Contains(term)) ||
+                        (i.Names.TryGetValue("en", out var nameEn) && nameEn.ToLower().Contains(term))
+                    ).ToList();
+                }
+
+                var results = rawIngredients
+                    .Take(filter.Amount)
                     .Select(i => new IngredientPreview
                     {
                         Id = i.Id,
-                        Name = i.Name,
-                        DefaultUnit = i.DefaultUnit,
-
+                        Name = i.Names.GetValueOrDefault(languageCode) ?? i.Names.GetValueOrDefault("en") ?? "Ingredient",
+                        ImageUrl = i.ImageUrl,
+                        DefaultUnit = new UnitPreviewDto
+                        {
+                            Id = i.DefaultUnit.Id,
+                            Name = i.DefaultUnit.Names.GetValueOrDefault(languageCode) ?? i.DefaultUnit.Names.GetValueOrDefault("en") ?? "Unit",
+                            Code = i.DefaultUnit.Code,
+                            ConversionFactor = 1
+                        },
                         IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
                         {
                             Id = iu.UnitId,
-                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "UnitName",
-                            ConversionFactor = iu.ToDefaultUnit
+                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "Unit",
+                            Code = iu.Unit.Code,
+                            ConversionFactor = iu.AmountInGrams
                         }).ToList()
-                    });
+                    }).ToList();
 
-                if (!query.Any())
-                {
-
-                }
-
-                if (amount.HasValue && amount > 0)
-                {
-                    query = query.Take(amount.Value);
-                }
-
-                return Results.Ok(await query.ToListAsync());
+                return Results.Ok(results);
             });
 
 
             //---------------------------------------------------------------Create ingredient
             group.MapPost("/create", async (IngredientCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
-                if (await db.Ingredients.AnyAsync(i => i.Name.ToLower() == dto.Name.ToLower()))
-                {
-                    return Results.Conflict(new { Message = $"Ingredient with name '{dto.Name}' already exists." });
-                }
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 try
                 {
-                    var ingredient = new Ingredient {
+                    Guid? finalTypeId = null;
+
+                    if (dto.TypeNames != null && dto.TypeNames.Any())
+                    {
+                        var existingType = await db.ShoppingCategories
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(t => dto.TypeNames.Contains(t.Code.ToLower()));
+
+                        if (existingType != null)
+                        {
+                            finalTypeId = existingType.Id;
+                        }
+                    }
+
+                    if (finalTypeId == null)
+                    {
+                        var uncategorizedType = await db.ShoppingCategories
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(t => t.Code == "Uncategorized");
+
+                        finalTypeId = uncategorizedType?.Id;
+                    }
+
+                    var ingredient = new Ingredient
+                    {
                         Id = Guid.NewGuid(),
-                        Name = dto.Name,
+                        Names = dto.Names,
+                        Barcode = dto.Barcode,
+                        ImageUrl = dto.ImageUrl,
+                        ShoppingCategoryId = finalTypeId??Guid.Parse("00000000-0000-0000-0000-000000000001"),
                         DefaultUnitId = dto.DefaultUnitId,
+
                         Calories = dto.Calories,
                         Proteins = dto.Proteins,
                         Fats = dto.Fats,
+                        SaturatedFats = dto.SaturatedFats,
                         Carbohydrates = dto.Carbohydrates,
+                        Sugars = dto.Sugars,
                         Fiber = dto.Fiber,
+                        Salt = dto.Salt,
+
+                        NutriScore = dto.NutriScore,
+                        NovaClassification = dto.NovaClassification,
+                        IsVegan = dto.IsVegan,
+                        IsVegetarian = dto.IsVegetarian,
+                        IsGlutenFree = dto.IsGlutenFree,
+                        IsLactoseFree = dto.IsLactoseFree
                     };
 
-                    foreach(var iu in dto.AdditionalUnits)
+                    if (dto.AdditionalUnits != null)
                     {
-                        ingredient.IngredientUnits.Add(new IngredientUnit { IngredientId = ingredient.Id, UnitId = iu.UnitId, ToDefaultUnit = iu.ToDefaultUnit });
+                        foreach (var iu in dto.AdditionalUnits)
+                        {
+                            ingredient.IngredientUnits.Add(new IngredientUnit
+                            {
+                                IngredientId = ingredient.Id,
+                                UnitId = iu.UnitId,
+                                AmountInGrams = iu.ToDefaultUnit
+                            });
+                        }
                     }
 
                     db.Ingredients.Add(ingredient);
                     await db.SaveChangesAsync();
 
-                    return Results.Ok("Ingredient added");
+                    return Results.Ok("Ingredient added successfully");
                 }
                 catch (Exception ex)
                 {
-                    return Results.Problem($"An error occurred while saving the ingredient. Ex:{ex.Message}");
+                    return Results.Problem($"An error occurred while saving the ingredient. Ex: {ex.Message}");
                 }
 
             }).RequireAuthorization();

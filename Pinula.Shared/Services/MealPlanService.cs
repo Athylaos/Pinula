@@ -12,10 +12,10 @@ namespace Pinula.Shared.Services
     public class MealPlanService : IMealPlanService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly ILogger<MealPlanService> _logger;
         private const string BaseUrl = "mealplan";
 
-        public MealPlanService(HttpClient httpClient, ILogger logger)
+        public MealPlanService(HttpClient httpClient, ILogger<MealPlanService> logger)
         {
             _logger = logger;
             _httpClient = httpClient;

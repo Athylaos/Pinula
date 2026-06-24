@@ -9,10 +9,10 @@ namespace Pinula.Shared.Services
     public class UnitService : IUnitService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly ILogger<UnitService> _logger;
         private const string BaseUrl = "units";
 
-        public UnitService(HttpClient httpClient, ILogger logger)
+        public UnitService(HttpClient httpClient, ILogger<UnitService> logger)
         {
             _httpClient = httpClient;
             _logger = logger;

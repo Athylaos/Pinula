@@ -239,7 +239,7 @@ namespace Pinula.API.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("ingredient_id");
 
-                    b.Property<decimal>("ToDefaultUnit")
+                    b.Property<decimal>("AmountInGrams")
                         .HasPrecision(12, 6)
                         .HasColumnType("numeric(12,6)")
                         .HasColumnName("to_default_unit");

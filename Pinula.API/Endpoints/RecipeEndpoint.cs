@@ -180,7 +180,7 @@ namespace Pinula.API.Endpoints
                     RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientDetailDto
                     {
                         Quantity = ri.Quantity ?? 0,
-                        IngredientName = ri.Ingredient.Name,
+                        IngredientName = ri.Ingredient.Names.GetValueOrDefault(languageCode) ?? ri.Ingredient.Names.GetValueOrDefault("en") ?? "Ingredient",
                         UnitName = ri.Unit.Names.GetValueOrDefault(languageCode) ?? ri.Unit.Names.GetValueOrDefault("en") ?? "Unit",
                         IngredientId = ri.Ingredient.Id,
                         UnitId = ri.Unit.Id,
@@ -354,7 +354,7 @@ namespace Pinula.API.Endpoints
                     {
                         var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.UnitId);
 
-                        decimal conversionFactor = ingredientUnit?.ToDefaultUnit ?? 1;
+                        decimal conversionFactor = ingredientUnit?.AmountInGrams ?? 1;
                         decimal factor = (conversionFactor / 100) * (i.Quantity / dto.ServingsAmount) ?? 0;
 
                         newRecipe.Calories += factor * dbIng.Calories;
@@ -509,7 +509,7 @@ namespace Pinula.API.Endpoints
                         if (dbIng != null)
                         {
                             var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.UnitId);
-                            decimal conversionFactor = ingredientUnit?.ToDefaultUnit ?? 1;
+                            decimal conversionFactor = ingredientUnit?.AmountInGrams ?? 1;
                             decimal factor = (conversionFactor / 100) * (i.Quantity / dto.ServingsAmount) ?? 0;
 
                             existingRecipe.Calories += factor * dbIng.Calories;

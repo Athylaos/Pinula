@@ -26,14 +26,22 @@ builder.Services.AddHttpClient("CookApi", client =>
     .AddHttpMessageHandler<AuthHttpMessageHandler>();
 #endif
 
+
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-builder.Services.AddScoped<IIngredientService>(sp => new IngredientService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<IngredientService>>()));
-builder.Services.AddScoped<IRecipeService>(sp => new RecipeService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<RecipeService>>()));
-builder.Services.AddScoped<ICategoryService>(sp => new CategoryService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<CategoryService>>()));
-builder.Services.AddScoped<IUserService>(sp => new UserService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILocalStorage>(), sp.GetRequiredService<ILogger<UserService>>()));
-builder.Services.AddScoped<IUnitService>(sp => new UnitService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<UnitService>>()));
-builder.Services.AddScoped<IMealPlanService>(sp => new MealPlanService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("CookApi"), sp.GetRequiredService<ILogger<MealPlanService>>()));
+builder.Services.AddHttpClient<IIngredientService, IngredientService>("CookApi");
+builder.Services.AddHttpClient<IRecipeService, RecipeService>("CookApi");
+builder.Services.AddHttpClient<ICategoryService, CategoryService>("CookApi");
+builder.Services.AddHttpClient<IUserService, UserService>("CookApi");
+builder.Services.AddHttpClient<IUnitService, UnitService>("CookApi");
+builder.Services.AddHttpClient<IMealPlanService, MealPlanService>("CookApi");
+builder.Services.AddHttpClient<OFFService>(client =>
+{
+    client.DefaultRequestHeaders.Clear();
+    client.DefaultRequestHeaders.Add("User-Agent", "PinulaApp/0.4 (davidhykys88@gmail.com)");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthenticationStateProvider>());

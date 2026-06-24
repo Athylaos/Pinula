@@ -19,7 +19,7 @@ namespace Pinula.API.Endpoints
             group.MapGet("/getServing", async (PinulaDbContext db) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
+                var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Code = u.Code, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
 
                 return Results.Ok(units) ;
             });
@@ -28,7 +28,7 @@ namespace Pinula.API.Endpoints
             group.MapGet("/get", async (PinulaDbContext db) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
+                var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Code = u.Code, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
 
                 return Results.Ok(units);
             });
@@ -74,7 +74,7 @@ namespace Pinula.API.Endpoints
                 return Results.NoContent();
             }).RequireAuthorization("AdminOnly");
 
-            //---------------------------------------------------------------Get units
+            //---------------------------------------------------------------Get units admin
             group.MapGet("/getAdmin", async (PinulaDbContext db) =>
             {
                 var units = await db.Units.AsNoTracking().ToListAsync();

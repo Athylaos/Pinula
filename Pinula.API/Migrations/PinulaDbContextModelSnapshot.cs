@@ -205,6 +205,14 @@ namespace Pinula.API.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Barcode")
+                        .HasColumnType("text")
+                        .HasColumnName("barcode");
+
+                    b.Property<Guid?>("BaseIngredientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("base_ingredient_id");
+
                     b.Property<decimal>("Calories")
                         .HasPrecision(10, 3)
                         .HasColumnType("numeric(10,3)")
@@ -229,21 +237,86 @@ namespace Pinula.API.Migrations
                         .HasColumnType("numeric(10,3)")
                         .HasColumnName("fiber");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<string>("ImageUrl")
                         .HasColumnType("text")
-                        .HasColumnName("name");
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsGlutenFree")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_gluten_free");
+
+                    b.Property<bool>("IsLactoseFree")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_lactose_free");
+
+                    b.Property<bool>("IsVegan")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_vegan");
+
+                    b.Property<bool>("IsVegetarian")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_vegetarian");
+
+                    b.Property<Dictionary<string, string>>("Names")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("names");
+
+                    b.Property<int?>("NovaClassification")
+                        .HasColumnType("integer")
+                        .HasColumnName("nova_classification");
+
+                    b.Property<string>("NutriScore")
+                        .HasColumnType("text")
+                        .HasColumnName("nutri_score");
+
+                    b.Property<string>("OffCategoryTag")
+                        .HasColumnType("text")
+                        .HasColumnName("off_category_tag");
 
                     b.Property<decimal>("Proteins")
                         .HasPrecision(10, 3)
                         .HasColumnType("numeric(10,3)")
                         .HasColumnName("proteins");
 
+                    b.Property<decimal>("Salt")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)")
+                        .HasColumnName("salt");
+
+                    b.Property<decimal>("SaturatedFats")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)")
+                        .HasColumnName("saturated_fats");
+
+                    b.Property<Guid>("ShoppingCategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shopping_category_id");
+
+                    b.Property<decimal>("Sugars")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("numeric(10,3)")
+                        .HasColumnName("sugars");
+
                     b.HasKey("Id")
                         .HasName("pk_ingredients");
 
+                    b.HasIndex("BaseIngredientId")
+                        .HasDatabaseName("ix_ingredients_base_ingredient_id");
+
                     b.HasIndex("DefaultUnitId")
                         .HasDatabaseName("ix_ingredients_default_unit_id");
+
+                    b.HasIndex("ShoppingCategoryId")
+                        .HasDatabaseName("ix_ingredients_shopping_category_id");
 
                     b.ToTable("ingredients", (string)null);
                 });
@@ -258,10 +331,10 @@ namespace Pinula.API.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("ingredient_id");
 
-                    b.Property<decimal>("ToDefaultUnit")
+                    b.Property<decimal>("AmountInGrams")
                         .HasPrecision(12, 6)
                         .HasColumnType("numeric(12,6)")
-                        .HasColumnName("to_default_unit");
+                        .HasColumnName("amount_in_grams");
 
                     b.HasKey("UnitId", "IngredientId")
                         .HasName("pk_ingredient_units");
@@ -510,6 +583,29 @@ namespace Pinula.API.Migrations
                     b.ToTable("recipe_users", (string)null);
                 });
 
+            modelBuilder.Entity("Pinula.Shared.Models.ShoppingCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<Dictionary<string, string>>("Names")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("names");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shopping_categories");
+
+                    b.ToTable("shopping_categories", (string)null);
+                });
+
             modelBuilder.Entity("Pinula.Shared.Models.Unit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -690,13 +786,28 @@ namespace Pinula.API.Migrations
 
             modelBuilder.Entity("Pinula.Shared.Models.Ingredient", b =>
                 {
+                    b.HasOne("Pinula.Shared.Models.Ingredient", "BaseIngredient")
+                        .WithMany("BrandedProducts")
+                        .HasForeignKey("BaseIngredientId")
+                        .HasConstraintName("fk_ingredients_ingredients_base_ingredient_id");
+
                     b.HasOne("Pinula.Shared.Models.Unit", "DefaultUnit")
                         .WithMany("Ingredients")
                         .HasForeignKey("DefaultUnitId")
                         .IsRequired()
                         .HasConstraintName("fk_ingredients_units_default_unit_id");
 
+                    b.HasOne("Pinula.Shared.Models.ShoppingCategory", "ShoppingCategory")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("ShoppingCategoryId")
+                        .IsRequired()
+                        .HasConstraintName("fk_ingredients_shopping_categories_shopping_category_id");
+
+                    b.Navigation("BaseIngredient");
+
                     b.Navigation("DefaultUnit");
+
+                    b.Navigation("ShoppingCategory");
                 });
 
             modelBuilder.Entity("Pinula.Shared.Models.IngredientUnit", b =>
@@ -704,6 +815,7 @@ namespace Pinula.API.Migrations
                     b.HasOne("Pinula.Shared.Models.Ingredient", "Ingredient")
                         .WithMany("IngredientUnits")
                         .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ingredient_units_ingredients_ingredient_id");
 
@@ -845,6 +957,8 @@ namespace Pinula.API.Migrations
 
             modelBuilder.Entity("Pinula.Shared.Models.Ingredient", b =>
                 {
+                    b.Navigation("BrandedProducts");
+
                     b.Navigation("IngredientUnits");
 
                     b.Navigation("RecipeIngredients");
@@ -861,6 +975,11 @@ namespace Pinula.API.Migrations
                     b.Navigation("RecipeSteps");
 
                     b.Navigation("RecipeUsers");
+                });
+
+            modelBuilder.Entity("Pinula.Shared.Models.ShoppingCategory", b =>
+                {
+                    b.Navigation("Ingredients");
                 });
 
             modelBuilder.Entity("Pinula.Shared.Models.Unit", b =>

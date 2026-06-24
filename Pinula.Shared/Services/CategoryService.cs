@@ -12,10 +12,10 @@ namespace Pinula.Shared.Services
     {
 
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly ILogger<CategoryService> _logger;
         private const string BaseUrl = "categories";
 
-        public CategoryService(HttpClient httpClient, ILogger logger)
+        public CategoryService(HttpClient httpClient, ILogger<CategoryService> logger)
         {
             _httpClient = httpClient;
             _logger = logger;

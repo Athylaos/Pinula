@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Pinula.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Pinula.API.Context;
 
@@ -24,6 +25,8 @@ public partial class PinulaDbContext : DbContext
     public virtual DbSet<Ingredient> Ingredients { get; set; }
 
     public virtual DbSet<IngredientUnit> IngredientUnits { get; set; }
+
+    public virtual DbSet<ShoppingCategory> ShoppingCategories { get; set; }
 
     public virtual DbSet<Recipe> Recipes { get; set; }
 
@@ -65,22 +68,39 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<Ingredient>(entity =>
         {
+            entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
+
             entity.Property(e => e.Calories).HasPrecision(10, 3);
-            entity.Property(e => e.Carbohydrates).HasPrecision(10, 3);
             entity.Property(e => e.Fats).HasPrecision(10, 3);
+            entity.Property(e => e.SaturatedFats).HasPrecision(10, 3);
+            entity.Property(e => e.Carbohydrates).HasPrecision(10, 3);
+            entity.Property(e => e.Sugars).HasPrecision(10, 3);
             entity.Property(e => e.Proteins).HasPrecision(10, 3);
             entity.Property(e => e.Fiber).HasPrecision(10, 3);
+            entity.Property(e => e.Salt).HasPrecision(10, 3);
+
+            entity.Property(e => e.IsVegan).HasDefaultValue(false);
+            entity.Property(e => e.IsVegetarian).HasDefaultValue(false);
+            entity.Property(e => e.IsGlutenFree).HasDefaultValue(false);
+            entity.Property(e => e.IsLactoseFree).HasDefaultValue(false);
 
             entity.HasOne(d => d.DefaultUnit).WithMany(p => p.Ingredients).HasForeignKey(d => d.DefaultUnitId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.BaseIngredient).WithMany(p => p.BrandedProducts).HasForeignKey(d => d.BaseIngredientId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.ShoppingCategory).WithMany(p => p.Ingredients).HasForeignKey(d => d.ShoppingCategoryId).OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<IngredientUnit>(entity =>
         {
             entity.HasKey(e => new { e.UnitId, e.IngredientId });
-            entity.Property(e => e.ToDefaultUnit).HasPrecision(12, 6);
+            entity.Property(e => e.AmountInGrams).HasPrecision(12, 6);
 
-            entity.HasOne(d => d.Ingredient).WithMany(p => p.IngredientUnits).HasForeignKey(d => d.IngredientId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.Ingredient).WithMany(p => p.IngredientUnits).HasForeignKey(d => d.IngredientId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(d => d.Unit).WithMany(p => p.IngredientUnits).HasForeignKey(d => d.UnitId).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<ShoppingCategory>(entity =>
+        {
+            entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
         });
 
         modelBuilder.Entity<Recipe>(entity =>

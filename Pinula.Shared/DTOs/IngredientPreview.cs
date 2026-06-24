@@ -11,7 +11,9 @@ namespace Pinula.Shared.DTOs
 
         public string Name { get; set; }
 
-        public Unit DefaultUnit { get; set; }
+        public string? ImageUrl { get; set; }
+
+        public UnitPreviewDto DefaultUnit { get; set; }
 
         public UnitPreviewDto SelectedUnit { get; set; } = null!;
 

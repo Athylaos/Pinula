@@ -133,7 +133,9 @@
                         <div class="ingredient-row">
                             <input type="number" class="custom-input qty" @bind="ing.Quantity" />
                             <span class="unit"><!--@ing.Unit?.Name-->UNIT NAME</span>
-                            <span class="name">@ing.Ingredient?.Name</span>
+                            <span class="name">
+                                <!--@ing.Ingredient?.Name-->INGREDIENT NAME
+                            </span>
                             <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
                         </div>
                     }
@@ -267,7 +269,7 @@
                     IngredientId = ingDto.IngredientId,
                     UnitId = ingDto.UnitId,
                     Quantity = ingDto.Quantity,
-                    Ingredient = new Ingredient { Name = ingDto.IngredientName },
+                    //Ingredient = new Ingredient { Name = ingDto.IngredientName },
                     //Unit = new Unit { Name = ingDto.UnitName }
                 }).ToList();
                 RecipeSteps = existingRecipe.RecipeSteps.OrderBy(s => s.StepNumber).ToList();
@@ -363,7 +365,7 @@
 
         foreach (var ing in Ingredients)
         {
-            if (ing.Quantity == 0) { ShowWarning($"{Localizer["CWarningIngredientsQuantity"]} ({ing.Ingredient.Name})"); return; }
+            //if (ing.Quantity == 0) { ShowWarning($"{Localizer["CWarningIngredientsQuantity"]} ({ing.Ingredient.Name})"); return; }
         }
 
         for (int i = 0; i < RecipeSteps.Count; i++)

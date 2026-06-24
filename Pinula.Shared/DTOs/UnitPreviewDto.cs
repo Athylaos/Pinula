@@ -8,6 +8,7 @@ namespace Pinula.Shared.DTOs
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string Code { get; set; }
         public decimal ConversionFactor { get; set; }
     }
 }

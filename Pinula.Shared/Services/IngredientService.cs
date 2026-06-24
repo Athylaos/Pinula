@@ -15,19 +15,49 @@ namespace Pinula.Shared.Services
     public class IngredientService : IIngredientService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly OFFService _offService;
+        private readonly ILogger<IngredientService> _logger;
+        private readonly IUnitService _unitService;
+        private readonly ILocalStorage _localStorage;
         private const string BaseUrl = "ingredients";
 
-        public IngredientService(HttpClient httpClient, ILogger logger)
+        public IngredientService(HttpClient httpClient, ILogger<IngredientService> logger, OFFService offservice, IUnitService unitService, ILocalStorage localStorage)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _offService = offservice;
+            _unitService = unitService;
+            _localStorage = localStorage;
         }
 
-        public async Task<CreateIngredientResponse> CreateIngredientAsync(IngredientCreateDto ingredientDto)
+        public async Task<CreateIngredientResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode)
         {
             try
             {
+                if (!string.IsNullOrWhiteSpace(barcode) && ingredientDto == null)
+                {
+                    var allLocalUnits = await _unitService.GetAllUnitsAsync();
+                    var defaultUnit = allLocalUnits.FirstOrDefault(u => u.Code.ToLower() == "g") ?? allLocalUnits.FirstOrDefault();
+
+                    if (defaultUnit == null)
+                    {
+                        return new CreateIngredientResponse { IsSuccess = false, Message = "No default units found" };
+                    }
+
+                    _logger.LogInformation($"Fetching heavy details for barcode {barcode} from OFF...");
+                    ingredientDto = await _offService.GetFullIngredientDetailsAsync(barcode, defaultUnit.Id);
+
+                    if (ingredientDto == null)
+                    {
+                        return new CreateIngredientResponse { IsSuccess = false, Message = "Failed to fetch product details from Open Food Facts." };
+                    }
+                }
+
+                if (ingredientDto == null)
+                {
+                    return new CreateIngredientResponse { IsSuccess = false, Message = "No ingredient data provided." };
+                }
+
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", ingredientDto);
 
                 if (response.IsSuccessStatusCode)
@@ -61,13 +91,6 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<List<IngredientPreview>> GetIngredientPreviewsAsync(int amount)
-        {
-            var response = await _httpClient.GetFromJsonAsync<List<IngredientPreview>>($"{BaseUrl}/getPreviews?amount={amount}");
-            return response ?? new List<IngredientPreview>();
-        }
-
-
         public Task<Ingredient?> GetIngredientAsync(Guid id)
         {
             throw new NotImplementedException();
@@ -83,22 +106,66 @@ namespace Pinula.Shared.Services
             throw new NotImplementedException();
         }
 
-        public async Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(string searchTerm, int? amount)
+        public async Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter)
         {
-            var encodedSearch = Uri.EscapeDataString(searchTerm ?? string.Empty);
+            string languageCode = await _localStorage.GetStringAsync("culture") ?? "en";
+            if (filter.Amount <= 0) filter.Amount = 20;
 
-            var url = $"{BaseUrl}/getFilteredPreviews?searchTerm={encodedSearch}&amount={amount}";
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+                queryParams.Add($"searchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
+
+            if (!string.IsNullOrWhiteSpace(filter.Barcode))
+                queryParams.Add($"barcode={Uri.EscapeDataString(filter.Barcode)}");
+
+            if (filter.Amount > 0)
+                queryParams.Add($"amount={filter.Amount}");
+
+            var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+            var localUrl = $"{BaseUrl}/getFilteredPreviews{queryString}";
+
+            var finalResults = new List<IngredientPreview>();
 
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<IngredientPreview>>(url);
-                return response ?? new List<IngredientPreview>();
+                var localResponse = await _httpClient.GetFromJsonAsync<List<IngredientPreview>>(localUrl);
+                if (localResponse != null)
+                {
+                    finalResults.AddRange(localResponse);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error fetching ingredients: {ex.Message}");
-                return new List<IngredientPreview>();
+                _logger.LogError($"Error fetching local ingredients: {ex.Message}");
             }
+
+            int remainingAmount = filter.Amount - finalResults.Count;
+
+            if (remainingAmount > 0)
+            {
+                try
+                {
+                    var allLocalUnits = await _unitService.GetAllUnitsAsync();
+
+                    var offFilter = new IngredientFilterParameters
+                    {
+                        SearchTerm = filter.SearchTerm,
+                        Barcode = filter.Barcode,
+                        Amount = remainingAmount
+                    };
+
+                  var offResults = await _offService.SearchPreviewsAsync(offFilter, allLocalUnits, languageCode);
+
+                    finalResults.AddRange(offResults);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error fetching OFF ingredients: {ex.Message}");
+                }
+            }
+
+            return finalResults.Take(filter.Amount).ToList();
         }
     }
 }
