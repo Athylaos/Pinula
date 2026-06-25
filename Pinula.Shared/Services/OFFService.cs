@@ -127,10 +127,10 @@ namespace Pinula.Shared.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<IngredientPreview>> SearchPreviewsAsync(IngredientFilterParameters filter, List<UnitPreviewDto> allLocalUnits, string languageCode)
+        public async Task<List<IngredientPreviewDto>> SearchPreviewsAsync(IngredientFilterParameters filter, List<UnitPreviewDto> allLocalUnits, string languageCode)
         {
             if (string.IsNullOrWhiteSpace(filter.SearchTerm) && string.IsNullOrWhiteSpace(filter.Barcode))
-                return new List<IngredientPreview>();
+                return new List<IngredientPreviewDto>();
 
             var gramUnit = allLocalUnits.FirstOrDefault(u => u.Code.ToLower() == "g");
             var mlUnit = allLocalUnits.FirstOrDefault(u => u.Code.ToLower() == "ml");
@@ -164,14 +164,14 @@ namespace Pinula.Shared.Services
             }
 
             var response = await _httpClient.GetFromJsonAsync<OffSearchPreviewResponse>(url);
-            if (response?.Products == null) return new List<IngredientPreview>();
+            if (response?.Products == null) return new List<IngredientPreviewDto>();
 
             var previews = response.Products.Select(p =>
             {
                 var isLiquid = p.Quantity != null && (p.Quantity.ToLower().Contains("ml") || p.Quantity.ToLower().Contains(" l"));
                 var defaultUnit = (isLiquid ? mlUnit : gramUnit) ?? allLocalUnits.First();
 
-                return new IngredientPreview
+                return new IngredientPreviewDto
                 {
                     Id = Guid.Empty,
                     Name = (languageCode == "cs")

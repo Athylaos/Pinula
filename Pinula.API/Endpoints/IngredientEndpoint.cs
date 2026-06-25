@@ -34,7 +34,7 @@ namespace Pinula.API.Endpoints
                 }
                 else if (string.IsNullOrWhiteSpace(filter.SearchTerm))
                 {
-                    return Results.Ok(new List<IngredientPreview>());
+                    return Results.Ok(new List<IngredientPreviewDto>());
                 }
 
                 var rawIngredients = await query.ToListAsync();
@@ -51,7 +51,7 @@ namespace Pinula.API.Endpoints
 
                 var results = rawIngredients
                     .Take(filter.Amount)
-                    .Select(i => new IngredientPreview
+                    .Select(i => new IngredientPreviewDto
                     {
                         Id = i.Id,
                         Name = i.Names.GetValueOrDefault(languageCode) ?? i.Names.GetValueOrDefault("en") ?? "Ingredient",
@@ -85,15 +85,15 @@ namespace Pinula.API.Endpoints
                 {
                     Guid? finalTypeId = null;
 
-                    if (dto.TypeNames != null && dto.TypeNames.Any())
+                    if (dto.CategoryTags != null && dto.CategoryTags.Any())
                     {
-                        var existingType = await db.ShoppingCategories
+                        var existingTCategory = await db.ShoppingCategories
                             .AsNoTracking()
-                            .FirstOrDefaultAsync(t => dto.TypeNames.Contains(t.Code.ToLower()));
+                            .FirstOrDefaultAsync(t => dto.CategoryTags.Contains(t.Code.ToLower()));
 
-                        if (existingType != null)
+                        if (existingTCategory != null)
                         {
-                            finalTypeId = existingType.Id;
+                            finalTypeId = existingTCategory.Id;
                         }
                     }
 

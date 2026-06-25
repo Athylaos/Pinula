@@ -109,9 +109,9 @@
                 <label class="section-title">@Localizer["Categories"]</label>
 
                 <div class="category-root-container">
-                    @foreach (var root in Categories.Where(c => c.Category.ParentCategoryId == null || c.Category.ParentCategoryId == Guid.Empty))
+                    @foreach (var rootCategory in RootCategories)
                     {
-                        @RenderCategoryTree(root)
+                        @RenderCategoryTree(rootCategory)
                     }
                 </div>
             </div>
@@ -132,9 +132,9 @@
                     {
                         <div class="ingredient-row">
                             <input type="number" class="custom-input qty" @bind="ing.Quantity" />
-                            <span class="unit"><!--@ing.Unit?.Name-->UNIT NAME</span>
+                            <span class="unit">@ing.Unit.Name</span>
                             <span class="name">
-                                <!--@ing.Ingredient?.Name-->INGREDIENT NAME
+                                @ing.Ingredient.Name
                             </span>
                             <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
                         </div>
@@ -216,12 +216,12 @@
     private List<DifficultyLevel> DifficultyOptions { get; set; } = Enum.GetValues(typeof(DifficultyLevel)).Cast<DifficultyLevel>().ToList();
 
     private List<UnitPreviewDto> ServingUnits { get; set; } = new();
-    private List<CategorySelectableBlazor> Categories { get; set; } = new();
-    private List<RecipeIngredient> Ingredients { get; set; } = new();
+    private List<CategorySelectableBlazor> RootCategories { get; set; } = new();
+    private List<RecipeIngredientPreviewDto> Ingredients { get; set; } = new();
     private List<RecipeStepDisplayDto> RecipeSteps { get; set; } = new();
 
     private bool showIngredientPopup = false;
-    private List<IngredientPreview> allIngredients = new();
+    private List<IngredientPreviewDto> allIngredients = new();
 
     private string SelectedImagePreview { get; set; } = string.Empty;
     private IBrowserFile? _selectedPhoto;
@@ -249,7 +249,7 @@
         ServingUnits = await UnitService.GetAllServingUnitsAsync();
 
         var cats = await CategoryService.GetAllCategoriesAsync();
-        Categories = cats.Select(c => new CategorySelectableBlazor { Category = c, IsSelected = false }).ToList();
+        RootCategories = MapDtoToSelectableTree(cats);
 
         if (IsEditMode)
         {
@@ -264,23 +264,22 @@
                 Difficulty = (DifficultyLevel)existingRecipe.Difficulty;
 
                 SelectedImagePreview = !string.IsNullOrEmpty(existingRecipe.PhotoUrl) ? existingRecipe.PhotoUrl : string.Empty;
-                Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredient
+                Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredientPreviewDto
                 {
-                    IngredientId = ingDto.IngredientId,
-                    UnitId = ingDto.UnitId,
                     Quantity = ingDto.Quantity,
-                    //Ingredient = new Ingredient { Name = ingDto.IngredientName },
-                    //Unit = new Unit { Name = ingDto.UnitName }
+                    Ingredient = new(){Id = ingDto.IngredientId, Name = ingDto.IngredientName, SelectedUnit = new() {Name = ingDto.UnitName } },
+                    Unit = new() { Name = ingDto.UnitName, Id = ingDto.UnitId }
                 }).ToList();
                 RecipeSteps = existingRecipe.RecipeSteps.OrderBy(s => s.StepNumber).ToList();
 
                 var existingCatIds = existingRecipe.Categories.Select(c => c.Id).ToList();
-                foreach (var cat in Categories)
+
+                foreach (var cat in RootCategories)
                 {
                     if (existingCatIds.Contains(cat.Category.Id))
                     {
                         cat.IsSelected = true;
-                        ExpandParentRecursive(cat.Category.ParentCategoryId);
+                        ExpandSelectedCategories(RootCategories, existingCatIds);
                     }
                 }
             }
@@ -299,16 +298,31 @@
         isLoading = false;
     }
 
-    private void ExpandParentRecursive(Guid? parentId)
+    private List<CategorySelectableBlazor> MapDtoToSelectableTree(IEnumerable<CategoryDisplayDto> dtos)
     {
-        if (parentId == null || parentId == Guid.Empty) return;
-
-        var parent = Categories.FirstOrDefault(c => c.Category.Id == parentId);
-        if (parent != null)
+        return dtos.Select(dto => new CategorySelectableBlazor
         {
-            parent.IsExpanded = true;
-            ExpandParentRecursive(parent.Category.ParentCategoryId);
+            Category = dto,
+            IsSelected = false,
+            IsExpanded = false,
+            ChildCategories = MapDtoToSelectableTree(dto.ChildCategories)
+        }).ToList();
+    }
+
+    private void ExpandSelectedCategories(List<CategorySelectableBlazor> categories, List<Guid> categoryIds)
+    {
+        var cIds = categoryIds;
+        foreach(var category in categories)
+        {
+            if (categoryIds.Contains(category.Category.Id)) category.IsSelected = true;
+
+            if (category.IsSelected && category.ChildCategories.Any())
+            {
+                category.IsExpanded = true;
+                ExpandSelectedCategories(category.ChildCategories, cIds);
+            }
         }
+
     }
 
     private void AddStep()
@@ -324,12 +338,12 @@
         }
     }
 
-    private void RemoveIngredient(RecipeIngredient ing)
+    private void RemoveIngredient(RecipeIngredientPreviewDto ing)
     {
         Ingredients.Remove(ing);
     }
 
-    private void HandleNewIngredient(RecipeIngredient ingredient)
+    private void HandleNewIngredient(RecipeIngredientPreviewDto ingredient)
     {
         Ingredients.Add(ingredient);
         showIngredientPopup = false;
@@ -360,12 +374,12 @@
         if (string.IsNullOrWhiteSpace(Title)) { ShowWarning(Localizer["CWarningTitle"]); return; }
         if (Time <= 0) { ShowWarning(Localizer["CWarningTime"]); return; }
         if (Servings <= 0) { ShowWarning(Localizer["CWarningServings"]); return; }
-        if (!Categories.Any(c => c.IsSelected)) { ShowWarning(Localizer["CWarningCategory"]); return; }
+        if (!RootCategories.Any(c => c.IsSelected)) { ShowWarning(Localizer["CWarningCategory"]); return; }
         if (Ingredients.Count == 0) { ShowWarning(Localizer["CWarningIngredients"]); return; }
 
         foreach (var ing in Ingredients)
         {
-            //if (ing.Quantity == 0) { ShowWarning($"{Localizer["CWarningIngredientsQuantity"]} ({ing.Ingredient.Name})"); return; }
+            if (ing.Quantity == 0) { ShowWarning($"{Localizer["CWarningIngredientsQuantity"]} ({ing.Ingredient.Name})"); return; }
         }
 
         for (int i = 0; i < RecipeSteps.Count; i++)
@@ -378,6 +392,16 @@
             if (string.IsNullOrEmpty(rs.Description)) { ShowWarning($"{Localizer["CWarningSteps"]} ({rs.StepNumber})"); return; }
         }
 
+        List<Guid> CategoriesIds = new();
+
+        void GetAllCategoriesIds(List<CategorySelectableBlazor> categories){
+            foreach(var category in categories)
+            {
+                if (category.IsSelected) CategoriesIds.Add(category.Category.Id);
+                if (category.ChildCategories.Any()) GetAllCategoriesIds(category.ChildCategories);
+            }
+        }
+
         var dto = new RecipeCreateDto
         {
             Title = Title,
@@ -385,7 +409,7 @@
             ServingsAmount = (short)Servings,
             ServingUnit = SelectedServingUnitId,
             Difficulty = (short)Difficulty,
-            CategoriesIds = Categories.Where(c => c.IsSelected).Select(c => c.Category.Id).ToList(),
+            CategoriesIds = CategoriesIds,
             RecipeIngredients = Ingredients,
             RecipeSteps = RecipeSteps
         };
@@ -427,63 +451,57 @@
     }
 
     RenderFragment<CategorySelectableBlazor> RenderCategoryTree => category => __builder =>
-    {
-        var children = GetChildren(category.Category.Id).ToList();
-        var hasChildren = children.Any();
+        {
+            var hasChildren = category.ChildCategories.Any();
 
-        <div class="category-node">
-            <div class="category-chip @(category.IsSelected ? "selected" : "") @(category.IsExpanded ? "expanded" : "")"
-                 @onclick="() => HandleClick(category)">
+            <div class="category-node">
+                <div class="category-chip @(category.IsSelected ? "selected" : "") @(category.IsExpanded ? "expanded" : "")"
+                     @onclick="() => HandleClick(category)">
 
-                @if (!string.IsNullOrEmpty(category.Category.PictureUrl) && category.Category.PictureUrl != "default_category_picture.png")
-                {
-                    <img src="@category.Category.PictureUrl" class="chip-img" />
-                }
-                <span class="chip-name">@category.Category.Name</span>
-
-            </div>
-
-            @if (hasChildren && category.IsExpanded)
-            {
-                <div class="children-wrapper animate-slide-down">
-                    @foreach (var child in children)
+                    @if (!string.IsNullOrEmpty(category.Category.PictureUrl) && category.Category.PictureUrl != "default_category_picture.png")
                     {
-                        @RenderCategoryTree(child)
+                        <img src="@category.Category.PictureUrl" class="chip-img" />
                     }
+                    <span class="chip-name">@category.Category.Name</span>
+
                 </div>
-            }
-        </div>
-    };
+
+                @if (hasChildren && category.IsExpanded)
+                {
+                    <div class="children-wrapper animate-slide-down">
+                        @foreach (var child in category.ChildCategories)
+                        {
+                            @RenderCategoryTree(child)
+                        }
+                    </div>
+                }
+            </div>
+        };
 
     private void HandleClick(CategorySelectableBlazor cat)
     {
         cat.IsSelected = !cat.IsSelected;
 
-        bool hasChildren = Categories.Any(c => c.Category.ParentCategoryId == cat.Category.Id);
-        if (hasChildren)
+        if (cat.ChildCategories.Any())
         {
             cat.IsExpanded = !cat.IsExpanded;
         }
 
         if (!cat.IsSelected)
         {
-            DeselectChildrenRecursive(cat.Category.Id);
+            DeselectChildrenRecursive(cat);
         }
     }
 
-    private void DeselectChildrenRecursive(Guid parentId)
+    private void DeselectChildrenRecursive(CategorySelectableBlazor parent)
     {
-        var children = Categories.Where(c => c.Category.ParentCategoryId == parentId).ToList();
-        foreach (var child in children)
+        foreach (var child in parent.ChildCategories)
         {
             child.IsSelected = false;
             child.IsExpanded = false;
-            DeselectChildrenRecursive(child.Category.Id);
+            DeselectChildrenRecursive(child);
         }
     }
-
-    private IEnumerable<CategorySelectableBlazor> GetChildren(Guid parentId)
-        => Categories.Where(c => c.Category.ParentCategoryId == parentId);
 
 
     public class CategorySelectableBlazor
@@ -491,6 +509,7 @@
         public CategoryDisplayDto Category { get; set; }
         public bool IsSelected { get; set; }
         public bool IsExpanded { get; set; }
+        public List<CategorySelectableBlazor> ChildCategories { get; set; }
     }
 
     private void ToggleDeletePopup()

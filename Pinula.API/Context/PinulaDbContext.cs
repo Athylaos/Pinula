@@ -70,6 +70,8 @@ public partial class PinulaDbContext : DbContext
         {
             entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
 
+            entity.Property(e => e.EdibleRatio).HasPrecision(4, 2);
+
             entity.Property(e => e.Calories).HasPrecision(10, 3);
             entity.Property(e => e.Fats).HasPrecision(10, 3);
             entity.Property(e => e.SaturatedFats).HasPrecision(10, 3);

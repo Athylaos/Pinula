@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Pinula.API.Context;
 using Pinula.API.Endpoints;
+using Pinula.API.Services;
 using Pinula.Shared.Interface;
 using Pinula.Shared.Services;
 using Scalar.AspNetCore;
@@ -109,7 +110,21 @@ app.MapUnitEndpoints();
 app.MapIngredientEndpoints();
 app.MapMealPlanEndpoints();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<PinulaDbContext>();
 
+        await NutriDbSeeder.SeedNutriDatabaseAsync(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 
 app.Run();

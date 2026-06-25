@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Pinula.Shared.DTOs
 {
-    public class IngredientPreview
+    public class IngredientPreviewDto
     {
         public Guid Id { get; set; }
 

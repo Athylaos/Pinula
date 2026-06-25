@@ -12,6 +12,7 @@ public partial class Ingredient
     public Guid ShoppingCategoryId { get; set; }
     public Guid? BaseIngredientId { get; set; }
     public string? OffCategoryTag { get; set; }
+    public decimal? EdibleRatio { get; set; }
 
     public decimal Calories { get; set; }
     public decimal Proteins { get; set; }

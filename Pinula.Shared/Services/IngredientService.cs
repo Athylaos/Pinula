@@ -106,7 +106,7 @@ namespace Pinula.Shared.Services
             throw new NotImplementedException();
         }
 
-        public async Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter)
+        public async Task<List<IngredientPreviewDto>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter)
         {
             string languageCode = await _localStorage.GetStringAsync("culture") ?? "en";
             if (filter.Amount <= 0) filter.Amount = 20;
@@ -125,11 +125,11 @@ namespace Pinula.Shared.Services
             var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
             var localUrl = $"{BaseUrl}/getFilteredPreviews{queryString}";
 
-            var finalResults = new List<IngredientPreview>();
+            var finalResults = new List<IngredientPreviewDto>();
 
             try
             {
-                var localResponse = await _httpClient.GetFromJsonAsync<List<IngredientPreview>>(localUrl);
+                var localResponse = await _httpClient.GetFromJsonAsync<List<IngredientPreviewDto>>(localUrl);
                 if (localResponse != null)
                 {
                     finalResults.AddRange(localResponse);

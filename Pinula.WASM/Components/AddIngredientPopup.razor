@@ -21,14 +21,16 @@
                            @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
 
                     <ul class="search-results-list">
-                        @foreach (var ing in FilteredIngredients)
-                        {
-                            <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
-                                @onclick="() => selectedIngredient = ing">
-                                <img src="@ing.ImageUrl" style="height:50px; width:50px;" />
-                                @ing.Name
-                            </li>
-                        }
+                        <LoadingView IsFullScreen="false" IsLoading="IsLoadingSearch" Text="Searching for ingredients">
+                            @foreach (var ing in FilteredIngredients)
+                            {
+                                <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
+                                    @onclick="() => selectedIngredient = ing">
+                                    <img src="@ing.ImageUrl" style="height:50px; width:50px;" />
+                                    @ing.Name
+                                </li>
+                            }
+                        </LoadingView>
                     </ul>
 
                     <button class="btn btn-link text-gray w-100 mb-1" @onclick="ToggleMode">
@@ -118,7 +120,7 @@
                             {
                                 <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
                                     <div class="d-flex align-items-center gap-3">
-										<!--<strong class="value fs-5">1x @(opt.Unit.Name) =</strong>-->
+										<strong class="value fs-5">1x @(opt.Unit.Name) =</strong>
                                         <div class="w-50">
                                             <input type="number" class="custom-input"
                                                    @bind="opt.AmountInGrams"
@@ -126,7 +128,7 @@
                                         </div>
                                         <p class="value fs-5 mb-0">g</p>
 
-                                        @if (opt.UnitId != selectedMainUnitId)
+                                        @if (opt.Unit.Id != selectedMainUnitId)
                                         {
                                             <button type="button" class="btn-delete" @onclick="() => RemoveUnit(opt)">✕</button>
                                         }
@@ -168,7 +170,7 @@
 
 @code {
     [Parameter] public bool IsVisible { get; set; }
-    [Parameter] public EventCallback<RecipeIngredient> OnIngredientAdded { get; set; }
+    [Parameter] public EventCallback<RecipeIngredientPreviewDto> OnIngredientAdded { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private bool isAddMode = true;
@@ -184,8 +186,8 @@
         }
     }
 
-    private List<IngredientPreview> FilteredIngredients = new();
-    private IngredientPreview? selectedIngredient;
+    private List<IngredientPreviewDto> FilteredIngredients = new();
+    private IngredientPreviewDto? selectedIngredient;
     private List<UnitPreviewDto> allUnits = new();
     private Guid? selectedUnitId;
     private decimal quantity;
@@ -228,10 +230,11 @@
     private System.Timers.Timer? debounceTimer;
     private IngredientCreateDto newIngDto = new();
 
-    public List<IngredientUnit> additionalUnits = new();
+    public List<IngredientUnitPreviewDto> additionalUnits = new();
     private Guid? selectedMainUnitId;
     private List<UnitPreviewDto> availableUnits = new();
     private Guid unitToAddId = Guid.Empty;
+    bool IsLoadingSearch = false;
 
     private async Task HandleMainUnitChange(ChangeEventArgs e)
     {
@@ -242,13 +245,13 @@
 
             if (unit != null)
             {
-                if (!additionalUnits.Any(a => a.UnitId == unitId) && unit.Name != "g" && unit.Name != "kg")
+                if (!additionalUnits.Any(a => a.Unit.Id == unitId) && unit.Code != "g" && unit.Code != "kg")
                 {
-                    additionalUnits.Add(new IngredientUnit
+                    additionalUnits.Add(new IngredientUnitPreviewDto
                     {
-                        UnitId = unit.Id,
-                        //Unit = new Unit() { Id = unit.Id, Name = unit.Name },
-                        AmountInGrams = unit.Name.ToLower() == "g" ? 1 : 0
+                        Ingredient = selectedIngredient??new(),
+                        Unit = unit,
+                        AmountInGrams = unit.Code.ToLower() == "g" ? 1 : 0
                     });
                 }
             }
@@ -258,9 +261,9 @@
 
     private void UpdateAvailableUnits()
     {
-        var usedIds = additionalUnits.Select(a => a.UnitId).ToList();
+        var usedIds = additionalUnits.Select(a => a.Unit.Id).ToList();
         availableUnits = allUnits
-            .Where(u => !usedIds.Contains(u.Id) && u.Name!="g")
+            .Where(u => !usedIds.Contains(u.Id) && u.Code!="g")
             .OrderBy(u => u.Name)
             .ToList();
     }
@@ -272,11 +275,10 @@
         var unit = allUnits.FirstOrDefault(u => u.Id == unitToAddId);
         if (unit != null)
         {
-            additionalUnits.Add(new IngredientUnit
+            additionalUnits.Add(new IngredientUnitPreviewDto
             {
-                UnitId = unit.Id,
-                //Unit = new(){Id = unit.Id, Name = unit.Name},
-                AmountInGrams = unit.Name.ToLower() == "g" ? 1 : 0
+                Unit = unit,
+                AmountInGrams = unit.Code.ToLower() == "g" ? 1 : 0
             });
 
             unitToAddId = Guid.Empty;
@@ -284,7 +286,7 @@
         }
     }
 
-    private void RemoveUnit(IngredientUnit opt)
+    private void RemoveUnit(IngredientUnitPreviewDto opt)
     {
         additionalUnits.Remove(opt);
         UpdateAvailableUnits();
@@ -319,7 +321,9 @@
             debounceTimer.Stop();
             await InvokeAsync(async () =>
             {
+                IsLoadingSearch = true;
                 await LoadIngredients();
+                IsLoadingSearch = false;
                 StateHasChanged();
             });
         };
@@ -355,13 +359,11 @@
         var unit = selectedIngredient.IngredientUnits.FirstOrDefault(u => u.Id == selectedUnitId);
         if (unit == null) return;
 
-        var result = new RecipeIngredient
+        var result = new RecipeIngredientPreviewDto
         {
-            IngredientId = selectedIngredient.Id,
             Quantity = quantity,
-            UnitId = unit.Id,
-            //Ingredient = new Ingredient { Name = selectedIngredient.Name },
-            //Unit = new Unit { Name = unit.Name }
+            Unit = unit,
+            Ingredient = selectedIngredient
         };
 
         await OnIngredientAdded.InvokeAsync(result);
@@ -374,7 +376,7 @@
 
     private async Task SaveNewIngredient()
     {
-        //if (string.IsNullOrWhiteSpace(newIngDto.Name)) { warningText = "Name is mandatory"; return; }
+        if (string.IsNullOrWhiteSpace(newIngDto.Names.GetValueOrDefault("cs")) || string.IsNullOrWhiteSpace(newIngDto.Names.GetValueOrDefault("en"))) { warningText = "Name is mandatory"; return; }
         if (newIngDto.Calories < 0) { warningText = "Calories can't be negative"; return; }
         if (newIngDto.Proteins < 0) { warningText = "Proteins can't be negative"; return; }
         if (newIngDto.Fats < 0) { warningText = "Fats can't be negative"; return; }
@@ -397,11 +399,11 @@
         newIngDto.AdditionalUnits = new();
         foreach(var unit in additionalUnits)
         {
-            newIngDto.AdditionalUnits.Add(new() { UnitId = unit.UnitId, ToDefaultUnit = unit.AmountInGrams });
+            newIngDto.AdditionalUnits.Add(new() { UnitId = unit.Unit.Id, ToDefaultUnit = unit.AmountInGrams });
         }
         if(additionalUnits.FirstOrDefault(u => u.Unit.Code == "g") is null)
         {
-            var g = allUnits.FirstOrDefault(u => u.Name == "g");
+            var g = allUnits.FirstOrDefault(u => u.Code == "g");
             newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
         }
         var result = await IngredientService.CreateIngredientAsync(newIngDto, null);

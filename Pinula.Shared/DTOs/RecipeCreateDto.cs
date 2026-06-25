@@ -19,7 +19,7 @@ namespace Pinula.Shared.DTOs
 
         public short Difficulty { get; set; }
 
-        public List<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
+        public List<RecipeIngredientPreviewDto> RecipeIngredients { get; set; } = new();
 
         public List<RecipeStepDisplayDto> RecipeSteps { get; set; } = new List<RecipeStepDisplayDto>();
 

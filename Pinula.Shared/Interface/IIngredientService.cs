@@ -11,6 +11,6 @@ namespace Pinula.Shared.Interface
         public Task RemoveIngredientAsync(Guid id);
         public Task UpdateIngredientAsync(Ingredient ingredient);
 
-        public Task<List<IngredientPreview>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter);
+        public Task<List<IngredientPreviewDto>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter);
     }
 }

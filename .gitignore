@@ -50,6 +50,8 @@ wwwroot/images/avatars/*
 wwwroot/images/recipes/*
 wwwroot/images/categories/*
 
+wwwroot/data/seed/*
+
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 

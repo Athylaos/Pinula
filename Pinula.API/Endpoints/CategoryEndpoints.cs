@@ -17,7 +17,6 @@ namespace Pinula.API.Endpoints
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/categories");
-            //---------------------------------------------------------------Get all categories
             group.MapGet("/getAll", async (HttpRequest request, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
@@ -26,10 +25,20 @@ namespace Pinula.API.Endpoints
 
                 var allCategories = await db.Categories.AsNoTracking().ToListAsync();
 
+                var categoriesByParent = allCategories.Where(c => c.ParentCategoryId != null).ToLookup(c => c.ParentCategoryId!.Value);
                 var rootCategories = allCategories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.SortOrder).ToList();
 
-                List<CategoryDisplayDto> BuildCategoryTree(List<Category> currentLevelItems)
+                List<CategoryDisplayDto> GetChildren(Guid? parentId)
                 {
+                    if (parentId.HasValue && !categoriesByParent.Contains(parentId.Value))
+                    {
+                        return new List<CategoryDisplayDto>();
+                    }
+
+                    IEnumerable<Category> currentLevelItems = parentId.HasValue
+                        ? categoriesByParent[parentId.Value].OrderBy(c => c.SortOrder)
+                        : rootCategories.AsEnumerable();
+
                     var resultList = new List<CategoryDisplayDto>();
 
                     foreach (var cat in currentLevelItems)
@@ -41,7 +50,7 @@ namespace Pinula.API.Endpoints
                             Name = cat.Names.GetValueOrDefault(languageCode) ?? cat.Names.GetValueOrDefault("en") ?? "Category",
                             PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? defaultImage : cat.PictureUrl)}",
                             SortOrder = cat.SortOrder,
-                            ChildCategories = BuildCategoryTree(allCategories.Where(sub => sub.ParentCategoryId == cat.Id).OrderBy(sub => sub.SortOrder).ToList())
+                            ChildCategories = GetChildren(cat.Id)
                         };
 
                         resultList.Add(dto);
@@ -50,7 +59,7 @@ namespace Pinula.API.Endpoints
                     return resultList;
                 }
 
-                var finalTree = BuildCategoryTree(rootCategories);
+                var finalTree = GetChildren(null);
                 return Results.Ok(finalTree);
             });
 

@@ -313,7 +313,7 @@ namespace Pinula.API.Endpoints
                     }
                 }
 
-                var ingredientIds = dto.RecipeIngredients.Select(x => x.IngredientId).ToList();
+                var ingredientIds = dto.RecipeIngredients.Select(x => x.Ingredient.Id).ToList();
                 var dbIngredients = await db.Ingredients.Include(x => x.IngredientUnits).Where(x => ingredientIds.Contains(x.Id)).ToListAsync();
 
                 var dbCategories = await db.Categories.Where(x => dto.CategoriesIds.Contains(x.Id)).ToListAsync();
@@ -348,11 +348,11 @@ namespace Pinula.API.Endpoints
 
                 foreach (var i in dto.RecipeIngredients)
                 {
-                    var dbIng = dbIngredients.FirstOrDefault(x => x.Id == i.IngredientId);
+                    var dbIng = dbIngredients.FirstOrDefault(x => x.Id == i.Ingredient.Id);
 
                     if (dbIng != null)
                     {
-                        var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.UnitId);
+                        var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.Unit.Id);
 
                         decimal conversionFactor = ingredientUnit?.AmountInGrams ?? 1;
                         decimal factor = (conversionFactor / 100) * (i.Quantity / dto.ServingsAmount) ?? 0;
@@ -369,9 +369,9 @@ namespace Pinula.API.Endpoints
                     {
 
                         RecipeId = newRecipe.Id,
-                        IngredientId = i.IngredientId,
+                        IngredientId = i.Ingredient.Id,
                         Quantity = i.Quantity,
-                        UnitId = i.UnitId,
+                        UnitId = i.Unit.Id,
                         ConversionFactor = i.ConversionFactor
                     });
                 }
@@ -497,18 +497,18 @@ namespace Pinula.API.Endpoints
                         }
                     }
 
-                    var ingredientIds = dto.RecipeIngredients.Select(x => x.IngredientId).ToList();
+                    var ingredientIds = dto.RecipeIngredients.Select(x => x.Ingredient.Id).ToList();
                     var dbIngredients = await db.Ingredients.Include(x => x.IngredientUnits).Where(x => ingredientIds.Contains(x.Id)).ToListAsync();
 
                     var newIngredients = new List<RecipeIngredient>();
 
                     foreach (var i in dto.RecipeIngredients)
                     {
-                        var dbIng = dbIngredients.FirstOrDefault(x => x.Id == i.IngredientId);
+                        var dbIng = dbIngredients.FirstOrDefault(x => x.Id == i.Ingredient.Id);
 
                         if (dbIng != null)
                         {
-                            var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.UnitId);
+                            var ingredientUnit = dbIng.IngredientUnits.FirstOrDefault(iu => iu.UnitId == i.Unit.Id);
                             decimal conversionFactor = ingredientUnit?.AmountInGrams ?? 1;
                             decimal factor = (conversionFactor / 100) * (i.Quantity / dto.ServingsAmount) ?? 0;
 
@@ -522,9 +522,9 @@ namespace Pinula.API.Endpoints
                         newIngredients.Add(new RecipeIngredient
                         {
                             RecipeId = existingRecipe.Id,
-                            IngredientId = i.IngredientId,
+                            IngredientId = i.Ingredient.Id,
                             Quantity = i.Quantity,
-                            UnitId = i.UnitId,
+                            UnitId = i.Unit.Id,
                             ConversionFactor = i.ConversionFactor
                         });
                     }
