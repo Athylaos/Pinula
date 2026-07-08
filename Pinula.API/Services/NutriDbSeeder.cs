@@ -1,9 +1,10 @@
-﻿using Pinula.API.Context;
+﻿using Microsoft.EntityFrameworkCore;
+using Pinula.API.Context;
 using Pinula.Shared.Models;
 using System.Globalization;
-using System.Text.Json;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Text.Json;
 
 namespace Pinula.API.Services
 {
@@ -45,7 +46,7 @@ namespace Pinula.API.Services
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var seedData = JsonSerializer.Deserialize<List<NutriDbSeedDto>>(jsonString, options);
 
-            if (seedData == null) return;
+             if (seedData == null) return;
 
             decimal ParseDecimal(JsonElement element)
             {
@@ -112,6 +113,164 @@ namespace Pinula.API.Services
             }
 
             await db.SaveChangesAsync();
+        }
+
+        public static async Task MatchCategoryTags(PinulaDbContext db)
+        {
+            var ingredientsToMap = await db.Ingredients
+                .Where(i => i.OffCategoryTag == null && i.BaseIngredientId == null)
+                .ToListAsync();
+
+            Console.WriteLine($"Linking started. {ingredientsToMap.Count} ingredients found.");
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Add("User-Agent", "Pinula - Version 3.0");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            int processedCount = 0;
+
+            foreach (var ingredient in ingredientsToMap)
+            {
+                string queryName = string.Empty;
+
+                if (ingredient.Names.ContainsKey("en") && !string.IsNullOrWhiteSpace(ingredient.Names["en"]))
+                    queryName = ingredient.Names["en"];
+                else if (ingredient.Names.ContainsKey("cs") && !string.IsNullOrWhiteSpace(ingredient.Names["cs"]))
+                    queryName = ingredient.Names["cs"];
+
+                if (string.IsNullOrEmpty(queryName)) continue;
+
+                string cleanQuery = queryName;
+                if (cleanQuery.Contains(",")) cleanQuery = cleanQuery.Split(',')[0];
+                if (cleanQuery.Contains("(")) cleanQuery = cleanQuery.Split('(')[0];
+                cleanQuery = cleanQuery.Trim();
+
+                
+                string url = $"https://world.openfoodfacts.org/cgi/search.pl" +
+                             $"?search_terms={Uri.EscapeDataString(cleanQuery)}" +
+                             $"&search_simple=1" +
+                             $"&action=process" +
+                             $"&json=1" +
+                             $"&sort_by=unique_scans_n" +
+                             $"&fields=categories_hierarchy,product_name,brands" +
+                             $"&page_size=5";
+
+                int retryCount = 0;
+                bool requestSuccess = false;
+                HttpResponseMessage? response = null;
+
+                while (retryCount < 3 && !requestSuccess)
+                {
+                    try
+                    {
+                        response = await client.GetAsync(url);
+
+                        if (response.StatusCode == HttpStatusCode.ServiceUnavailable || (int)response.StatusCode == 429)
+                        {
+                            retryCount++;
+                            int backoffDelay = retryCount * 1500;
+                            Console.WriteLine($"[503/429] OFF overloaded. Waiting {backoffDelay / 1000}s...");
+                            await Task.Delay(backoffDelay);
+                            continue;
+                        }
+
+                        if (!response.IsSuccessStatusCode) break;
+                        requestSuccess = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        retryCount++;
+                        Console.WriteLine($"[NET] Error: {ex.Message}. Try {retryCount}/3...");
+                        await Task.Delay(2000);
+                    }
+                }
+
+                if (!requestSuccess || response == null || !response.IsSuccessStatusCode)
+                {
+                    await Task.Delay(600);
+                    continue;
+                }
+
+                try
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(jsonString);
+
+                    if (doc.RootElement.TryGetProperty("products", out var productsProp) && productsProp.ValueKind == JsonValueKind.Array && productsProp.GetArrayLength() > 0)
+                    {
+                        string? bestOffTag = null;
+                        int maxProductsToCheck = Math.Min(productsProp.GetArrayLength(), 5);
+
+                        for (int p = 0; p < maxProductsToCheck; p++)
+                        {
+                            var product = productsProp[p];
+
+                            string productName = product.TryGetProperty("product_name", out var nameProp) ? nameProp.GetString() ?? "" : "";
+                            string brands = product.TryGetProperty("brands", out var brandsProp) ? brandsProp.GetString() ?? "" : "";
+
+                            string lowerQuery = cleanQuery.ToLower();
+                            if (!productName.ToLower().Contains(lowerQuery) && !brands.ToLower().Contains(lowerQuery))
+                            {
+                                continue;
+                            }
+
+                            if (product.TryGetProperty("categories_hierarchy", out var hierarchyProp) && hierarchyProp.ValueKind == JsonValueKind.Array)
+                            {
+                                for (int i = hierarchyProp.GetArrayLength() - 1; i >= 0; i--)
+                                {
+                                    string? tag = hierarchyProp[i].GetString();
+                                    if (tag != null && tag.StartsWith("en:"))
+                                    {
+                                        string lowerTag = tag.ToLower();
+                                        if (lowerTag.Contains("groceries") || lowerTag.Contains("meals") || lowerTag.Contains("dishes"))
+                                        {
+                                            continue;
+                                        }
+
+                                        bestOffTag = tag;
+                                        Console.WriteLine($"   -> Linked trough product: '{productName}' ({brands})");
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(bestOffTag)) break;
+                        }
+
+                        if (!string.IsNullOrEmpty(bestOffTag))
+                        {
+                            ingredient.OffCategoryTag = bestOffTag;
+                            Console.WriteLine($"Linked: {queryName} -> {bestOffTag}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"No valid product for: {queryName}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No searched products for: {queryName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[JSON Error] {queryName}: {ex.Message}");
+                }
+
+                processedCount++;
+
+                if (processedCount % 25 == 0)
+                {
+                    await db.SaveChangesAsync();
+                    Console.WriteLine($"---> Saved 25 ingredients");
+                }
+                Console.WriteLine($"-------------------------------------------------------------------------------------------");
+                await Task.Delay(700);
+            }
+
+            await db.SaveChangesAsync();
+            Console.WriteLine("=== Finish ===");
         }
 
 
