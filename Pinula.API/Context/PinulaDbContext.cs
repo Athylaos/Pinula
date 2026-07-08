@@ -70,6 +70,11 @@ public partial class PinulaDbContext : DbContext
         {
             entity.Property(e => e.Names).HasColumnType("jsonb").IsRequired();
 
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.IsApproved).HasDefaultValue(true);
+            entity.Property(e => e.IngredientCreated).HasPrecision(0).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.Checked).HasDefaultValue(false);
+
             entity.Property(e => e.EdibleRatio).HasPrecision(4, 2);
 
             entity.Property(e => e.Calories).HasPrecision(10, 3);
@@ -89,6 +94,7 @@ public partial class PinulaDbContext : DbContext
             entity.HasOne(d => d.DefaultUnit).WithMany(p => p.Ingredients).HasForeignKey(d => d.DefaultUnitId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.BaseIngredient).WithMany(p => p.BrandedProducts).HasForeignKey(d => d.BaseIngredientId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.ShoppingCategory).WithMany(p => p.Ingredients).HasForeignKey(d => d.ShoppingCategoryId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.Creator).WithMany(p => p.Ingredients).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<IngredientUnit>(entity =>
@@ -118,6 +124,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(e => e.RecipeCreated).HasPrecision(0).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsApproved).HasDefaultValue(true);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.Checked).HasDefaultValue(false);
 
             entity.HasOne(d => d.ServingUnit).WithMany(p => p.Recipes).HasForeignKey(d => d.ServingUnitId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.User).WithMany(p => p.Recipes).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);

@@ -21,5 +21,6 @@ namespace Pinula.Shared.DTOs
         public bool IsFavorite { get; set; } = false;
         public bool IsApproved { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
+        public bool? Checked { get; set; }
     }
 }

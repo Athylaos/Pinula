@@ -96,26 +96,54 @@ namespace Pinula.API.Endpoints
                     _ => query.OrderByDescending(r => r.RecipeCreated)
                 };
 
-                var results = await query
-                    .Skip(filter.Skip)
-                    .Take(filter.Amount)
-                    .Select(r => new RecipePreviewDto
-                    {
-                        Id = r.Id,
-                        Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
-                        PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
-                        CookingTime = r.CookingTime,
-                        Difficulty = (DifficultyLevel)r.Difficulty,
-                        Rating = r.Rating,
-                        UserName = r.User.Name,
-                        Calories = r.Calories,
-                        ServingsAmount = r.ServingsAmount,
-                        IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
-                        IsApproved = r.IsApproved,
-                        IsDeleted = r.IsDeleted,
-                        MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
-                    })
-                    .ToListAsync();
+                List<RecipePreviewDto> results;
+
+                if (userDb is not null && userDb.Role == "admin" && filter.IncludeAdminData)
+                {
+                    results = await query
+                        .Skip(filter.Skip)
+                        .Take(filter.Amount)
+                        .Select(r => new RecipePreviewDto
+                        {
+                            Id = r.Id,
+                            Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
+                            PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
+                            CookingTime = r.CookingTime,
+                            Difficulty = (DifficultyLevel)r.Difficulty,
+                            Rating = r.Rating,
+                            UserName = r.User.Name,
+                            Calories = r.Calories,
+                            ServingsAmount = r.ServingsAmount,
+                            IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
+                            IsApproved = r.IsApproved,
+                            IsDeleted = r.IsDeleted,
+                            MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
+                            Checked = r.Checked,
+                        }).ToListAsync();
+                }
+                else
+                {
+                    results = await query
+                        .Skip(filter.Skip)
+                        .Take(filter.Amount)
+                        .Select(r => new RecipePreviewDto
+                        {
+                            Id = r.Id,
+                            Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
+                            PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
+                            CookingTime = r.CookingTime,
+                            Difficulty = (DifficultyLevel)r.Difficulty,
+                            Rating = r.Rating,
+                            UserName = r.User.Name,
+                            Calories = r.Calories,
+                            ServingsAmount = r.ServingsAmount,
+                            IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
+                            IsApproved = r.IsApproved,
+                            IsDeleted = r.IsDeleted,
+                            MacrosLabel = GetMacrosLabel(r.Calories, r.Proteins, r.Fats, r.Carbohydrates),
+                        }).ToListAsync();
+                }
+
 
                 return Results.Ok(results);
             });
@@ -787,6 +815,19 @@ namespace Pinula.API.Endpoints
 
                 await db.SaveChangesAsync();
                 return Results.Ok(new { isApproved = recipe.IsApproved });
+
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Toggle recipe checked
+            group.MapPost("/admin/toggleChecked/{recipeId:guid}", async (Guid recipeId, PinulaDbContext db) =>
+            {
+                var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == recipeId);
+                if (recipe is null) return Results.NotFound("Recipe not found");
+
+                recipe.Checked = !recipe.Checked;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Checked = recipe.Checked});
 
             }).RequireAuthorization("AdminOnly");
 

@@ -6,6 +6,11 @@ namespace Pinula.Shared.Models;
 public partial class Ingredient
 {
     public Guid Id { get; set; }
+    public bool IsDeleted { get; set; }
+    public bool IsApproved { get; set; }
+    public bool Checked { get; set; } = false;
+    public DateTime IngredientCreated { get; set; }
+    public Guid UserId { get; set; }
 
     public Dictionary<string, string> Names { get; set; } = new();
     public Guid DefaultUnitId { get; set; }
@@ -29,15 +34,16 @@ public partial class Ingredient
     public bool IsLactoseFree { get; set; }
 
     public string? Barcode { get; set; }
-    public string? ImageUrl { get; set; }
+    public string? ImageUrl { get; set; } 
 
     public string? NutriScore { get; set; }
     public int? NovaClassification { get; set; }
 
     public virtual Unit DefaultUnit { get; set; } = null!;
-    public virtual ShoppingCategory ShoppingCategory { get; set; }
-    public virtual Ingredient BaseIngredient { get; set; }
-    public virtual List<Ingredient> BrandedProducts { get; set; } = new();
+    public virtual User Creator { get; set; } = null!;
+    public virtual ShoppingCategory ShoppingCategory { get; set; } = null!;
+    public virtual Ingredient? BaseIngredient { get; set; }
+    public virtual ICollection<Ingredient> BrandedProducts { get; set; } = new List<Ingredient>();
     public virtual ICollection<IngredientUnit> IngredientUnits { get; set; } = new List<IngredientUnit>();
     public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }

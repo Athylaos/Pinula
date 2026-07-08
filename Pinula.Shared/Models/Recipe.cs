@@ -42,6 +42,7 @@ public partial class Recipe
     public bool IsApproved { get; set; } = true;
 
     public bool IsDeleted { get; set; } = false;
+    public bool Checked { get; set; } = false;
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 

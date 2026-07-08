@@ -24,6 +24,8 @@ public partial class User
     [JsonIgnore]
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
     [JsonIgnore]
+    public virtual ICollection<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
+    [JsonIgnore]
     public virtual ICollection<RecipeUser> RecipeUsers { get; set; } = new List<RecipeUser>();
     [JsonIgnore]
     public Group? Group { get; set; }

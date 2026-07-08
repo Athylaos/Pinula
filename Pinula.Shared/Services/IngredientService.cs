@@ -1,8 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using Pinula.Shared.Interface;
+using Microsoft.VisualBasic;
 using Pinula.Shared.DTOs;
+using Pinula.Shared.Interface;
 using Pinula.Shared.Models;
+using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace Pinula.Shared.Services
 {
@@ -30,7 +34,7 @@ namespace Pinula.Shared.Services
             _localStorage = localStorage;
         }
 
-        public async Task<CreateIngredientResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode)
+        public async Task<StatusResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -41,70 +45,55 @@ namespace Pinula.Shared.Services
 
                     if (defaultUnit == null)
                     {
-                        return new CreateIngredientResponse { IsSuccess = false, Message = "No default units found" };
+                        return new StatusResponse { Successful = false, Message = "No default units found" };
                     }
 
-                    _logger.LogInformation($"Fetching heavy details for barcode {barcode} from OFF...");
+                    _logger.LogInformation($"Fetching heavy details for barcode {barcode} from OFF");
                     ingredientDto = await _offService.GetFullIngredientDetailsAsync(barcode, defaultUnit.Id);
 
                     if (ingredientDto == null)
                     {
-                        return new CreateIngredientResponse { IsSuccess = false, Message = "Failed to fetch product details from Open Food Facts." };
+                        return new StatusResponse { Successful = false, Message = "Failed to fetch product details from Open Food Facts." };
                     }
                 }
 
                 if (ingredientDto == null)
                 {
-                    return new CreateIngredientResponse { IsSuccess = false, Message = "No ingredient data provided." };
+                    return new StatusResponse { Successful = false, Message = "No ingredient data provided." };
                 }
 
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", ingredientDto);
+
+                using var content = new MultipartFormDataContent();
+                var recipeJson = JsonSerializer.Serialize(ingredientDto);
+                content.Add(new StringContent(recipeJson, Encoding.UTF8, "application/json"), "ingredientData");
+
+                if (photoStream is not null && photoName is not null && contentType is not null)
+                {
+                    var fileContent = new StreamContent(photoStream);
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    content.Add(fileContent, "image", photoName);
+                }
+
+                var response = await _httpClient.PostAsync($"{BaseUrl}/create", content);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var msg = await response.Content.ReadAsStringAsync();
-                    return new CreateIngredientResponse { IsSuccess = true, Message = msg };
+                    return new StatusResponse { Successful = true, Message = msg };
                 }
-
-                if (response.Content != null)
+                else
                 {
-                    try
-                    {
-                        var errorObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                        if (errorObj != null && errorObj.TryGetValue("message", out var apiMessage))
-                        {
-                            return new CreateIngredientResponse { IsSuccess = false, Message = apiMessage };
-                        }
-                    }
-                    catch
-                    {
-                        return new CreateIngredientResponse { IsSuccess = false, Message = $"Error: {response.StatusCode}" };
-                    }
+                    return new StatusResponse { Successful = false, StatusCode = (int)response.StatusCode };
                 }
 
-                return new CreateIngredientResponse { IsSuccess = false, Message = "Unknown error occurred" };
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error while creating ingredient: {ex.Message}");
-                return new CreateIngredientResponse { IsSuccess = false, Message = "Connection to server failed." };
+                return new StatusResponse { Successful = false, Message = "Connection to server failed." };
             }
         }
 
-        public Task<Ingredient?> GetIngredientAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task RemoveIngredientAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateIngredientAsync(Ingredient ingredient)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<List<IngredientPreviewDto>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter)
         {
@@ -166,6 +155,98 @@ namespace Pinula.Shared.Services
             }
 
             return finalResults.Take(filter.Amount).ToList();
+        }
+
+        public async Task<List<AdminIngredientDisplayDto>> AdminGetIngredients(int amount, int skip)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/getAdminPreviews?amount={amount}&skip={skip}";
+                var response = await _httpClient.GetFromJsonAsync<List<AdminIngredientDisplayDto>>(url);
+                if (response is null) return new List<AdminIngredientDisplayDto>();
+                return response.ToList();
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching ingredients: {ex.Message}");
+                return new List<AdminIngredientDisplayDto>();
+            }
+
+        }
+
+        public async Task<Ingredient?> AdminGetIngredientDetailsAsync(Guid id)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/getAdminPreviews/{id}";
+                var response = await _httpClient.GetFromJsonAsync<Ingredient>(url);
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching ingredients: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<StatusResponse> AdminUpdateIngredientAsync(Ingredient ingredient, Stream? photoStream, string? photoName, string? contentType)
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                var recipeJson = JsonSerializer.Serialize(ingredient);
+                content.Add(new StringContent(recipeJson, Encoding.UTF8, "application/json"), "ingredientData");
+
+                if (photoStream is not null && photoName is not null && contentType is not null)
+                {
+                    var fileContent = new StreamContent(photoStream);
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    content.Add(fileContent, "image", photoName);
+                }
+
+                var response = await _httpClient.PostAsync($"{BaseUrl}/updateAdmin", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var msg = await response.Content.ReadAsStringAsync();
+                    return new StatusResponse { Successful = true, Message = msg };
+                }
+                else
+                {
+                    return new StatusResponse { Successful = false, StatusCode = (int)response.StatusCode };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while creating ingredient: {ex.Message}");
+                return new StatusResponse { Successful = false, Message = "Connection to server failed." };
+            }
+        }
+
+        public async Task<StatusResponse> DeleteIngredientAsync(Guid id)
+        {
+            try
+            {
+                var url = $"{BaseUrl}/deleteAdmin/{id}";
+                var response = await _httpClient.DeleteAsync(url);
+
+                if (response is null)
+                {
+                    return new StatusResponse() { StatusCode = (int)HttpStatusCode.NotFound, Successful = false, Message="Api endpoint not found" };
+                }
+                else
+                {
+                    return await response.Content.ReadFromJsonAsync<StatusResponse>();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching ingredients: {ex.Message}");
+                return new StatusResponse() { StatusCode = (int)HttpStatusCode.InternalServerError, Successful = false, Message = ex.Message }; ;
+            }
         }
     }
 }

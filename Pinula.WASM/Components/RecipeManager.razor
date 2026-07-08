@@ -19,6 +19,7 @@ else
         <thead class="table-dark">
             <tr>
                 <th>Title</th>
+                <th>Checked</th>
                 <th>Admin approval</th>
                 <th>Deleted</th>
                 <th class="text-end">Actions</th>
@@ -29,6 +30,16 @@ else
             {
                 <tr>
                     <td><strong>@recipe.Title</strong></td>
+                    <td>
+                        @if (recipe.Checked??false)
+                        {
+                            <span class="badge bg-success">Checked</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Unchecked</span>
+                        }
+                    </td>
                     <td>
                         @if (recipe.IsApproved)
                         {
@@ -56,6 +67,9 @@ else
                         <button class="btn btn-sm btn-outline-danger"
                                 @onclick='() => SwitchApproval(recipe)'>Switch Approval
                         </button>
+                        <button class="btn btn-sm btn-outline-success"
+                                @onclick='() => SwitchChecked(recipe)'>Switch Checked
+                        </button>
                     </td>
                 </tr>
             }
@@ -73,6 +87,7 @@ else
             Sort = SortBy.Newest,
             SortDescending = true,
             IncludeUnapproved = true,
+            IncludeAdminData = true,
             Amount = 100
         };
 
@@ -84,5 +99,11 @@ else
         dto.IsApproved = !dto.IsApproved;
 
         await RecipeService.AdminToggleRecipeApprovalAsync(dto.Id);
+    }
+    private async Task SwitchChecked(RecipePreviewDto dto)
+    {
+        dto.Checked = !dto.Checked;
+
+        await RecipeService.AdminToggleRecipeCheckedAsync(dto.Id);
     }
 }

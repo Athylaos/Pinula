@@ -18,6 +18,7 @@ namespace Pinula.Shared.Interface
         public Task<DeleteCommentResponse?> UpdateCommentAsync(Comment comment);
 
         Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
+        Task<bool> AdminToggleRecipeCheckedAsync(Guid recipeId);
         Task<List<AdminCommentDto>> GetAdminCommentsAsync();
         Task<bool> AdminToggleCommentApprovalAsync(Guid commentId);
 

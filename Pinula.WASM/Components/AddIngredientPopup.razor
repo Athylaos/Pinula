@@ -406,8 +406,8 @@
             var g = allUnits.FirstOrDefault(u => u.Code == "g");
             newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
         }
-        var result = await IngredientService.CreateIngredientAsync(newIngDto, null);
-        if (result.IsSuccess)
+        var result = await IngredientService.CreateIngredientAsync(newIngDto, null, null, null, null);
+        if (result.Successful)
         {
             newIngDto = new();
             additionalUnits.Clear();

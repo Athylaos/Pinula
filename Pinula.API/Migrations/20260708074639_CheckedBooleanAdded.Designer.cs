@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pinula.API.Context;
@@ -12,9 +13,11 @@ using Pinula.API.Context;
 namespace Pinula.API.Migrations
 {
     [DbContext(typeof(PinulaDbContext))]
-    partial class PinulaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708074639_CheckedBooleanAdded")]
+    partial class CheckedBooleanAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,10 +339,6 @@ namespace Pinula.API.Migrations
                         .HasColumnType("numeric(10,3)")
                         .HasColumnName("sugars");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.HasKey("Id")
                         .HasName("pk_ingredients");
 
@@ -351,9 +350,6 @@ namespace Pinula.API.Migrations
 
                     b.HasIndex("ShoppingCategoryId")
                         .HasDatabaseName("ix_ingredients_shopping_category_id");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_ingredients_user_id");
 
                     b.ToTable("ingredients", (string)null);
                 });
@@ -846,15 +842,7 @@ namespace Pinula.API.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_ingredients_shopping_categories_shopping_category_id");
 
-                    b.HasOne("Pinula.Shared.Models.User", "Creator")
-                        .WithMany("Ingredients")
-                        .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("fk_ingredients_users_user_id");
-
                     b.Navigation("BaseIngredient");
-
-                    b.Navigation("Creator");
 
                     b.Navigation("DefaultUnit");
 
@@ -1047,8 +1035,6 @@ namespace Pinula.API.Migrations
             modelBuilder.Entity("Pinula.Shared.Models.User", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Ingredients");
 
                     b.Navigation("RecipeUsers");
 

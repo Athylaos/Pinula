@@ -111,6 +111,7 @@ app.MapIngredientEndpoints();
 app.MapMealPlanEndpoints();
 
 
+/*
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -126,7 +127,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-
+*/
 app.Run();
 
 

@@ -10,6 +10,7 @@ namespace Pinula.Shared.DTOs
         public string? Barcode { get; set; }
         public string? ImageUrl { get; set; }
         public Guid DefaultUnitId { get; set; }
+        public Guid BaseIngredientId { get; set; }
 
         public string? NutriScore { get; set; }
         public int? NovaClassification { get; set; }
@@ -29,7 +30,8 @@ namespace Pinula.Shared.DTOs
         public bool IsLactoseFree { get; set; }
 
         public List<CreateIngredientUnitDto> AdditionalUnits { get; set; } = new();
-        public List<string>? CategoryTags;
+        public Guid? CategoryTagId;
+        public List<string> CategoryTags { get; set; } = new();
 
     }
 

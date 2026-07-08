@@ -29,6 +29,7 @@ namespace Pinula.Shared.DTOs
         public bool SortDescending { get; set; } = true;
 
         public bool IncludeUnapproved { get; set; } = false;
+        public bool IncludeAdminData { get; set; } = false;
     
         public RecipeFilterParameters Clone()
         {
