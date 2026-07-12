@@ -65,7 +65,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization();
 
             //---------------------------------------------------------------Create meal plan
-            group.MapPost("/add", async (CreateMealPlanDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapPost("/add", async (MealPlanCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var userDb = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
@@ -119,7 +119,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization();
 
             //---------------------------------------------------------------Update meal plan
-            group.MapPut("/update/{id:guid}", async (Guid id, UpdateMealPlanDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapPut("/update/{id:guid}", async (Guid id, MealPlanUpdateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -146,7 +146,7 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization();
 
             //---------------------------------------------------------------Create group
-            group.MapPost("/group/create", async (CreateGroupDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapPost("/group/create", async (GroupCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);

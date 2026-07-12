@@ -205,7 +205,7 @@ namespace Pinula.API.Endpoints
                     RecipeCreated = r.RecipeCreated,
                     Rating = r.Rating,
                     UsersRated = r.UsersRated,
-                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientDetailDto
+                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientPreviewDto
                     {
                         Quantity = ri.Quantity ?? 0,
                         IngredientName = ri.Ingredient.Names.GetValueOrDefault(languageCode) ?? ri.Ingredient.Names.GetValueOrDefault("en") ?? "Ingredient",
@@ -239,7 +239,7 @@ namespace Pinula.API.Endpoints
 
                 if (recipe == null) return Results.NotFound();
 
-                var allComments = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId).Select(c => new CommentPreview
+                var allComments = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId).Select(c => new CommentDisplayDto
                 {
                     Id = c.Id,
                     Text = c.Text??string.Empty,
@@ -253,11 +253,11 @@ namespace Pinula.API.Endpoints
                     IsDeleted = c.IsDeleted,
                     EditedAt = c.EditedAt,
                     ParentCommentId = c.ParentCommentId,
-                    Replies = new List<CommentPreview>()
+                    Replies = new List<CommentDisplayDto>()
                 }).OrderByDescending(c => c.CreatedAt).ToListAsync();
 
                 var commentLookup = allComments.ToDictionary(c => c.Id);
-                var rootComments = new List<CommentPreview>();
+                var rootComments = new List<CommentDisplayDto>();
 
                 foreach (var comment in allComments)
                 {
@@ -673,11 +673,11 @@ namespace Pinula.API.Endpoints
                     .Select(u => new { u.Name, u.Surname })
                     .FirstOrDefaultAsync();
 
-                var response = new PostCommentResponse
+                var response = new CommentPostResponse
                 {
                     NewAverageRating = newAvg,
                     NewUsersRatedCount = newCount,
-                    NewComment = new CommentPreview
+                    NewComment = new CommentDisplayDto
                     {
                         Id = comment.Id,
                         Text = comment.Text ?? "",
@@ -686,7 +686,7 @@ namespace Pinula.API.Endpoints
                         UserName = userProfile?.Name ?? "User",
                         UserSurname = userProfile?.Surname ?? "",
                         ParentCommentId = comment.ParentCommentId,
-                        Replies = new List<CommentPreview>(),
+                        Replies = new List<CommentDisplayDto>(),
                         IsApproved = true,
                         UserId = userId,
                     }
@@ -730,7 +730,7 @@ namespace Pinula.API.Endpoints
 
 
 
-                return Results.Ok(new DeleteCommentResponse
+                return Results.Ok(new CommentDeleteResponse
                 {
                     UserAlreadyRated = await db.Comments.AnyAsync(c => c.RecipeId == recipeId && c.UserId == userId && c.IsApproved && c.Rating.HasValue),
                     NewAverageRating = newAvg,
@@ -796,7 +796,7 @@ namespace Pinula.API.Endpoints
 
                 await db.SaveChangesAsync();
 
-                return Results.Ok(new DeleteCommentResponse
+                return Results.Ok(new CommentDeleteResponse
                 {
                     UserAlreadyRated = await db.Comments.AnyAsync(c => c.RecipeId == recipeId && c.UserId == userId && c.IsApproved && c.Rating.HasValue),
                     NewAverageRating = newAvg,

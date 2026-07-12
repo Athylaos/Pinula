@@ -150,14 +150,14 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<PostCommentResponse?> PostCommentAsync(Comment comment)
+        public async Task<CommentPostResponse?> PostCommentAsync(Comment comment)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync<Comment>($"{BaseUrl}/postComment", comment);
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<PostCommentResponse>();
+                    return await response.Content.ReadFromJsonAsync<CommentPostResponse>();
                 }
                 _logger.LogError($"Error while posting comment: {response.StatusCode}");
                 return null;
@@ -169,7 +169,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<DeleteCommentResponse?> DeleteCommentAsync(Guid commentId)
+        public async Task<CommentDeleteResponse?> DeleteCommentAsync(Guid commentId)
         {
             try
             {
@@ -177,7 +177,7 @@ namespace Pinula.Shared.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<DeleteCommentResponse>();
+                    return await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
                 }
                 _logger.LogError($"Error while removing comment: {response.StatusCode}");
                 return null;
@@ -189,7 +189,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<DeleteCommentResponse?> UpdateCommentAsync(Comment comment)
+        public async Task<CommentDeleteResponse?> UpdateCommentAsync(Comment comment)
         {
             try
             {
@@ -197,7 +197,7 @@ namespace Pinula.Shared.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<DeleteCommentResponse>();
+                    return await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
                 }
                 _logger.LogError($"Error while updating comment: {response.StatusCode}");
                 return null;

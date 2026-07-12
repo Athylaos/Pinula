@@ -13,9 +13,9 @@ namespace Pinula.Shared.Interface
 
         public Task<bool?> ChangeFavoriteAsync(Guid recipeId);
 
-        public Task<PostCommentResponse?> PostCommentAsync(Comment comment);
-        public Task<DeleteCommentResponse?> DeleteCommentAsync(Guid commentId);
-        public Task<DeleteCommentResponse?> UpdateCommentAsync(Comment comment);
+        public Task<CommentPostResponse?> PostCommentAsync(Comment comment);
+        public Task<CommentDeleteResponse?> DeleteCommentAsync(Guid commentId);
+        public Task<CommentDeleteResponse?> UpdateCommentAsync(Comment comment);
 
         Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
         Task<bool> AdminToggleRecipeCheckedAsync(Guid recipeId);

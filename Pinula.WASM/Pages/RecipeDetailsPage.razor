@@ -247,7 +247,7 @@
         else newComment.Rating = (short)r;
     }
 
-    private void StartReply(CommentPreview parent)
+    private void StartReply(CommentDisplayDto parent)
     {
         isReplying = true;
         replyingToName = parent.UserName;
@@ -296,7 +296,7 @@
         replyText = "";
     }
 
-    private CommentPreview? FindCommentRecursive(IEnumerable<CommentPreview> comments, Guid id)
+    private CommentDisplayDto? FindCommentRecursive(IEnumerable<CommentDisplayDto> comments, Guid id)
     {
         foreach (var comment in comments)
         {
@@ -347,7 +347,7 @@
         }
     }
 
-    private void OpenEditForm(CommentPreview comment)
+    private void OpenEditForm(CommentDisplayDto comment)
     {
         activeEditCommentId = comment.Id;
         activeReplyCommentId = null;
@@ -419,7 +419,7 @@
 
 
 
-    RenderFragment<CommentPreview> DisplayComment => comment => __builder =>
+    RenderFragment<CommentDisplayDto> DisplayComment => comment => __builder =>
     {
         <div class="comment-thread">
             <div class="comment-main @(comment.IsApproved && !comment.IsDeleted ? "" : "comment-moderated-deleted")">

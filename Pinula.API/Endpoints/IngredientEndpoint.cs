@@ -259,18 +259,18 @@ namespace Pinula.API.Endpoints
             {
 
                 var ingredient = await db.Ingredients.FirstOrDefaultAsync(i => i.Id == ingredientId);
-                if (ingredient is null) return Results.NotFound(new StatusResponse() { Successful = false, StatusCode = (int)HttpStatusCode.NotFound, Message = $"Ingredient with id:{ingredientId} does not exist." });
+                if (ingredient is null) return Results.NotFound(new GeneralResponse() { Successful = false, StatusCode = (int)HttpStatusCode.NotFound, Message = $"Ingredient with id:{ingredientId} does not exist." });
 
                 if(await db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == ingredientId)){
                     ingredient.IsDeleted = true;
                     await db.SaveChangesAsync();
-                    return Results.Ok(new StatusResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} is used in recipes, successfuly SOFT deleted." });
+                    return Results.Ok(new GeneralResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} is used in recipes, successfuly SOFT deleted." });
                 }
                 else
                 {
                     db.Remove(ingredient);
                     await db.SaveChangesAsync();
-                    return Results.Ok(new StatusResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} successfuly permanently deleted." });
+                    return Results.Ok(new GeneralResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} successfuly permanently deleted." });
                 }          
             }).RequireAuthorization("AdminOnly");
 

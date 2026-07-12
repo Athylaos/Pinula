@@ -170,7 +170,7 @@
 
 @code {
     [Parameter] public bool IsVisible { get; set; }
-    [Parameter] public EventCallback<RecipeIngredientPreviewDto> OnIngredientAdded { get; set; }
+    [Parameter] public EventCallback<RecipeIngredientDisplayDto> OnIngredientAdded { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private bool isAddMode = true;
@@ -359,7 +359,7 @@
         var unit = selectedIngredient.IngredientUnits.FirstOrDefault(u => u.Id == selectedUnitId);
         if (unit == null) return;
 
-        var result = new RecipeIngredientPreviewDto
+        var result = new RecipeIngredientDisplayDto
         {
             Quantity = quantity,
             Unit = unit,

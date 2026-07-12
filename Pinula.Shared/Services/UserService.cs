@@ -27,7 +27,7 @@ namespace Pinula.Shared.Services
         {
             try
             {
-                var dto = new ChangePasswordDto { OldPassword = oldPassword, NewPassword = newPassword};
+                var dto = new PasswordChangeDto { OldPassword = oldPassword, NewPassword = newPassword};
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/changePassword", dto);
                 return response.IsSuccessStatusCode;
             }

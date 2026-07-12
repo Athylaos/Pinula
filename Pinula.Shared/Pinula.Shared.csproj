@@ -14,4 +14,8 @@
     <PackageReference Include="System.Net.Http.Json" Version="10.0.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\ShoppingCategory\" />
+  </ItemGroup>
+
 </Project>

@@ -206,7 +206,7 @@ namespace Pinula.API.Endpoints
             }).DisableAntiforgery();
 
             //---------------------------------------------------------------Change password
-            group.MapPost("/changePassword", async (ClaimsPrincipal user, ChangePasswordDto dto, PinulaDbContext db) =>
+            group.MapPost("/changePassword", async (ClaimsPrincipal user, PasswordChangeDto dto, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);

@@ -34,7 +34,7 @@ namespace Pinula.Shared.Services
             _localStorage = localStorage;
         }
 
-        public async Task<StatusResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode, Stream? photoStream, string? photoName, string? contentType)
+        public async Task<GeneralResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -45,7 +45,7 @@ namespace Pinula.Shared.Services
 
                     if (defaultUnit == null)
                     {
-                        return new StatusResponse { Successful = false, Message = "No default units found" };
+                        return new GeneralResponse { Successful = false, Message = "No default units found" };
                     }
 
                     _logger.LogInformation($"Fetching heavy details for barcode {barcode} from OFF");
@@ -53,13 +53,13 @@ namespace Pinula.Shared.Services
 
                     if (ingredientDto == null)
                     {
-                        return new StatusResponse { Successful = false, Message = "Failed to fetch product details from Open Food Facts." };
+                        return new GeneralResponse { Successful = false, Message = "Failed to fetch product details from Open Food Facts." };
                     }
                 }
 
                 if (ingredientDto == null)
                 {
-                    return new StatusResponse { Successful = false, Message = "No ingredient data provided." };
+                    return new GeneralResponse { Successful = false, Message = "No ingredient data provided." };
                 }
 
 
@@ -79,18 +79,18 @@ namespace Pinula.Shared.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var msg = await response.Content.ReadAsStringAsync();
-                    return new StatusResponse { Successful = true, Message = msg };
+                    return new GeneralResponse { Successful = true, Message = msg };
                 }
                 else
                 {
-                    return new StatusResponse { Successful = false, StatusCode = (int)response.StatusCode };
+                    return new GeneralResponse { Successful = false, StatusCode = (int)response.StatusCode };
                 }
 
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error while creating ingredient: {ex.Message}");
-                return new StatusResponse { Successful = false, Message = "Connection to server failed." };
+                return new GeneralResponse { Successful = false, Message = "Connection to server failed." };
             }
         }
 
@@ -192,7 +192,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<StatusResponse> AdminUpdateIngredientAsync(Ingredient ingredient, Stream? photoStream, string? photoName, string? contentType)
+        public async Task<GeneralResponse> AdminUpdateIngredientAsync(Ingredient ingredient, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -212,22 +212,22 @@ namespace Pinula.Shared.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var msg = await response.Content.ReadAsStringAsync();
-                    return new StatusResponse { Successful = true, Message = msg };
+                    return new GeneralResponse { Successful = true, Message = msg };
                 }
                 else
                 {
-                    return new StatusResponse { Successful = false, StatusCode = (int)response.StatusCode };
+                    return new GeneralResponse { Successful = false, StatusCode = (int)response.StatusCode };
                 }
 
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error while creating ingredient: {ex.Message}");
-                return new StatusResponse { Successful = false, Message = "Connection to server failed." };
+                return new GeneralResponse { Successful = false, Message = "Connection to server failed." };
             }
         }
 
-        public async Task<StatusResponse> DeleteIngredientAsync(Guid id)
+        public async Task<GeneralResponse> DeleteIngredientAsync(Guid id)
         {
             try
             {
@@ -236,17 +236,17 @@ namespace Pinula.Shared.Services
 
                 if (response is null)
                 {
-                    return new StatusResponse() { StatusCode = (int)HttpStatusCode.NotFound, Successful = false, Message="Api endpoint not found" };
+                    return new GeneralResponse() { StatusCode = (int)HttpStatusCode.NotFound, Successful = false, Message="Api endpoint not found" };
                 }
                 else
                 {
-                    return await response.Content.ReadFromJsonAsync<StatusResponse>();
+                    return await response.Content.ReadFromJsonAsync<GeneralResponse>();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error fetching ingredients: {ex.Message}");
-                return new StatusResponse() { StatusCode = (int)HttpStatusCode.InternalServerError, Successful = false, Message = ex.Message }; ;
+                return new GeneralResponse() { StatusCode = (int)HttpStatusCode.InternalServerError, Successful = false, Message = ex.Message }; ;
             }
         }
 

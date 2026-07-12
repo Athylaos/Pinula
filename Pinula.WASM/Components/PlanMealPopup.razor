@@ -93,7 +93,7 @@
     [Parameter] public List<UserDisplayDto> GroupMembers { get; set; } = new();
     [Parameter] public GroupDetailDto GroupDetail { get; set; }
     [Parameter] public List<RecipePreviewDto> FvRecipes { get; set; } = new();
-    [Parameter] public EventCallback<CreateMealPlanDto> OnSave { get; set; }
+    [Parameter] public EventCallback<MealPlanCreateDto> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private DateOnly PlanDate = DateOnly.FromDateTime(DateTime.Today);
@@ -138,7 +138,7 @@
     {
         if (!IsValid) return;
 
-        var dto = new CreateMealPlanDto
+        var dto = new MealPlanCreateDto
         {
             GroupId = GroupDetail.Id,
             Date = PlanDate,

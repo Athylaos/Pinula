@@ -21,7 +21,7 @@ namespace Pinula.Shared.Services
             _httpClient = httpClient;
         }
 
-        public async Task<bool> AddRecipeToPlanAsync(CreateMealPlanDto dto)
+        public async Task<bool> AddRecipeToPlanAsync(MealPlanCreateDto dto)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<GroupDetailDto?> CreateGroupAsync(CreateGroupDto dto)
+        public async Task<GroupDetailDto?> CreateGroupAsync(GroupCreateDto dto)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<bool> UpdateMealPlanAsync(UpdateMealPlanDto dto)
+        public async Task<bool> UpdateMealPlanAsync(MealPlanUpdateDto dto)
         {
             try
             {

@@ -85,7 +85,7 @@
     [Parameter] public List<UserDisplayDto> AllGroupMembers { get; set; } = new();
 
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<UpdateMealPlanDto> OnSave { get; set; }
+    [Parameter] public EventCallback<MealPlanUpdateDto> OnSave { get; set; }
     [Parameter] public EventCallback<Guid> OnDelete { get; set; }
 
     private Guid MealPlanId { get; set; }
@@ -125,7 +125,7 @@
 
     private void HandleSave()
     {
-        var updateModel = new UpdateMealPlanDto
+        var updateModel = new MealPlanUpdateDto
         {
             Id = MealPlanId,
             Date = EditDate,

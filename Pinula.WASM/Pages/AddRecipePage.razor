@@ -217,7 +217,7 @@
 
     private List<UnitPreviewDto> ServingUnits { get; set; } = new();
     private List<CategorySelectableBlazor> RootCategories { get; set; } = new();
-    private List<RecipeIngredientPreviewDto> Ingredients { get; set; } = new();
+    private List<RecipeIngredientDisplayDto> Ingredients { get; set; } = new();
     private List<RecipeStepDisplayDto> RecipeSteps { get; set; } = new();
 
     private bool showIngredientPopup = false;
@@ -264,7 +264,7 @@
                 Difficulty = (DifficultyLevel)existingRecipe.Difficulty;
 
                 SelectedImagePreview = !string.IsNullOrEmpty(existingRecipe.PhotoUrl) ? existingRecipe.PhotoUrl : string.Empty;
-                Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredientPreviewDto
+                Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredientDisplayDto
                 {
                     Quantity = ingDto.Quantity,
                     Ingredient = new(){Id = ingDto.IngredientId, Name = ingDto.IngredientName, SelectedUnit = new() {Name = ingDto.UnitName } },
@@ -338,12 +338,12 @@
         }
     }
 
-    private void RemoveIngredient(RecipeIngredientPreviewDto ing)
+    private void RemoveIngredient(RecipeIngredientDisplayDto ing)
     {
         Ingredients.Remove(ing);
     }
 
-    private void HandleNewIngredient(RecipeIngredientPreviewDto ingredient)
+    private void HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
     {
         Ingredients.Add(ingredient);
         showIngredientPopup = false;

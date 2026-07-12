@@ -274,7 +274,7 @@
     private async Task HandleCreateGroup(string name)
     {
         IsLoading = true;
-        var result = await MealPlanService.CreateGroupAsync(new CreateGroupDto { Name = name });
+        var result = await MealPlanService.CreateGroupAsync(new GroupCreateDto { Name = name });
         if (result != null)
         {
             showGroupModal = false;
@@ -346,7 +346,7 @@
         }
     }
 
-    private async Task SaveUpdatedPlanToDb(UpdateMealPlanDto updatedDto)
+    private async Task SaveUpdatedPlanToDb(MealPlanUpdateDto updatedDto)
     {
         var suc = await MealPlanService.UpdateMealPlanAsync(updatedDto);
 
@@ -384,7 +384,7 @@
         showPlanMealModal = true;
     }
 
-    private async Task HandleSaveMealPlan(CreateMealPlanDto newPlan)
+    private async Task HandleSaveMealPlan(MealPlanCreateDto newPlan)
     {
         IsLoading = true;
         showPlanMealModal = false;
