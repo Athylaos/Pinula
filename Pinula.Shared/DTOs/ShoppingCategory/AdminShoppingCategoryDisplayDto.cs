@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json.Serialization;
 
-namespace Pinula.Shared.Models
+namespace Pinula.Shared.DTOs
 {
-    public class ShoppingCategory
+    public class AdminShoppingCategoryDisplayDto
     {
         public Guid Id { get; set; }
         public string Code { get; set; }
         public Dictionary<string, string> Names { get; set; } = new();
-
-        [JsonIgnore]
-        public virtual List<Ingredient> Ingredients { get; set; } = null!;
-
     }
 }

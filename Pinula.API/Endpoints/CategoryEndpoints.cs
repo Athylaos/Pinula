@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
+using Pinual.API.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.Globalization;

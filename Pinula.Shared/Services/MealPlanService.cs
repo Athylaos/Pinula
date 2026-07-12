@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Interface;
-using Pinula.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http.Json;

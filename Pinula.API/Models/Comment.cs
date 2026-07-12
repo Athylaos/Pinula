@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Pinula.Shared.Models;
+namespace Pinual.API.Models;
 
 public partial class Comment
 {

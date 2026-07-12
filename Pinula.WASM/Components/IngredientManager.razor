@@ -1,7 +1,6 @@
 ﻿@using System.Diagnostics
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@using Pinula.Shared.Models
 @inject IIngredientService IngredientService
 @inject IUnitService UnitService
 @inject IJSRuntime JS
@@ -121,12 +120,12 @@
                     <input type="text" class="form-control" @bind="currentIngredient.OffCategoryTag" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Base ingredient - @(currentIngredient.BaseIngredient is null ? "" : currentIngredient.BaseIngredient.Names["en"])</label>
+                    <label class="form-label fw-bold">Base ingredient)</label>
                     <input type="text" class="form-control" @bind="currentIngredient.BaseIngredientId" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Default Unit</label>
-                    <select class="form-select" style="background-color:white;" @bind="currentIngredient.DefaultUnitId">
+                    <select class="form-select" style="background-color:white;" value="@currentIngredient.DefaultUnitId" @onchange="OnDefaultUnitChanged">
                         <option value="@Guid.Empty">-- Select Unit --</option>
                         @if (allUnits != null)
                         {
@@ -145,10 +144,41 @@
                 </div>
 
                 <hr />
-                <h5 class="mb-3">Additional units</h5>
-                foreach(var unit in currentIngredient.IngredientUnits)
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Additional units (to grams)</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AddAdditionalUnit">
+                        <i class="bi bi-plus-lg"></i> Add Unit
+                    </button>
+                </div>
+
+                @if (additionalUnitsList.Any())
                 {
-                    <p>@unit.Unit.Names["en"]</p>
+                    <div class="mb-3">
+                        @foreach (var au in additionalUnitsList)
+                        {
+                            <div class="d-flex gap-2 mb-2 align-items-center">
+                                <select class="form-select form-select-sm" style="background-color:white;" @bind="au.UnitId">
+                                    <option value="@Guid.Empty">-- Select Unit --</option>
+                                    @if (allUnits != null)
+                                    {
+                                        @foreach (var unit in allUnits)
+                                        {
+                                            <option value="@unit.Id">@unit.Names["en"] (@unit.Code)</option>
+                                        }
+                                    }
+                                </select>
+                                <input type="number" step="0.1" class="form-control" @bind="au.ToDefaultUnit" placeholder="Grams" />
+                                <span class="input-group-text">g</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveAdditionalUnit(au)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3">No additional units defined.</p>
                 }
 
                 <hr />
@@ -249,13 +279,13 @@
 </div>
 
 @code {
-    private List<AdminIngredientDisplayDto>? ingredients;
-    private List<Unit>? allUnits;
+    private List<AdminIngredientPreviewDto>? ingredients;
+    private List<UnitDto>? allUnits;
     private bool isLoadingList = true;
     private int currentSkip = 0;
     private const int amountToLoad = 50;
 
-    private Ingredient? currentIngredient;
+    private AdminIngredientDisplayDto? currentIngredient;
     private bool isEditing = false;
     private bool isLoadingDetails = false;
     private Guid? selectedIngredientId;
@@ -265,6 +295,7 @@
     private IBrowserFile? selectedFile;
     private string statusMessage = "";
     private bool isError = false;
+    private List<CreateIngredientUnitDto> additionalUnitsList = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -283,7 +314,7 @@
         if (reset)
         {
             currentSkip = 0;
-            ingredients = new List<AdminIngredientDisplayDto>();
+            ingredients = new List<AdminIngredientPreviewDto>();
         }
 
         isLoadingList = true;
@@ -308,10 +339,11 @@
     {
         isEditing = false;
         selectedIngredientId = null;
-        currentIngredient = new Ingredient();
+        currentIngredient = new();
         nameEn = "";
         nameCs = "";
         selectedFile = null;
+        additionalUnitsList.Clear();
         ClearMessage();
     }
 
@@ -329,6 +361,11 @@
             nameCs = currentIngredient.Names.ContainsKey("cs") ? currentIngredient.Names["cs"] : "";
             isEditing = true;
             selectedFile = null;
+            additionalUnitsList = currentIngredient.AdditionalUnits.Select(u => new CreateIngredientUnitDto()
+            {
+                UnitId = u.Unit.Id,
+                ToDefaultUnit = u.AmountInGrams
+            }).ToList();
         }
         else
         {
@@ -352,6 +389,18 @@
             return;
         }
 
+        if (additionalUnitsList.Any(u => u.UnitId == Guid.Empty || u.ToDefaultUnit <= 0))
+        {
+            ShowMessage("All additional units must have valid amount in grams", true);
+            return;
+        }
+
+        if (additionalUnitsList.GroupBy(u => u.UnitId).Any(g => g.Count() > 1))
+        {
+            ShowMessage("Can not add same unit multiple time", true);
+            return;
+        }
+
         currentIngredient.Names["en"] = nameEn;
         currentIngredient.Names["cs"] = nameCs;
 
@@ -368,34 +417,38 @@
 
         GeneralResponse response;
 
+        var createDto = new IngredientCreateDto
+        {
+            Id = currentIngredient.Id,
+            Names = currentIngredient.Names,
+            DefaultUnitId = currentIngredient.DefaultUnitId,
+            BaseIngredientId = currentIngredient.BaseIngredientId,
+            ShoppingCategoryId = currentIngredient.ShoppingCategoryId,
+            Calories = currentIngredient.Calories,
+            Proteins = currentIngredient.Proteins,
+            Fats = currentIngredient.Fats,
+            SaturatedFats = currentIngredient.SaturatedFats,
+            Carbohydrates = currentIngredient.Carbohydrates,
+            Sugars = currentIngredient.Sugars,
+            Fiber = currentIngredient.Fiber,
+            Salt = currentIngredient.Salt,
+            IsVegan = currentIngredient.IsVegan,
+            IsVegetarian = currentIngredient.IsVegetarian,
+            IsGlutenFree = currentIngredient.IsGlutenFree,
+            IsLactoseFree = currentIngredient.IsLactoseFree,
+            NutriScore = currentIngredient.NutriScore,
+            NovaClassification = currentIngredient.NovaClassification,
+            Barcode = currentIngredient.Barcode,
+            OffCategoryTag = currentIngredient.OffCategoryTag,
+            AdditionalUnits = additionalUnitsList
+        };
+
         if (isEditing)
         {
-            response = await IngredientService.AdminUpdateIngredientAsync(currentIngredient, fileStream, fileName, contentType);
+            response = await IngredientService.AdminUpdateIngredientAsync(createDto, fileStream, fileName, contentType);
         }
         else
         {
-            var createDto = new IngredientCreateDto
-            {
-                Names = currentIngredient.Names,
-                DefaultUnitId = currentIngredient.DefaultUnitId,
-                BaseIngredientId = currentIngredient.BaseIngredientId,
-                ShoppingCategoryId = currentIngredient.ShoppingCategoryId,
-                Calories = currentIngredient.Calories,
-                Proteins = currentIngredient.Proteins,
-                Fats = currentIngredient.Fats,
-                SaturatedFats = currentIngredient.SaturatedFats,
-                Carbohydrates = currentIngredient.Carbohydrates,
-                Sugars = currentIngredient.Sugars,
-                Fiber = currentIngredient.Fiber,
-                Salt = currentIngredient.Salt,
-                IsVegan = currentIngredient.IsVegan,
-                IsVegetarian = currentIngredient.IsVegetarian,
-                IsGlutenFree = currentIngredient.IsGlutenFree,
-                IsLactoseFree = currentIngredient.IsLactoseFree,
-                NutriScore = currentIngredient.NutriScore,
-                NovaClassification = currentIngredient.NovaClassification
-            };
-
             response = await IngredientService.CreateIngredientAsync(createDto, currentIngredient.Barcode, fileStream, fileName, contentType);
         }
 
@@ -460,6 +513,38 @@
                 StateHasChanged();
             }
         }
+    }
+
+    private void OnDefaultUnitChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out Guid newUnitId))
+        {
+            currentIngredient.DefaultUnitId = newUnitId;
+
+            var selectedUnit = allUnits?.FirstOrDefault(u => u.Id == newUnitId);
+
+            if (selectedUnit != null && selectedUnit.Code?.ToLower() != "g")
+            {
+                if (!additionalUnitsList.Any(x => x.UnitId == newUnitId))
+                {
+                    additionalUnitsList.Add(new CreateIngredientUnitDto { UnitId = newUnitId, ToDefaultUnit = 0 });
+                }
+            }
+        }
+        else
+        {
+            currentIngredient.DefaultUnitId = Guid.Empty;
+        }
+    }
+
+    private void AddAdditionalUnit()
+    {
+        additionalUnitsList.Add(new CreateIngredientUnitDto { UnitId = Guid.Empty, ToDefaultUnit = 0 });
+    }
+
+    private void RemoveAdditionalUnit(CreateIngredientUnitDto unitToRemove)
+    {
+        additionalUnitsList.Remove(unitToRemove);
     }
 
     private void ShowMessage(string msg, bool error)

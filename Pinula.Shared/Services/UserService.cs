@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -84,11 +83,6 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public Task<bool> IsEmailRegistredAsync(string email)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<bool> IsUserLoggedInAsync()
         {
 
@@ -99,7 +93,7 @@ namespace Pinula.Shared.Services
             return true;
         }
 
-        public async Task<User?> LoginAsync(UserLoginDto loginDto)
+        public async Task<bool> LoginAsync(UserLoginDto loginDto)
         {
             try
             {
@@ -113,15 +107,15 @@ namespace Pinula.Shared.Services
                     {
                         await _tokenStorage.SaveTokenAsync(authResult.Token);
 
-                        return authResult.User;
+                        return true;
                     }
                 }
-                return null;
+                return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Login Error: {ex.Message}");
-                return null;
+                return false;
             }
         }
 
@@ -148,11 +142,6 @@ namespace Pinula.Shared.Services
                 return false;
             }
             return false;
-        }
-
-        public Task RememberCurrentUserAsync(User user)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateUserAsync(UserUpdateDto? userUpdateDto, Stream? photoStream, string photoName, string contentType)
@@ -182,17 +171,17 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<List<User>> GetAllUsersAsync()
+        public async Task<List<AdminUserDisplayDto>> AdminGetAllUsersAsync()
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<User>>($"{BaseUrl}/admin/all");
-                return response ?? new List<User>();
+                var response = await _httpClient.GetFromJsonAsync<List<AdminUserDisplayDto>>($"{BaseUrl}/admin/all");
+                return response ?? new();
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Error while getting users: {ex.Message}");
-                return new List<User>();
+                return new List<AdminUserDisplayDto>();
             }
         }
 

@@ -6,7 +6,7 @@ using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Enums;
 using Pinula.Shared.Interface;
-using Pinula.Shared.Models;
+using Pinual.API.Models;
 using Pinula.Shared.Services;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
@@ -611,8 +611,8 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization();
 
 
-            //---------------------------------------------------------------Post comment
-            group.MapPost("/postComment", async (Comment comment, ClaimsPrincipal user, PinulaDbContext db) =>
+            //---------------------------------------------------------------Post commentDto
+            group.MapPost("/postComment", async (CommentCreateDto commentDto, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -623,41 +623,49 @@ namespace Pinula.API.Endpoints
                 }
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
-                var exists = await db.Recipes.AnyAsync(r => r.Id == comment.RecipeId);
-                bool isNewRating = comment.Rating.HasValue;
+                var exists = await db.Recipes.AnyAsync(r => r.Id == commentDto.RecipeId);
+                bool isNewRating = commentDto.Rating.HasValue;
 
-                if (comment.ParentCommentId.HasValue)
+                if (commentDto.ParentCommentId.HasValue)
                 {
-                    var parentExists = await db.Comments.AnyAsync(c => c.Id == comment.ParentCommentId);
-                    if (!parentExists) return Results.BadRequest("Parent comment not found.");
-                    comment.Rating = null;
+                    var parentExists = await db.Comments.AnyAsync(c => c.Id == commentDto.ParentCommentId);
+                    if (!parentExists) return Results.BadRequest("Parent commentDto not found.");
+                    commentDto.Rating = null;
                 }
 
-                if (comment.Rating.HasValue)
+                if (commentDto.Rating.HasValue)
                 {
-                    var alreadyRated = comment.Rating.HasValue && await db.Comments.AnyAsync(c => c.RecipeId == comment.RecipeId && c.UserId == userId && c.Rating != null && c.IsApproved);
+                    var alreadyRated = commentDto.Rating.HasValue && await db.Comments.AnyAsync(c => c.RecipeId == commentDto.RecipeId && c.UserId == userId && c.Rating != null && c.IsApproved);
                     if (alreadyRated) return Results.BadRequest("You have already rated this recipe.");
                 }
 
-                comment.UserId = userId;
-                comment.CreatedAt = DateTime.UtcNow;
-                comment.LanguageCode = languageCode;
-                comment.IsApproved = true;
-                db.Comments.Add(comment);
+                Comment commentDb = new()
+                {
+                    Id = Guid.NewGuid(),
+                    RecipeId = commentDto.RecipeId,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow,
+                    LanguageCode = languageCode,
+                    Text = commentDto.Text,
+                    Rating = commentDto.Rating,
+                    ParentCommentId = commentDto.ParentCommentId,
+                };
+
+                db.Comments.Add(commentDb);
                 await db.SaveChangesAsync();
 
                 decimal newAvg = 0;
                 int newCount = 0;
 
                 var stats = await db.Comments
-                    .Where(c => c.RecipeId == comment.RecipeId && c.Rating.HasValue && comment.IsApproved)
+                    .Where(c => c.RecipeId == commentDto.RecipeId && c.Rating.HasValue && c.IsApproved)
                     .GroupBy(c => c.RecipeId)
                     .Select(g => new { Avg = g.Average(c => (decimal?)c.Rating) ?? 0, Count = g.Count() })
                     .FirstOrDefaultAsync();
 
                 if (stats != null)
                 {
-                    var recipe = await db.Recipes.FindAsync(comment.RecipeId);
+                    var recipe = await db.Recipes.FindAsync(commentDto.RecipeId);
                     if (recipe != null)
                     {
                         recipe.Rating = stats.Avg;
@@ -679,13 +687,13 @@ namespace Pinula.API.Endpoints
                     NewUsersRatedCount = newCount,
                     NewComment = new CommentDisplayDto
                     {
-                        Id = comment.Id,
-                        Text = comment.Text ?? "",
-                        Rating = comment.Rating,
-                        CreatedAt = comment.CreatedAt ?? DateTime.UtcNow,
+                        Id = commentDto.Id,
+                        Text = commentDto.Text ?? "",
+                        Rating = commentDto.Rating,
+                        CreatedAt = commentDb.CreatedAt ?? DateTime.UtcNow,
                         UserName = userProfile?.Name ?? "User",
                         UserSurname = userProfile?.Surname ?? "",
-                        ParentCommentId = comment.ParentCommentId,
+                        ParentCommentId = commentDto.ParentCommentId,
                         Replies = new List<CommentDisplayDto>(),
                         IsApproved = true,
                         UserId = userId,
@@ -696,7 +704,7 @@ namespace Pinula.API.Endpoints
 
             }).RequireAuthorization();
 
-            //---------------------------------------------------------------Delete comment
+            //---------------------------------------------------------------Delete commentDto
             group.MapDelete("/deleteComment/{commentId:guid}", async (Guid commentId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
@@ -739,26 +747,26 @@ namespace Pinula.API.Endpoints
 
             }).RequireAuthorization();
 
-            //---------------------------------------------------------------Update comment
-            group.MapPut("/updateComment/{commentId:guid}", async (Comment comment, Guid commentId, ClaimsPrincipal user, PinulaDbContext db) =>
+            //---------------------------------------------------------------Update commentDto
+            group.MapPut("/updateComment/{commentId:guid}", async (CommentCreateDto commentDto, Guid commentId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 var userId = user.GetUserId();
                 var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (dbUser is null) return Results.NotFound("User not found.");
                 if (!dbUser.CanComment) return Results.Forbid();
 
-                if (comment is null) return Results.BadRequest();
+                if (commentDto is null) return Results.BadRequest();
                 var commentDb = await db.Comments.FirstOrDefaultAsync(c => c.Id == commentId);
                 if (commentDb is null) return Results.NotFound();
                 if (commentDb.UserId != userId) return Results.Unauthorized();
-                if (!comment.IsApproved) return Results.Forbid();
+                if (!commentDb.IsApproved) return Results.Forbid();
 
-                bool isRatingChanged = commentDb.Rating != comment.Rating;
+                bool isRatingChanged = commentDb.Rating != commentDto.Rating;
 
                 commentDb.IsEdited = true;
                 commentDb.EditedAt = DateTime.UtcNow;
-                commentDb.Text = comment.Text;
-                commentDb.Rating = comment.Rating;
+                commentDb.Text = commentDto.Text;
+                commentDb.Rating = commentDto.Rating;
 
                 decimal newAvg = 0;
                 int newCount = 0;
@@ -856,7 +864,7 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(comments);
             }).RequireAuthorization("AdminOnly");
 
-            //---------------------------------------------------------------Toggle comment approval
+            //---------------------------------------------------------------Toggle commentDto approval
             group.MapPost("/admin/toggleCommentApproval/{commentId:guid}", async (Guid commentId, PinulaDbContext db) =>
             {
                 var comment = await db.Comments.FirstOrDefaultAsync(c => c.Id == commentId);

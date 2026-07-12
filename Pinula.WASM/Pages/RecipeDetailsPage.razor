@@ -1,7 +1,6 @@
 ﻿@page "/recipe/{Id:guid}"
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@using Pinula.Shared.Models
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
 @inject NavigationManager NavManager
@@ -194,14 +193,14 @@
     private bool isLoading;
     private bool isUserLogged;
 
-    private Comment newComment = new Comment();
+    private CommentCreateDto newComment = new();
     private bool isReplying = false;
     private string replyingToName = "";
     private Guid? activeReplyCommentId = null;
     private string replyText = "";
 
     private Guid? activeEditCommentId = null;
-    private Comment editCommentModel = new Comment();
+    private CommentCreateDto editCommentModel = new();
 
     private UserDisplayDto? userDto;
 
@@ -257,14 +256,13 @@
 
     private void ResetForm()
     {
-        newComment = new Comment();
+        newComment = new();
     }
 
     private async Task HandlePostReview()
     {
         newComment.RecipeId = recipe.Id;
         newComment.ParentCommentId = null;
-        newComment.IsApproved = true;
 
         var response = await RecipeService.PostCommentAsync(newComment);
 
@@ -282,7 +280,7 @@
     private void OpenReplyForm(Guid commentId)
     {
         activeReplyCommentId = commentId;
-        newComment = new Comment
+        newComment = new()
         {
             ParentCommentId = commentId,
             RecipeId = recipe.Id
@@ -310,13 +308,12 @@
 
     private async Task HandlePostReply(Guid parentId)
     {
-        var replyComment = new Comment
+        var replyComment = new CommentCreateDto()
         {
             RecipeId = recipe.Id,
             ParentCommentId = parentId,
             Text = replyText,
             Rating = null,
-            CreatedAt = DateTime.UtcNow
         };
 
         var response = await RecipeService.PostCommentAsync(replyComment);
@@ -352,7 +349,7 @@
         activeEditCommentId = comment.Id;
         activeReplyCommentId = null;
 
-        editCommentModel = new Comment
+        editCommentModel = new()
         {
             Id = comment.Id,
             RecipeId = recipe!.Id,

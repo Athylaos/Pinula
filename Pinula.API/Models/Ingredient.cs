@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Pinula.Shared.Models;
+namespace Pinual.API.Models;
 
 public partial class Ingredient
 {

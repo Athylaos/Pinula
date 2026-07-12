@@ -2,15 +2,14 @@
 {
     public class IngredientCreateDto
     {
-        public Dictionary<string, string> Names { get; set; } = new();
-        public string? Barcode { get; set; }
-        public string? ImageUrl { get; set; }
-        public Guid DefaultUnitId { get; set; }
-        public Guid? BaseIngredientId { get; set; }
-        public Guid ShoppingCategoryId { get; set; }
+        public Guid Id { get; set; }
 
-        public string? NutriScore { get; set; }
-        public int? NovaClassification { get; set; }
+        public Dictionary<string, string> Names { get; set; } = new();
+        public Guid DefaultUnitId { get; set; }
+        public Guid ShoppingCategoryId { get; set; }
+        public Guid? BaseIngredientId { get; set; }
+        public string? OffCategoryTag { get; set; }
+        public decimal? EdibleRatio { get; set; }
 
         public decimal Calories { get; set; }
         public decimal Proteins { get; set; }
@@ -25,6 +24,12 @@
         public bool IsVegetarian { get; set; }
         public bool IsGlutenFree { get; set; }
         public bool IsLactoseFree { get; set; }
+
+        public string? Barcode { get; set; }
+        public string? ImageUrl { get; set; }
+
+        public string? NutriScore { get; set; }
+        public int? NovaClassification { get; set; }
 
         public List<CreateIngredientUnitDto> AdditionalUnits { get; set; } = new();
         public Guid? CategoryTagId;

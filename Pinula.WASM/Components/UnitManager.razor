@@ -1,5 +1,4 @@
-﻿@using Pinula.Shared.Models
-@using Pinula.Shared.DTOs
+﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @inject IUnitService UnitService
 
@@ -58,7 +57,7 @@ else
 }
 
 @code {
-    private List<Unit>? units;
+    private List<UnitDto>? units;
     private string newUnitNameEn = "";
     private string newUnitNameCs = "";
     private string newUnitCode = "";
@@ -80,7 +79,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(newUnitNameCs) || string.IsNullOrWhiteSpace(newUnitNameEn) || string.IsNullOrWhiteSpace(newUnitCode)) return;
 
-        var success = await UnitService.CreateUnitAsync(new Unit { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
+        var success = await UnitService.CreateUnitAsync(new UnitDto { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
         if (success)
         {
             newUnitCode = "";

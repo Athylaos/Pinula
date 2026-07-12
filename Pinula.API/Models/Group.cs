@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pinula.Shared.Models
+namespace Pinual.API.Models
 {
     public class Group
     {

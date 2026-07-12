@@ -2,7 +2,6 @@
 using Microsoft.VisualBasic;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Interface;
-using Pinula.Shared.Models;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -157,30 +156,30 @@ namespace Pinula.Shared.Services
             return finalResults.Take(filter.Amount).ToList();
         }
 
-        public async Task<List<AdminIngredientDisplayDto>> AdminGetIngredients(int amount, int skip)
+        public async Task<List<AdminIngredientPreviewDto>> AdminGetIngredients(int amount, int skip)
         {
             try
             {
                 var url = $"{BaseUrl}/getAdminPreviews?amount={amount}&skip={skip}";
-                var response = await _httpClient.GetFromJsonAsync<List<AdminIngredientDisplayDto>>(url);
-                if (response is null) return new List<AdminIngredientDisplayDto>();
+                var response = await _httpClient.GetFromJsonAsync<List<AdminIngredientPreviewDto>>(url);
+                if (response is null) return new List<AdminIngredientPreviewDto>();
                 return response.ToList();
 
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error fetching ingredients: {ex.Message}");
-                return new List<AdminIngredientDisplayDto>();
+                return new List<AdminIngredientPreviewDto>();
             }
 
         }
 
-        public async Task<Ingredient?> AdminGetIngredientDetailsAsync(Guid id)
+        public async Task<AdminIngredientDisplayDto?> AdminGetIngredientDetailsAsync(Guid id)
         {
             try
             {
                 var url = $"{BaseUrl}/getAdmin/{id}";
-                var response = await _httpClient.GetFromJsonAsync<Ingredient>(url);
+                var response = await _httpClient.GetFromJsonAsync<AdminIngredientDisplayDto>(url);
                 if(response is null) return null;
                 return response;
 
@@ -192,7 +191,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<GeneralResponse> AdminUpdateIngredientAsync(Ingredient ingredient, Stream? photoStream, string? photoName, string? contentType)
+        public async Task<GeneralResponse> AdminUpdateIngredientAsync(IngredientCreateDto ingredient, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {

@@ -1,7 +1,7 @@
 ﻿using BCrypt.Net;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
+using Pinual.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -14,6 +14,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Mapster;
 
 namespace Pinula.API.Endpoints
 {
@@ -65,17 +66,8 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(new LoginResponse
                 {
                     Token = token,
-                    User = new User()
-                    {
-                        Id = user.Id,
-                        Email = user.Email,
-                        Name = user.Name,
-                        Surname = user.Surname,
-                        UserCreated = user.UserCreated,
-                        Role = user.Role,
-                        AvatarUrl = user.AvatarUrl,
-                        PasswordHash = string.Empty
-                    }
+                    UserName = user.Name,
+                    UserSurname = user.Surname,
                 });
             });
 
@@ -247,7 +239,9 @@ namespace Pinula.API.Endpoints
                     user.AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(user.AvatarUrl) ? defaultImage : user.AvatarUrl)}";
                 }
 
-                return users;
+                var usersDb = users.Adapt<List<AdminUserDisplayDto>>();
+
+                return usersDb;
 
             }).RequireAuthorization("AdminOnly");
 

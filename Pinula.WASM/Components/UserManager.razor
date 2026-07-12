@@ -1,5 +1,4 @@
-﻿@using Pinula.Shared.Models
-@using Pinula.Shared.DTOs
+﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @inject IUserService UserService
 @inject IJSRuntime JSRuntime
@@ -43,7 +42,7 @@ else
                     <td>@user.UserCreated.ToString("dd.MM.yyyy")</td>
                     <td>
                         <button class="btn btn-sm @(user.CanComment ? "btn-outline-success" : "btn-danger")"
-                                @onclick="() => ToggleComment(user)">
+                                @onclick="() => ToggleComment(user)"> 
                             @(user.CanComment ? "Allowed" : "Banned")
                         </button>
                     </td>
@@ -88,8 +87,8 @@ else
 }
 
 @code {
-    private List<User>? users;
-    private User? selectedUser;
+    private List<AdminUserDisplayDto>? users;
+    private AdminUserDisplayDto? selectedUser;
 
     private string newPassword = "";
     private string statusMessage = "";
@@ -102,11 +101,11 @@ else
 
     private async Task LoadUsers()
     {
-        var result = await UserService.GetAllUsersAsync();
+        var result = await UserService.AdminGetAllUsersAsync();
         users = result.ToList();
     }
 
-    private void OpenPasswordReset(User user)
+    private void OpenPasswordReset(AdminUserDisplayDto user)
     {
         selectedUser = user;
         newPassword = "";
@@ -178,7 +177,7 @@ else
         }
     }
 
-    private async Task ToggleComment(User user)
+    private async Task ToggleComment(AdminUserDisplayDto user)
     {
         var success = await UserService.AdminToggleCommentPermissionAsync(user.Id);
         if (success)
@@ -187,7 +186,7 @@ else
         }
     }
 
-    private async Task ToggleRecipes(User user)
+    private async Task ToggleRecipes(AdminUserDisplayDto user)
     {
         var success = await UserService.AdminToggleRecipePermissionAsync(user.Id);
         if (success)

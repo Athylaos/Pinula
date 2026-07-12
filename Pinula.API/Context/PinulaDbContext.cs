@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Pinula.Shared.Models;
+using Pinual.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Internal;

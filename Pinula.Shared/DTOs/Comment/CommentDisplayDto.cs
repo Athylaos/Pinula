@@ -1,10 +1,4 @@
-﻿using Pinula.Shared.Models;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-
-namespace Pinula.Shared.DTOs
+﻿namespace Pinula.Shared.DTOs
 {
     public class CommentDisplayDto
     {

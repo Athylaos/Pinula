@@ -1,7 +1,6 @@
 ﻿using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
 using System.Net.Http.Json;
-using Pinula.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Pinula.Shared.Services
@@ -38,7 +37,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<bool> CreateUnitAsync(Unit unit)
+        public async Task<bool> CreateUnitAsync(UnitDto unit)
         {
             try
             {
@@ -74,18 +73,18 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<List<Unit>> GetAllUnitsAdminAsync()
+        public async Task<List<UnitDto>> GetAllUnitsAdminAsync()
         {
 
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<Unit>>($"{BaseUrl}/getAdmin");
-                return response ?? new List<Unit>();
+                var response = await _httpClient.GetFromJsonAsync<List<UnitDto>>($"{BaseUrl}/getAdmin");
+                return response ?? new();
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error while getting all units: {ex.Message}");
-                return new List<Unit>();
+                return new();
             }
         }
     }

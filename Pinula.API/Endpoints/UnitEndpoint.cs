@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
+using Pinual.API.Models;
 using System.Globalization;
 using System.Security.Claims;
 
@@ -34,7 +34,7 @@ namespace Pinula.API.Endpoints
             });
 
             //---------------------------------------------------------------Create unit
-            group.MapPost("/create", async (Unit unit, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapPost("/create", async (UnitDto unit, ClaimsPrincipal user, PinulaDbContext db) =>
             {
                 if (string.IsNullOrWhiteSpace(unit.Names["en"]) || string.IsNullOrWhiteSpace(unit.Names["cs"]))
                     return Results.BadRequest("Unit names is mandatory");
@@ -53,7 +53,7 @@ namespace Pinula.API.Endpoints
                 db.Units.Add(newUnit);
                 await db.SaveChangesAsync();
 
-                return Results.Ok(unit.Id);
+                return Results.Ok(newUnit.Id);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete unit
@@ -77,7 +77,13 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get units admin
             group.MapGet("/getAdmin", async (PinulaDbContext db) =>
             {
-                var units = await db.Units.AsNoTracking().ToListAsync();
+                var units = await db.Units.AsNoTracking().Select(u => new UnitDto
+                {
+                    IsServingUnit = u.IsServingUnit,
+                    Code = u.Code,
+                    Names= u.Names,
+                    Id = u.Id,
+                }).ToListAsync();
 
                 return Results.Ok(units);
             }).RequireAuthorization("AdminOnly");

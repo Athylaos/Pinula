@@ -1,5 +1,4 @@
-﻿using Pinula.Shared.Models;
-using Pinula.Shared.DTOs;
+﻿using Pinula.Shared.DTOs;
 
 namespace Pinula.Shared.Interface
 {
@@ -13,9 +12,9 @@ namespace Pinula.Shared.Interface
 
         public Task<bool?> ChangeFavoriteAsync(Guid recipeId);
 
-        public Task<CommentPostResponse?> PostCommentAsync(Comment comment);
+        public Task<CommentPostResponse?> PostCommentAsync(CommentCreateDto comment);
         public Task<CommentDeleteResponse?> DeleteCommentAsync(Guid commentId);
-        public Task<CommentDeleteResponse?> UpdateCommentAsync(Comment comment);
+        public Task<CommentDeleteResponse?> UpdateCommentAsync(CommentCreateDto comment);
 
         Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
         Task<bool> AdminToggleRecipeCheckedAsync(Guid recipeId);

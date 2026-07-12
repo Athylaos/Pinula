@@ -1,5 +1,4 @@
 ﻿using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
 
 namespace Pinula.Shared.Interface
 {

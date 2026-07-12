@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
-using Pinula.Shared.Models;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -150,11 +149,11 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<CommentPostResponse?> PostCommentAsync(Comment comment)
+        public async Task<CommentPostResponse?> PostCommentAsync(CommentCreateDto comment)
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync<Comment>($"{BaseUrl}/postComment", comment);
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/postComment", comment);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<CommentPostResponse>();
@@ -189,7 +188,7 @@ namespace Pinula.Shared.Services
             }
         }
 
-        public async Task<CommentDeleteResponse?> UpdateCommentAsync(Comment comment)
+        public async Task<CommentDeleteResponse?> UpdateCommentAsync(CommentCreateDto comment)
         {
             try
             {
