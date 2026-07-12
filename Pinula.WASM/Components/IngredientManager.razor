@@ -1,0 +1,476 @@
+﻿@using System.Diagnostics
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.Shared.Models
+@inject IIngredientService IngredientService
+@inject IUnitService UnitService
+@inject IJSRuntime JS
+
+<div class="container-fluid py-3">
+    <h3>Manage Ingredients</h3>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @(isError ? "alert-danger" : "alert-success") py-2 alert-dismissible fade show">
+            @statusMessage
+            <button type="button" class="btn-close" @onclick="() => statusMessage = string.Empty"></button>
+        </div>
+    }
+
+    <div class="row align-items-start">
+        <div class="col-md-7 col-lg-8 mb-4" style="max-height: 85vh; overflow-y: auto;">
+
+            <div class="d-flex justify-content-between mb-3">
+                <button class="btn btn-primary" @onclick="InitNewIngredient">
+                    <i class="bi bi-plus-lg"></i> Add New Ingredient
+                </button>
+                <button class="btn btn-secondary" @onclick="LoadMoreIngredients">
+                    Load More (Skip: @currentSkip)
+                </button>
+            </div>
+
+            @if (isLoadingList)
+            {
+                <div class="spinner-border text-primary" role="status"></div>
+            }
+            else if (ingredients != null)
+            {
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th>Image</th>
+                            <th>Name (EN/CS)</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ing in ingredients)
+                        {
+                            <tr class="@(selectedIngredientId == ing.Id ? "table-primary" : "")">
+                                <td style="width: 60px;">
+                                    @if (!string.IsNullOrEmpty(ing.ImageUrl))
+                                    {
+                                        <img src="@ing.ImageUrl" alt="img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />
+                                    }
+                                    else
+                                    {
+                                        <div style="width: 40px; height: 40px; background: #eee; border-radius: 4px;"></div>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@(ing.Names.ContainsKey("en") ? ing.Names["en"] : "N/A")</strong><br />
+                                    <small class="text-muted">@(ing.Names.ContainsKey("cs") ? ing.Names["cs"] : "N/A")</small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm @(ing.IsApproved ? "btn-success" : "btn-outline-secondary") me-1"
+                                            @onclick="() => ToggleApproval(ing.Id)" title="Toggle Approval">
+                                        Appr
+                                    </button>
+                                    <button class="btn btn-sm @(ing.Checked ? "btn-info" : "btn-outline-secondary")"
+                                            @onclick="() => ToggleChecked(ing.Id)" title="Toggle Checked">
+                                        Chk
+                                    </button>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => SelectIngredient(ing.Id)">
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => HandleDelete(ing.Id)">
+                                        Del
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="col-md-5 col-lg-4" style="position: sticky; top: 20px; max-height: 85vh; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+
+            @if (isLoadingDetails)
+            {
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            }
+            else if (currentIngredient != null)
+            {
+                <h4 class="mb-3">@(isEditing ? "Edit Ingredient" : "Create New Ingredient")</h4>
+
+                @if (isEditing)
+                {
+                    <div class="mb-3 text-muted small">ID: @currentIngredient.Id</div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Name (English)</label>
+                    <input type="text" class="form-control" @bind="nameEn" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Name (Czech)</label>
+                    <input type="text" class="form-control" @bind="nameCs" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Barcode</label>
+                    <input type="text" class="form-control" @bind="currentIngredient.Barcode" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">OFF category tag</label>
+                    <input type="text" class="form-control" @bind="currentIngredient.OffCategoryTag" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Base ingredient - @(currentIngredient.BaseIngredient is null ? "" : currentIngredient.BaseIngredient.Names["en"])</label>
+                    <input type="text" class="form-control" @bind="currentIngredient.BaseIngredientId" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Default Unit</label>
+                    <select class="form-select" style="background-color:white;" @bind="currentIngredient.DefaultUnitId">
+                        <option value="@Guid.Empty">-- Select Unit --</option>
+                        @if (allUnits != null)
+                        {
+                            @foreach (var unit in allUnits)
+                            {
+                                <option value="@unit.Id">@unit.Names["en"] (@unit.Code)</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Shopping Category ID</label>
+                    <!--Shopping category picker should be added in the future-->
+                    <input type="text" class="form-control" @bind="currentIngredient.ShoppingCategoryId" />
+                </div>
+
+                <hr />
+                <h5 class="mb-3">Additional units</h5>
+                foreach(var unit in currentIngredient.IngredientUnits)
+                {
+                    <p>@unit.Unit.Names["en"]</p>
+                }
+
+                <hr />
+                <h5 class="mb-3">Nutrition (per 100g)</h5>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small">Calories (kcal)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Calories" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Proteins (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Proteins" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Carbs (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Carbohydrates" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Sugars (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Sugars" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Fats (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Fats" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Saturated (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.SaturatedFats" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Fiber (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Fiber" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Salt (g)</label>
+                        <input type="number" step="0.1" class="form-control form-control-sm" @bind="currentIngredient.Salt" />
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-3">Dietary & Classification</h5>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="flexVegan" @bind="currentIngredient.IsVegan">
+                    <label class="form-check-label" for="flexVegan">Is Vegan</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="flexVeg" @bind="currentIngredient.IsVegetarian">
+                    <label class="form-check-label" for="flexVeg">Is Vegetarian</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="flexGluten" @bind="currentIngredient.IsGlutenFree">
+                    <label class="form-check-label" for="flexGluten">Is Gluten Free</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="flexLactose" @bind="currentIngredient.IsLactoseFree">
+                    <label class="form-check-label" for="flexLactose">Is Lactose Free</label>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small">NutriScore</label>
+                        <input type="text" class="form-control form-control-sm" @bind="currentIngredient.NutriScore" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">NOVA Class</label>
+                        <input type="number" class="form-control form-control-sm" @bind="currentIngredient.NovaClassification" />
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-3">Image</h5>
+                <div class="mb-4">
+                    <InputFile class="form-control" OnChange="HandleFileSelected" accept=".jpg,.jpeg,.png,.webp" />
+                    @if (selectedFile != null)
+                    {
+                        <small class="text-success mt-1 d-block">File selected: @selectedFile.Name</small>
+                    }
+                </div>
+
+                <button class="btn btn-success w-100 mb-2" @onclick="SaveIngredient">
+                    @(isEditing ? "Update Ingredient" : "Create Ingredient")
+                </button>
+                @if (isEditing)
+                {
+                    <button class="btn btn-outline-secondary w-100" @onclick="InitNewIngredient">Cancel Edit</button>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted mt-5">
+                    <p>Select an ingredient from the list or create a new one.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<AdminIngredientDisplayDto>? ingredients;
+    private List<Unit>? allUnits;
+    private bool isLoadingList = true;
+    private int currentSkip = 0;
+    private const int amountToLoad = 50;
+
+    private Ingredient? currentIngredient;
+    private bool isEditing = false;
+    private bool isLoadingDetails = false;
+    private Guid? selectedIngredientId;
+
+    private string nameEn = "";
+    private string nameCs = "";
+    private IBrowserFile? selectedFile;
+    private string statusMessage = "";
+    private bool isError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUnits();
+        await LoadIngredients(true);
+        InitNewIngredient();
+    }
+
+    private async Task LoadUnits()
+    {
+        allUnits = await UnitService.GetAllUnitsAdminAsync();
+    }
+
+    private async Task LoadIngredients(bool reset = false)
+    {
+        if (reset)
+        {
+            currentSkip = 0;
+            ingredients = new List<AdminIngredientDisplayDto>();
+        }
+
+        isLoadingList = true;
+        StateHasChanged();
+
+        var newItems = await IngredientService.AdminGetIngredients(amountToLoad, currentSkip);
+        if (newItems != null && newItems.Any())
+        {
+            ingredients!.AddRange(newItems);
+            currentSkip += amountToLoad;
+        }
+
+        isLoadingList = false;
+    }
+
+    private async Task LoadMoreIngredients()
+    {
+        await LoadIngredients(false);
+    }
+
+    private void InitNewIngredient()
+    {
+        isEditing = false;
+        selectedIngredientId = null;
+        currentIngredient = new Ingredient();
+        nameEn = "";
+        nameCs = "";
+        selectedFile = null;
+        ClearMessage();
+    }
+
+    private async Task SelectIngredient(Guid id)
+    {
+        ClearMessage();
+        isLoadingDetails = true;
+        selectedIngredientId = id;
+
+        var details = await IngredientService.AdminGetIngredientDetailsAsync(id);
+        if (details != null)
+        {
+            currentIngredient = details;
+            nameEn = currentIngredient.Names.ContainsKey("en") ? currentIngredient.Names["en"] : "";
+            nameCs = currentIngredient.Names.ContainsKey("cs") ? currentIngredient.Names["cs"] : "";
+            isEditing = true;
+            selectedFile = null;
+        }
+        else
+        {
+            ShowMessage("Failed to load ingredient details.", true);
+        }
+
+        isLoadingDetails = false;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task SaveIngredient()
+    {
+        if (currentIngredient == null) return;
+        if (string.IsNullOrWhiteSpace(nameEn) || string.IsNullOrWhiteSpace(nameCs))
+        {
+            ShowMessage("English and Czech names are required.", true);
+            return;
+        }
+
+        currentIngredient.Names["en"] = nameEn;
+        currentIngredient.Names["cs"] = nameCs;
+
+        Stream? fileStream = null;
+        string? fileName = null;
+        string? contentType = null;
+
+        if (selectedFile != null)
+        {
+            fileStream = selectedFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            fileName = selectedFile.Name;
+            contentType = selectedFile.ContentType;
+        }
+
+        StatusResponse response;
+
+        if (isEditing)
+        {
+            response = await IngredientService.AdminUpdateIngredientAsync(currentIngredient, fileStream, fileName, contentType);
+        }
+        else
+        {
+            var createDto = new IngredientCreateDto
+            {
+                Names = currentIngredient.Names,
+                DefaultUnitId = currentIngredient.DefaultUnitId,
+                BaseIngredientId = currentIngredient.BaseIngredientId,
+                ShoppingCategoryId = currentIngredient.ShoppingCategoryId,
+                Calories = currentIngredient.Calories,
+                Proteins = currentIngredient.Proteins,
+                Fats = currentIngredient.Fats,
+                SaturatedFats = currentIngredient.SaturatedFats,
+                Carbohydrates = currentIngredient.Carbohydrates,
+                Sugars = currentIngredient.Sugars,
+                Fiber = currentIngredient.Fiber,
+                Salt = currentIngredient.Salt,
+                IsVegan = currentIngredient.IsVegan,
+                IsVegetarian = currentIngredient.IsVegetarian,
+                IsGlutenFree = currentIngredient.IsGlutenFree,
+                IsLactoseFree = currentIngredient.IsLactoseFree,
+                NutriScore = currentIngredient.NutriScore,
+                NovaClassification = currentIngredient.NovaClassification
+            };
+
+            response = await IngredientService.CreateIngredientAsync(createDto, currentIngredient.Barcode, fileStream, fileName, contentType);
+        }
+
+        if (response.Successful)
+        {
+            ShowMessage(isEditing ? "Ingredient updated successfully" : "Ingredient created successfully", false);
+            selectedFile = null;
+            await LoadIngredients(true);
+            if (!isEditing) InitNewIngredient();
+        }
+        else
+        {
+            ShowMessage(response.Message ?? "An error occurred while saving.", true);
+        }
+    }
+
+    private async Task ToggleApproval(Guid id)
+    {
+        var success = await IngredientService.AdminToggleIngredientApprovalAsync(id);
+        if (success) await RefreshSpecificItem(id);
+    }
+
+    private async Task ToggleChecked(Guid id)
+    {
+        var success = await IngredientService.AdminToggleIngredientCheckedAsync(id);
+        if (success) await RefreshSpecificItem(id);
+    }
+
+    private async Task HandleDelete(Guid id)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this ingredient?");
+
+        if (confirmed)
+        {
+            var response = await IngredientService.DeleteIngredientAsync(id);
+            if (response.Successful)
+            {
+                ShowMessage("Ingredient deleted.", false);
+                await LoadIngredients(true);
+                if (selectedIngredientId == id) InitNewIngredient();
+            }
+            else
+            {
+                ShowMessage(response.Message, true);
+            }
+        }
+        else
+        {
+            Debug.WriteLine("Delete action was canceled by admin.");
+        }
+    }
+    private async Task RefreshSpecificItem(Guid id)
+    {
+        var updatedItem = await IngredientService.AdminGetIngredientDetailsAsync(id);
+        if (updatedItem != null && ingredients != null)
+        {
+            var itemInList = ingredients.FirstOrDefault(i => i.Id == id);
+            if (itemInList != null)
+            {
+                itemInList.IsApproved = updatedItem.IsApproved;
+                itemInList.Checked = updatedItem.Checked;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void ShowMessage(string msg, bool error)
+    {
+        statusMessage = msg;
+        isError = error;
+    }
+
+    private void ClearMessage()
+    {
+        statusMessage = "";
+        isError = false;
+    }
+}

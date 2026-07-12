@@ -13,6 +13,8 @@ namespace Pinula.Shared.Interface
         public Task<Ingredient?> AdminGetIngredientDetailsAsync(Guid id);
         public Task<StatusResponse> AdminUpdateIngredientAsync(Ingredient ingredient, Stream? photoStream, string? photoName, string? contentType);
         public Task<StatusResponse> DeleteIngredientAsync(Guid id);
+        public Task<bool> AdminToggleIngredientApprovalAsync(Guid id);
+        public Task<bool> AdminToggleIngredientCheckedAsync(Guid id);
 
     }
 }

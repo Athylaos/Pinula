@@ -76,7 +76,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddLocalization();
-builder.Services.AddSingleton<ITranslationService, TranslationService>();
+builder.Services.AddScoped<ITranslationService, TranslationService>();
 
 var app = builder.Build();
 

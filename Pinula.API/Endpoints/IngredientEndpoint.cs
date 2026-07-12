@@ -117,8 +117,8 @@ namespace Pinula.API.Endpoints
                         {
                             image.Mutate(x => x.Resize(new ResizeOptions
                             {
-                                Mode = ResizeMode.Max,
-                                Size = new Size(1200, 0)
+                                Mode = ResizeMode.Crop,
+                                Size = new Size(1200, 1200)
                             }));
 
                             await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
@@ -161,7 +161,7 @@ namespace Pinula.API.Endpoints
                     {
                         ct = await db.ShoppingCategories
                              .AsNoTracking()
-                             .FirstOrDefaultAsync(t => t.Code == "Uncategorized");
+                             .FirstOrDefaultAsync(t => t.Code == "other");
                     }
 
 
@@ -222,7 +222,7 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get filtered previews
             group.MapGet("/getAdminPreviews", async (int amount, int skip, HttpRequest request, PinulaDbContext db) =>
             {
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
                 var defaultImage = "default_ingredient.png";
 
 
@@ -244,10 +244,10 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get ingredient detail admin
             group.MapGet("/getAdmin/{ingredientId:guid}", async (Guid ingredientId, HttpRequest request, PinulaDbContext db) =>
             {
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
                 var defaultImage = "default_ingredient.png";
 
-                var ingredient= await db.Ingredients.AsNoTrackingWithIdentityResolution().Include(i => i.DefaultUnit).Include(i => i.ShoppingCategory).Include(i => i.IngredientUnits).FirstOrDefaultAsync(i => i.Id == ingredientId);
+                var ingredient= await db.Ingredients.AsNoTrackingWithIdentityResolution().Include(i => i.DefaultUnit).Include(i => i.ShoppingCategory).Include(i => i.IngredientUnits).Include(i => i.BaseIngredient).FirstOrDefaultAsync(i => i.Id == ingredientId);
                 if (ingredient is null) return null;
                 ingredient.ImageUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(ingredient.ImageUrl) ? defaultImage : ingredient.ImageUrl)}";
 
@@ -292,6 +292,25 @@ namespace Pinula.API.Endpoints
                 if (ingredient == null) return Results.NotFound($"Ingredient with id:{dto.Id} does not exist.");
 
                 string finalPhotoUrl = ingredient.ImageUrl;
+                if(finalPhotoUrl is not null)
+                {
+                    if (finalPhotoUrl.Contains("/ingredients/"))
+                    {
+                        const string target = "/ingredients/";
+                        int index = finalPhotoUrl.IndexOf(target);
+
+                        if (index == -1)
+                        {
+
+                        }
+                        else
+                        {
+                            int startIndex = index + target.Length;
+                            finalPhotoUrl = finalPhotoUrl[startIndex..];
+                        }
+                    }
+                }
+
                 var file = form.Files.GetFile("image");
 
                 if (file is { Length: > 0 })
@@ -340,8 +359,6 @@ namespace Pinula.API.Endpoints
                         Debug.WriteLine($"Image Processing Error: {ex.Message}");
                     }
                 }
-
-                if (finalPhotoUrl == ingredient.ImageUrl && !string.IsNullOrWhiteSpace(dto.ImageUrl)) finalPhotoUrl = dto.ImageUrl;
 
                 try
                 {
@@ -402,6 +419,32 @@ namespace Pinula.API.Endpoints
                 {
                     return Results.Problem($"An error occurred while updating the ingredient. Ex: {ex.Message}");
                 }
+
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Toggle ingredient approval
+            group.MapPost("/admin/toggleApproval/{ingredientId:guid}", async (Guid ingredientId, PinulaDbContext db) =>
+            {
+                var ingredient = await db.Ingredients.FirstOrDefaultAsync(r => r.Id == ingredientId);
+                if (ingredient is null) return Results.NotFound("Ingredient not found");
+
+                ingredient.IsApproved = !ingredient.IsApproved;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { isApproved = ingredient.IsApproved });
+
+            }).RequireAuthorization("AdminOnly");
+
+            //---------------------------------------------------------------Toggle ingredient checked
+            group.MapPost("/admin/toggleChecked/{ingredientId:guid}", async (Guid ingredientId, PinulaDbContext db) =>
+            {
+                var ingredient = await db.Ingredients.FirstOrDefaultAsync(r => r.Id == ingredientId);
+                if (ingredient is null) return Results.NotFound("Ingredient not found");
+
+                ingredient.Checked = !ingredient.Checked;
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Checked = ingredient.Checked });
 
             }).RequireAuthorization("AdminOnly");
 

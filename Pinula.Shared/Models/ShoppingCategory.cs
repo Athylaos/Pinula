@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Pinula.Shared.Models
 {
@@ -10,6 +11,7 @@ namespace Pinula.Shared.Models
         public string Code { get; set; }
         public Dictionary<string, string> Names { get; set; } = new();
 
+        [JsonIgnore]
         public virtual List<Ingredient> Ingredients { get; set; } = null!;
 
     }

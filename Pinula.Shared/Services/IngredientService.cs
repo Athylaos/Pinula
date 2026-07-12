@@ -179,8 +179,9 @@ namespace Pinula.Shared.Services
         {
             try
             {
-                var url = $"{BaseUrl}/getAdminPreviews/{id}";
+                var url = $"{BaseUrl}/getAdmin/{id}";
                 var response = await _httpClient.GetFromJsonAsync<Ingredient>(url);
+                if(response is null) return null;
                 return response;
 
             }
@@ -206,7 +207,7 @@ namespace Pinula.Shared.Services
                     content.Add(fileContent, "image", photoName);
                 }
 
-                var response = await _httpClient.PostAsync($"{BaseUrl}/updateAdmin", content);
+                var response = await _httpClient.PutAsync($"{BaseUrl}/updateAdmin", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -247,6 +248,18 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error fetching ingredients: {ex.Message}");
                 return new StatusResponse() { StatusCode = (int)HttpStatusCode.InternalServerError, Successful = false, Message = ex.Message }; ;
             }
+        }
+
+        public async Task<bool> AdminToggleIngredientApprovalAsync(Guid id)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleApproval/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> AdminToggleIngredientCheckedAsync(Guid id)
+        {
+            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleChecked/{id}", null);
+            return response.IsSuccessStatusCode;
         }
     }
 }

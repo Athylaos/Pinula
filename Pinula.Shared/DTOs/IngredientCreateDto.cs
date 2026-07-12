@@ -10,7 +10,8 @@ namespace Pinula.Shared.DTOs
         public string? Barcode { get; set; }
         public string? ImageUrl { get; set; }
         public Guid DefaultUnitId { get; set; }
-        public Guid BaseIngredientId { get; set; }
+        public Guid? BaseIngredientId { get; set; }
+        public Guid ShoppingCategoryId { get; set; }
 
         public string? NutriScore { get; set; }
         public int? NovaClassification { get; set; }
