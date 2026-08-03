@@ -6,7 +6,6 @@ using Pinula.Shared.Services;
 using Pinula.WASM;
 using Pinula.WASM.Services;
 using System.Globalization;
-using System.Net.Http;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -18,7 +17,7 @@ builder.Services.AddAuthorizationCore();
 
 #if DEBUG
 builder.Services.AddHttpClient("CookApi", client =>
-    client.BaseAddress = new Uri("http://10.0.1.160:5017/"))
+    client.BaseAddress = new Uri("http://10.0.20.2:5017/"))
     .AddHttpMessageHandler<AuthHttpMessageHandler>();
 #else
 builder.Services.AddHttpClient("CookApi", client =>

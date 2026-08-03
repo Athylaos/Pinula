@@ -46,4 +46,5 @@ public partial class Ingredient
     public virtual ICollection<Ingredient> BrandedProducts { get; set; } = new List<Ingredient>();
     public virtual ICollection<IngredientUnit> IngredientUnits { get; set; } = new List<IngredientUnit>();
     public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
+    public virtual ICollection<MealPlanIngredient> MealPlanIngredients { get; set; } = new List<MealPlanIngredient>();
 }

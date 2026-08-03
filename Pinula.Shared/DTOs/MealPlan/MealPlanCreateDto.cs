@@ -10,5 +10,6 @@ namespace Pinula.Shared.DTOs
         public Guid GroupId { get; set; }
         public int Servings { get; set; } = 1;
         public List<Guid> UsersId { get; set; } = new();
+        public List<RecipeIngredientDisplayDto> Ingredients { get; set; } = new();
     }
 }

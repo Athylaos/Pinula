@@ -9,5 +9,6 @@ namespace Pinula.Shared.DTOs
         public MealType MealType { get; set; }
         public int Servings { get; set; }
         public List<Guid> UsersIds { get; set; } = new();
+        public List<RecipeIngredientDisplayDto> Ingredients { get; set; }
     }
 }

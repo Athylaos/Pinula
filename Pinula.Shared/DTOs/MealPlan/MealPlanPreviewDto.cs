@@ -13,5 +13,6 @@ namespace Pinula.Shared.DTOs
         public Guid RecipeId { get; set; }
         public string RecipeName { get; set; } = string.Empty;
         public string? RecipePhotoUrl { get; set; }
+        public List<RecipeIngredientPreviewDto> Ingredients { get; set; }
     }
 }

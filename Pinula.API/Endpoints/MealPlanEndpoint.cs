@@ -57,7 +57,15 @@ namespace Pinula.API.Endpoints
                             Name = u.Name,
                             Surname = u.Surname,
                             AvatarUrl = $"{userImageBaseUrl}{(string.IsNullOrWhiteSpace(u.AvatarUrl) ? userDefaultImage : u.AvatarUrl)}",
-                        }).ToList()
+                        }).ToList(),
+                        Ingredients = mp.MealPlanIngredients.Select(i => new RecipeIngredientPreviewDto()
+                        {
+                            IngredientId = i.IngredientId,
+                            IngredientName = i.Ingredient.Names.GetValueOrDefault(languageCode) ?? i.Ingredient.Names.GetValueOrDefault("en") ?? "Ingredient name",
+                            Quantity = i.Quantity??0,
+                            UnitId = i.UnitId,
+                            UnitName = i.Unit.Names.GetValueOrDefault(languageCode) ?? i.Unit.Names.GetValueOrDefault("en") ?? "Unit",
+                        }).ToList(),
                     }).ToListAsync();
 
                 return Results.Ok(mealplans);
@@ -77,16 +85,40 @@ namespace Pinula.API.Endpoints
                 var users = await db.Users.Where(u => dto.UsersId.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
 
                 if (!users.Any()) return Results.BadRequest("At least one user from the group has to be selected.");
+                
+                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).ToList();
+                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).ToList();
 
+                var existingIngredients = await db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).ToListAsync();
+                if (existingIngredients.Count != ingredientIds.Count)
+                {
+                    return Results.NotFound("Some ingredients do not exist in the database.");
+                }
+                
+                var existingUnits = await db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
+                if (existingUnits.Count != unitIds.Count)
+                {
+                    return Results.NotFound("Some units do not exist in the database.");
+                }
+
+                var newMPId = Guid.NewGuid();
                 var mealPlan = new MealPlan
                 {
-                    Id = Guid.NewGuid(),
+                    Id = newMPId,
                     Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc),
                     MealType = dto.MealType,
                     RecipeId = dto.RecipeId,
                     GroupId = groupId.Value,
                     Servings = dto.Servings,
-                    Users = users
+                    Users = users,
+                    MealPlanIngredients = dto.Ingredients.Select(i => new MealPlanIngredient()
+                    {
+                        MealPlanId = newMPId,
+                        IngredientId = i.Ingredient.Id,
+                        UnitId = i.Unit.Id,
+                        ConversionFactor = i.ConversionFactor,
+                        Quantity = i.Quantity
+                    }).ToList()
                 };
 
                 db.MealPlans.Add(mealPlan);
@@ -134,7 +166,32 @@ namespace Pinula.API.Endpoints
 
                 var newUsers = await db.Users.Where(u => dto.UsersIds.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
                 if (!newUsers.Any()) return Results.BadRequest("At least one user must be selected.");
+                
+                if (!dto.Ingredients.Any()) return Results.BadRequest("At least one ingredient must be selected.");
+                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).ToList();
+                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).ToList();
 
+                var existingIngredients = await db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).ToListAsync();
+                if (existingIngredients.Count != ingredientIds.Count)
+                {
+                    return Results.NotFound("Some ingredients do not exist in the database.");
+                }
+                
+                var existingUnits = await db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
+                if (existingUnits.Count != unitIds.Count)
+                {
+                    return Results.NotFound("Some units do not exist in the database.");
+                }
+                
+                mealPlan.MealPlanIngredients.Clear();
+                mealPlan.MealPlanIngredients = dto.Ingredients.Select(i => new MealPlanIngredient
+                {
+                    MealPlanId = mealPlan.Id,
+                    IngredientId = i.Ingredient.Id,
+                    UnitId = i.Unit.Id,
+                    ConversionFactor = i.ConversionFactor,
+                    Quantity = i.Quantity
+                }).ToList();
                 mealPlan.Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 mealPlan.MealType = dto.MealType;
                 mealPlan.Servings = dto.Servings;

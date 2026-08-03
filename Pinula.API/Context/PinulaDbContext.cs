@@ -194,6 +194,17 @@ public partial class PinulaDbContext : DbContext
 
             entity.HasMany(mp => mp.Users).WithMany(u => u.MealPlans);
         });
+        
+        modelBuilder.Entity<MealPlanIngredient>(entity =>
+        {
+            entity.HasKey(e => new { e.MealPlanId, e.IngredientId });
+            entity.Property(e => e.ConversionFactor).HasPrecision(12, 6);
+            entity.Property(e => e.Quantity).HasPrecision(10, 3);
+
+            entity.HasOne(d => d.Ingredient).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.IngredientId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.MealPlan).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.MealPlanId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.Unit).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.UnitId).OnDelete(DeleteBehavior.ClientSetNull);
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

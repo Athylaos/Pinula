@@ -18,5 +18,6 @@ namespace Pinual.API.Models
         public Group? Group { get; set; }
         public Recipe? Recipe { get; set; }
         public ICollection<User> Users { get; set; } = new List<User>();
+        public virtual ICollection<MealPlanIngredient> MealPlanIngredients { get; set; } = new List<MealPlanIngredient>();
     }
 }
