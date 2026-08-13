@@ -8,7 +8,7 @@
 <div class="modal-overlay" @onclick="Cancel">
     <div class="glass-modal plan-meal-modal" @onclick:stopPropagation>
         <div class="modal-header">
-            <img src="images/icons/calendar.png" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
+            <img src="images/icons/calendar.png" alt="calendar" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
             <h2 style="display:inline-block">@Localizer["AddToPlan"]</h2>
             <button class="close-modal-btn" @onclick="Cancel">&times;</button>
         </div>
@@ -76,12 +76,18 @@
                 </div>
             </div>
             
-            <div class="modal-section modal-spacer-top-lg">
-                <label class="section-label section-label-block">Ingredients:</label>
+            <div class="modal-section">
+                <div class="servings-selector">
+                    <label class="section-label section-label-block">@Localizer["Ingredients"]:</label>
+                    <div class="flex-spacer"></div>
+                    <button class="btn-icon-add" style="margin-bottom: 12px" @onclick="() => ToggleAddIngredientPopup()">
+                        + @Localizer["Add"]
+                    </button>
+                </div>
                 @foreach (var ing in MealPlanIngredients)
                 {
                     <div class="ingredient-row">
-                        <input type="number" class="custom-input qty" @bind="@ing.Quantity" />
+                        <input type="number" class="custom-input qty" @bind="@ing.Quantity"/>
                         <span class="unit">@ing.Unit.Name</span>
                         <span class="name">@ing.Ingredient.Name</span>
                         <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
@@ -99,6 +105,10 @@
         </div>
     </div>
 </div>
+
+<AddIngredientPopup IsVisible="showIngredientPopup"
+                    OnIngredientAdded="HandleNewIngredient"
+                    OnClose="() => showIngredientPopup = false" />
 
 @code {
     [Parameter] public DateOnly? PreselectedDate { get; set; }
@@ -214,4 +224,20 @@
     }
 
     private async Task Cancel() => await OnCancel.InvokeAsync();
+
+
+    bool showIngredientPopup = false;
+    private void ToggleAddIngredientPopup()
+    {
+        if (SelectedRecipeId.HasValue)
+        {
+            showIngredientPopup = !showIngredientPopup;          
+        }
     }
+
+    private async Task HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
+    {
+        MealPlanIngredients.Add(ingredient);
+    }
+}
+

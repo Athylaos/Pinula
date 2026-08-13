@@ -11,7 +11,7 @@
 
         <div class="meal-section">
             <div class="meal-section-header">
-                <h3>@mealType.ToString()</h3>
+                <h3>@Localizer[mealType.ToString()]</h3>
                 <button class="btn-icon-add" @onclick="() => OnAddMeal.InvokeAsync(mealType)">
                     + @Localizer["Add"]
                 </button>

@@ -681,4 +681,19 @@
   <data name="Fiber" xml:space="preserve">
     <value>Vláknina</value>
   </data>
+  <data name="SnackAfternoon" xml:space="preserve">
+    <value>Odpolední svačina</value>
+  </data>
+  <data name="SnackMorning" xml:space="preserve">
+    <value>Dopolední svačina</value>
+  </data>
+  <data name="Dinner" xml:space="preserve">
+    <value>Večeře</value>
+  </data>
+  <data name="Breakfast" xml:space="preserve">
+    <value>Snídaně</value>
+  </data>
+  <data name="Lunch" xml:space="preserve">
+    <value>Oběd</value>
+  </data>
 </root>

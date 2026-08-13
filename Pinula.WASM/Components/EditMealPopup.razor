@@ -69,12 +69,18 @@
                     </div>
                 </div>
                 
-                <div class="modal-section modal-spacer-top-lg">
-                    <label class="section-label section-label-block">Ingredients:</label>
+                <div class="modal-section">
+                    <div class="servings-selector">
+                        <label class="section-label section-label-block">@Localizer["Ingredients"]:</label>
+                        <div class="flex-spacer"></div>
+                        <button class="btn-icon-add" style="margin-bottom: 12px" @onclick="() => ToggleAddIngredientPopup()">
+                            + @Localizer["Add"]
+                        </button>
+                    </div>
                     @foreach (var ing in MealPlanIngredients)
                     {
                         <div class="ingredient-row">
-                            <input type="number" class="custom-input qty" @bind="@ing.Quantity" />
+                            <input type="number" class="custom-input qty" @bind="@ing.Quantity"/>
                             <span class="unit">@ing.Unit.Name</span>
                             <span class="name">@ing.Ingredient.Name</span>
                             <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
@@ -92,6 +98,9 @@
         </div>
     </div>
 
+    <AddIngredientPopup IsVisible="showIngredientPopup"
+                        OnIngredientAdded="HandleNewIngredient"
+                        OnClose="() => showIngredientPopup = false" />
 }
 
 @code {
@@ -180,5 +189,16 @@
     private void RemoveIngredient(RecipeIngredientDisplayDto ing)
     {
         MealPlanIngredients.Remove(ing);
+    }
+    
+    bool showIngredientPopup = false;
+    private void ToggleAddIngredientPopup()
+    {
+            showIngredientPopup = !showIngredientPopup;          
+    }
+
+    private async Task HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
+    {
+        MealPlanIngredients.Add(ingredient);
     }
 }

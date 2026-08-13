@@ -681,4 +681,19 @@
   <data name="Fiber" xml:space="preserve">
     <value>Fiber</value>
   </data>
+  <data name="Breakfast" xml:space="preserve">
+    <value>Breakfast</value>
+  </data>
+  <data name="SnackMorning" xml:space="preserve">
+    <value>Morning snack</value>
+  </data>
+  <data name="Lunch" xml:space="preserve">
+    <value>Lunch</value>
+  </data>
+  <data name="SnackAfternoon" xml:space="preserve">
+    <value>Afternnon snack</value>
+  </data>
+  <data name="Dinner" xml:space="preserve">
+    <value>Dinner</value>
+  </data>
 </root>
