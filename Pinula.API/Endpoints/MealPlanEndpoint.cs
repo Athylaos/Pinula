@@ -96,7 +96,7 @@ namespace Pinula.API.Endpoints
                 }
                 
                 var existingUnits = await db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
-                if (existingUnits.Count != unitIds.Count)
+                if (!unitIds.All(unitId => existingUnits.Any(eu => eu.Id == unitId)))
                 {
                     return Results.NotFound("Some units do not exist in the database.");
                 }
@@ -160,13 +160,20 @@ namespace Pinula.API.Endpoints
                 var groupId = userDb.GroupId;
                 if (groupId is null) return Results.BadRequest("User is not in group");
 
-                var mealPlan = await db.MealPlans.Include(mp => mp.Users).FirstOrDefaultAsync(mp => mp.Id == id);
+                var mealPlan = await db.MealPlans
+                    .Include(mp => mp.Users)
+                    .Include(mp => mp.MealPlanIngredients)
+                        .ThenInclude(mpi => mpi.Ingredient)
+                    .Include(mp => mp.MealPlanIngredients)
+                        .ThenInclude(mpi => mpi.Unit)
+                    .FirstOrDefaultAsync(mp => mp.Id == id);
+
                 if (mealPlan is null) return Results.NotFound();
                 if (mealPlan.GroupId != groupId) return Results.Unauthorized();
 
                 var newUsers = await db.Users.Where(u => dto.UsersIds.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
                 if (!newUsers.Any()) return Results.BadRequest("At least one user must be selected.");
-                
+
                 if (!dto.Ingredients.Any()) return Results.BadRequest("At least one ingredient must be selected.");
                 var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).ToList();
                 var unitIds = dto.Ingredients.Select(i => i.Unit.Id).ToList();
@@ -176,22 +183,44 @@ namespace Pinula.API.Endpoints
                 {
                     return Results.NotFound("Some ingredients do not exist in the database.");
                 }
-                
+
                 var existingUnits = await db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
-                if (existingUnits.Count != unitIds.Count)
+                if (!unitIds.All(unitId => existingUnits.Any(eu => eu.Id == unitId)))
                 {
                     return Results.NotFound("Some units do not exist in the database.");
                 }
                 
-                mealPlan.MealPlanIngredients.Clear();
-                mealPlan.MealPlanIngredients = dto.Ingredients.Select(i => new MealPlanIngredient
+                foreach (var mpi in mealPlan.MealPlanIngredients.ToList())
                 {
-                    MealPlanId = mealPlan.Id,
-                    IngredientId = i.Ingredient.Id,
-                    UnitId = i.Unit.Id,
-                    ConversionFactor = i.ConversionFactor,
-                    Quantity = i.Quantity
-                }).ToList();
+                    if (!dto.Ingredients.Any(i => i.Ingredient.Id == mpi.IngredientId))
+                    {
+                        db.MealPlanIngredients.Remove(mpi);
+                    }
+                }
+                
+                foreach (var ingredientDto in dto.Ingredients)
+                {
+                    var existingMPI = mealPlan.MealPlanIngredients.FirstOrDefault(mpi => mpi.IngredientId == ingredientDto.Ingredient.Id);
+
+                    if (existingMPI is null)
+                    {
+                        var newMPI = new MealPlanIngredient()
+                        {
+                            MealPlanId = mealPlan.Id,
+                            IngredientId = ingredientDto.Ingredient.Id,
+                            UnitId = ingredientDto.Unit.Id,
+                            ConversionFactor = ingredientDto.ConversionFactor,
+                            Quantity = ingredientDto.Quantity
+                        };
+                        db.MealPlanIngredients.Add(newMPI);
+                    }
+                    else
+                    {
+                        existingMPI.ConversionFactor = ingredientDto.ConversionFactor;
+                        existingMPI.Quantity = ingredientDto.Quantity;
+                    }
+                }
+
                 mealPlan.Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 mealPlan.MealType = dto.MealType;
                 mealPlan.Servings = dto.Servings;

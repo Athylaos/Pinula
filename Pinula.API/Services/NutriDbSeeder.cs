@@ -29,6 +29,65 @@ namespace Pinula.API.Services
             public Guid? ShoppingCategoryId { get; set; }
             public string? OffCategoryTag {  get; set; }
         }
+        
+        public static async Task ShowDefaultUnitsAsync(PinulaDbContext db)
+        {
+            var ingredients = await db.Ingredients.AsNoTracking().ToListAsync();
+            foreach (var ingredient in ingredients)
+            {
+                if (ingredient.DefaultUnit != null)
+                {
+                    Console.WriteLine($"Ingredient: {ingredient.Names["en"]} === Default Unit: {ingredient.DefaultUnit.Code}");
+                }
+                else
+                {
+                    Console.WriteLine($"Ingredient: {ingredient.Names["en"]} === Default Unit: doesnt have a default unit");
+                }
+            }
+
+        }
+        
+        public static async Task MakeDefaultUnitsAsync(PinulaDbContext db)
+        {
+            var gUnit =  db.Units.FirstOrDefault(u => u.Code == "g");
+            
+            var ingredients = await db.Ingredients.Include(i => i.IngredientUnits).ThenInclude(iu => iu.Unit).ToListAsync();
+            foreach (var ingredient in ingredients)
+            {
+                Console.WriteLine("================================================================================================}");
+                if (ingredient.IngredientUnits.Count == 0)
+                {
+                    db.IngredientUnits.Add(new IngredientUnit
+                    {
+                        AmountInGrams = 1,
+                        IngredientId = ingredient.Id,
+                        UnitId = gUnit.Id,
+                    });
+                    Console.WriteLine($"**************Ingredient: {ingredient.Names["en"]} === Added new ingredient unit: {gUnit.Code}");
+                }
+                else
+                {
+                    Console.WriteLine($"Ingredient: {ingredient.Names["en"]} === Ingredient units:");
+                    foreach (var unit in ingredient.IngredientUnits)
+                    {
+                        Console.WriteLine($"Name: {unit.Unit.Names["en"]}");
+                    }
+                }
+                
+                
+                if (ingredient.DefaultUnit is null)
+                {
+                    ingredient.DefaultUnitId = gUnit.Id;
+                    Console.WriteLine($"#####################Ingredient: {ingredient.Names["en"]} === Added new default unit: {gUnit.Code}");
+                }
+                else
+                {
+                    Console.WriteLine($"Ingredient: {ingredient.Names["en"]} === Default Unit: {ingredient.DefaultUnit.Code}");
+                }
+            }
+            db.SaveChanges();
+
+        }
 
         public static async Task SeedNutriDatabaseAsync(PinulaDbContext db)
         {

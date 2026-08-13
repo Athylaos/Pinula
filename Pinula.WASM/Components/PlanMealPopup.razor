@@ -75,13 +75,27 @@
                     }
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <button class="btn-cancel-mp" @onclick="Cancel">@Localizer["Cancel"]</button>
-                <button class="btn-accent" disabled="@(!IsValid)" @onclick="ConfirmSave">
-                    @Localizer["SavePlan"]
-                </button>
+            
+            <div class="modal-section modal-spacer-top-lg">
+                <label class="section-label section-label-block">Ingredients:</label>
+                @foreach (var ing in MealPlanIngredients)
+                {
+                    <div class="ingredient-row">
+                        <input type="number" class="custom-input qty" @bind="@ing.Quantity" />
+                        <span class="unit">@ing.Unit.Name</span>
+                        <span class="name">@ing.Ingredient.Name</span>
+                        <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
+                    </div>
+                }
             </div>
+            
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn-cancel-mp" @onclick="Cancel">@Localizer["Cancel"]</button>
+            <button class="btn-accent" disabled="@(!IsValid)" @onclick="ConfirmSave">
+                @Localizer["SavePlan"]
+            </button>
         </div>
     </div>
 </div>
@@ -98,28 +112,70 @@
 
     private DateOnly PlanDate = DateOnly.FromDateTime(DateTime.Today);
     private MealType SelectedMealType = MealType.Lunch;
-    private Guid? SelectedRecipeId;
+    private Guid? _selectedRecipeId;
+    public Guid? SelectedRecipeId
+    {
+        get => _selectedRecipeId;
+        set
+        {
+            if (_selectedRecipeId != value)
+            {
+                _selectedRecipeId = value;
+
+                LoadRecipeIngredients();
+            }
+        }
+    }
     private int Servings = 1;
     private HashSet<Guid> SelectedUsers = new();
+    private RecipeDetailsDto? RecipeDetailsDto;
+    private List<RecipeIngredientDisplayDto> MealPlanIngredients = new();
 
-
+    private async Task LoadRecipeIngredients()
+    {
+        RecipeDetailsDto = await RecipeService.GetRecipeDetailsAsync(SelectedRecipeId.Value);
+        MealPlanIngredients.Clear();
+        foreach (var ing in RecipeDetailsDto.RecipeIngredients)
+        {
+            MealPlanIngredients.Add(new RecipeIngredientDisplayDto()
+            {
+                Quantity = ing.Quantity,
+                Unit = new()
+                {
+                    Id = ing.UnitId,
+                    Name = ing.UnitName,
+                },
+                Ingredient = new()
+                {
+                    Id = ing.IngredientId,
+                    Name = ing.IngredientName,
+                },
+            });
+        }
+        StateHasChanged();
+    }
 
     protected override void OnInitialized()
     {
         if (PreselectedDate.HasValue) PlanDate = PreselectedDate.Value;
         if (PreselectedMealType.HasValue) SelectedMealType = PreselectedMealType.Value;
         if (PreselectedRecipeId.HasValue) SelectedRecipeId = PreselectedRecipeId.Value;
-
         foreach (var member in GroupMembers)
         {
             SelectedUsers.Add(member.Id);
         }
         Servings = SelectedUsers.Count > 0 ? SelectedUsers.Count : 1;
+        LoadData();
     }
 
     private async Task LoadData()
     {
         FvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
+    
+        if (PreselectedRecipeId.HasValue)
+        {
+            await LoadRecipeIngredients();
+        }
     }
 
     private void ToggleUser(Guid userId)
@@ -145,11 +201,17 @@
             MealType = SelectedMealType,
             RecipeId = SelectedRecipeId.Value,
             Servings = Servings,
-            UsersId = SelectedUsers.ToList()
+            UsersId = SelectedUsers.ToList(),
+            Ingredients = MealPlanIngredients
         };
 
         await OnSave.InvokeAsync(dto);
     }
+    
+    private void RemoveIngredient(RecipeIngredientDisplayDto ing)
+    {
+        MealPlanIngredients.Remove(ing);
+    }
 
     private async Task Cancel() => await OnCancel.InvokeAsync();
-}
+    }

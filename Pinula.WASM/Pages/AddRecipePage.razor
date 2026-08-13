@@ -261,7 +261,6 @@
                 Servings = existingRecipe.ServingsAmount;
                 SelectedServingUnitId = existingRecipe.ServingUnit.Id;
                 Difficulty = (DifficultyLevel)existingRecipe.Difficulty;
-
                 SelectedImagePreview = !string.IsNullOrEmpty(existingRecipe.PhotoUrl) ? existingRecipe.PhotoUrl : string.Empty;
                 Ingredients = existingRecipe.RecipeIngredients.Select(ingDto => new RecipeIngredientDisplayDto
                 {
@@ -272,7 +271,6 @@
                 RecipeSteps = existingRecipe.RecipeSteps.OrderBy(s => s.StepNumber).ToList();
 
                 var existingCatIds = existingRecipe.Categories.Select(c => c.Id).ToList();
-
                 foreach (var cat in RootCategories)
                 {
                     if (existingCatIds.Contains(cat.Category.Id))
@@ -400,7 +398,8 @@
                 if (category.ChildCategories.Any()) GetAllCategoriesIds(category.ChildCategories);
             }
         }
-
+        GetAllCategoriesIds(RootCategories);
+        
         var dto = new RecipeCreateDto
         {
             Title = Title,

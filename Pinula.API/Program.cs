@@ -123,7 +123,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<PinulaDbContext>();
 
-        await NutriDbSeeder.MatchCategoryTags(context);
+        await NutriDbSeeder.MakeDefaultUnitsAsync(context);
     }
     catch (Exception ex)
     {

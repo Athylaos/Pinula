@@ -44,6 +44,8 @@ public partial class PinulaDbContext : DbContext
 
     public virtual DbSet<MealPlan> MealPlans { get; set; }
 
+    public virtual DbSet<MealPlanIngredient> MealPlanIngredients { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>

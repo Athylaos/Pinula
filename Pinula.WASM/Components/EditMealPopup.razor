@@ -68,7 +68,21 @@
                         }
                     </div>
                 </div>
+                
+                <div class="modal-section modal-spacer-top-lg">
+                    <label class="section-label section-label-block">Ingredients:</label>
+                    @foreach (var ing in MealPlanIngredients)
+                    {
+                        <div class="ingredient-row">
+                            <input type="number" class="custom-input qty" @bind="@ing.Quantity" />
+                            <span class="unit">@ing.Unit.Name</span>
+                            <span class="name">@ing.Ingredient.Name</span>
+                            <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
+                        </div>
+                    }
+                </div>
             </div>
+            
 
             <div class="modal-footer">
                 <button type="button" class="btn-delete-mp" @onclick="HandleDelete">@Localizer["DeleteFromPlan"]</button>
@@ -88,23 +102,41 @@
     [Parameter] public EventCallback<MealPlanUpdateDto> OnSave { get; set; }
     [Parameter] public EventCallback<Guid> OnDelete { get; set; }
 
+    private MealPlanPreviewDto MealPlan { get; set; } = new();
     private Guid MealPlanId { get; set; }
     private string RecipeName { get; set; } = string.Empty;
     private DateOnly EditDate { get; set; }
     private MealType EditMealType { get; set; }
     private int EditServings { get; set; }
     private HashSet<Guid> SelectedUserIds { get; set; } = new();
+    private List<RecipeIngredientDisplayDto> MealPlanIngredients = new();
 
     public void Open(MealPlanPreviewDto mealPlan)
     {
+        MealPlan = mealPlan;
         MealPlanId = mealPlan.Id;
         RecipeName = mealPlan.RecipeName;
         EditDate = mealPlan.Date;
         EditMealType = mealPlan.MealType;
         EditServings = mealPlan.Servings;
-
+        
         SelectedUserIds = mealPlan.UsersPreviews.Select(u => u.Id).ToHashSet();
-
+        
+        MealPlanIngredients = MealPlan.Ingredients.Select(ing => new RecipeIngredientDisplayDto()
+        {
+            Quantity = ing.Quantity,
+            Unit = new()
+            {
+                Id = ing.UnitId,
+                Name = ing.UnitName,
+            },
+            Ingredient = new()
+            {
+                Id = ing.IngredientId,
+                Name = ing.IngredientName,
+            },
+        }).ToList();
+        
         IsVisible = true;
         StateHasChanged();
     }
@@ -131,7 +163,8 @@
             Date = EditDate,
             MealType = EditMealType,
             Servings = EditServings,
-            UsersIds = SelectedUserIds.ToList()
+            UsersIds = SelectedUserIds.ToList(),
+            Ingredients = MealPlanIngredients
         };
 
         OnSave.InvokeAsync(updateModel);
@@ -142,5 +175,10 @@
     {
         OnDelete.InvokeAsync(MealPlanId);
         IsVisible = false;
+    }
+    
+    private void RemoveIngredient(RecipeIngredientDisplayDto ing)
+    {
+        MealPlanIngredients.Remove(ing);
     }
 }
