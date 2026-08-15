@@ -34,6 +34,7 @@ builder.Services.AddHttpClient<ICategoryService, CategoryService>("CookApi");
 builder.Services.AddHttpClient<IUserService, UserService>("CookApi");
 builder.Services.AddHttpClient<IUnitService, UnitService>("CookApi");
 builder.Services.AddHttpClient<IMealPlanService, MealPlanService>("CookApi");
+builder.Services.AddHttpClient<IInventoryService, InventoryService>("CookApi");
 builder.Services.AddHttpClient<OFFService>(client =>
 {
     client.DefaultRequestHeaders.Clear();

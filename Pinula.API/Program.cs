@@ -113,6 +113,7 @@ app.MapRecipeEndpoints();
 app.MapUnitEndpoints();
 app.MapIngredientEndpoints();
 app.MapMealPlanEndpoints();
+app.MapInventoryEndpoints();
 
 
 /*

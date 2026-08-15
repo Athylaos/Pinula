@@ -9,12 +9,6 @@ using System.Text.Json;
 
 namespace Pinula.Shared.Services
 {
-    public class CreateIngredientResponse
-    {
-        public bool IsSuccess { get; set; }
-        public required string Message { get; set; }
-    }
-
     public class IngredientService : IIngredientService
     {
         private readonly HttpClient _httpClient;
