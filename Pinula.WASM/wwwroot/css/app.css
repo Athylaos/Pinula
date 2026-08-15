@@ -838,6 +838,7 @@ html, * {
 .hero-content{
     display: flex;
     flex-flow:column;
+    padding: 0 25px 10px 25px;
 }
 
 .hero-badge {
@@ -852,7 +853,7 @@ html, * {
     text-transform: uppercase;
     letter-spacing: 1px;
     width: fit-content;
-    margin-bottom: 4px;
+    margin-bottom: 10px;
 }
 
 .hero-title {
@@ -1542,7 +1543,7 @@ select.custom-select {
     border-radius: 0 0 35px 35px;
 }
 
-.hero-content {
+.hero-content-recipe-details {
     width: 100%;
     padding: 20px 5%;
     position: relative;

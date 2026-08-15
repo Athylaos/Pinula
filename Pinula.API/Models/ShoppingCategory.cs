@@ -10,9 +10,9 @@ namespace Pinual.API.Models
         public Guid Id { get; set; }
         public string Code { get; set; }
         public Dictionary<string, string> Names { get; set; } = new();
-
-        [JsonIgnore]
+        
         public virtual List<Ingredient> Ingredients { get; set; } = null!;
+        public virtual ICollection<ShoppingListItem> ShoppingListItems { get; set; } = new List<ShoppingListItem>();
 
     }
 }

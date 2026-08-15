@@ -14,7 +14,7 @@
 <LoadingView IsLoading="isLoading" IsFullScreen="true" Text="@Localizer["LoadingRecipe"]">
     <div class="recipe-page-container">
         <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
-            <div class="hero-content">
+            <div class="hero-content-recipe-details">
                 <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" />
                 <div class="hero-actions">
                     <button class="icon-btn" @onclick="ToggleFavorite"><img class="info-icon" src="@(recipe.IsFavorite ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" /></button>

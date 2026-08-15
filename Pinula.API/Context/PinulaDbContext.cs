@@ -190,6 +190,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(mp => mp.Date).IsRequired();
             entity.Property(mp => mp.MealType).IsRequired();
             entity.Property(mp => mp.Servings).HasDefaultValue(1);
+            entity.Property(mp => mp.IsCooked).HasDefaultValue(false);
 
             entity.HasOne(mp => mp.Group).WithMany(g => g.MealPlans).HasForeignKey(mp => mp.GroupId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(mp => mp.Recipe).WithMany(r => r.MealPlans).HasForeignKey(mp => mp.RecipeId).OnDelete(DeleteBehavior.Cascade);
@@ -206,6 +207,29 @@ public partial class PinulaDbContext : DbContext
             entity.HasOne(d => d.Ingredient).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.IngredientId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.MealPlan).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.MealPlanId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.Unit).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.UnitId).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<InventoryItem>(entity =>
+        {
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.QuantityInGrams).IsRequired();
+            entity.Property(e => e.IsAllocated).HasDefaultValue(false);
+
+            entity.HasOne(e => e.Group).WithMany(g => g.InventoryItems).HasForeignKey(e => e.GroupId);
+            entity.HasOne(e => e.Ingredient).WithMany(i => i.InventoryItems).HasForeignKey(e => e.IngredientId);
+            entity.HasOne(e => e.Unit).WithMany(u => u.InventoryItems).HasForeignKey(e => e.UnitId);
+        });
+
+        modelBuilder.Entity<ShoppingListItem>(entity =>
+        {
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.QuantityInGrams).IsRequired();
+            entity.Property(e => e.IsPurchased).HasDefaultValue(false);
+            
+            entity.HasOne(e => e.Group).WithMany(g => g.ShoppingListItems).HasForeignKey(e => e.GroupId);
+            entity.HasOne(e => e.Ingredient).WithMany(i => i.ShoppingListItems).HasForeignKey(e => e.IngredientId);
+            entity.HasOne(e => e.Unit).WithMany(u => u.ShoppingListItems).HasForeignKey(e => e.UnitId);
+            entity.HasOne(e => e.ShoppingCategory).WithMany(c => c.ShoppingListItems).HasForeignKey(e => e.ShoppingCategoryId);
         });
 
         OnModelCreatingPartial(modelBuilder);

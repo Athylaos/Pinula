@@ -696,4 +696,7 @@
   <data name="Dinner" xml:space="preserve">
     <value>Dinner</value>
   </data>
+  <data name="HomePage" xml:space="preserve">
+    <value>Home</value>
+  </data>
 </root>

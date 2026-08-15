@@ -696,4 +696,7 @@
   <data name="Lunch" xml:space="preserve">
     <value>Oběd</value>
   </data>
+  <data name="HomePage" xml:space="preserve">
+    <value>Domů</value>
+  </data>
 </root>

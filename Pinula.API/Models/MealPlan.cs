@@ -13,7 +13,8 @@ namespace Pinual.API.Models
         public DateTime Date { get; set; }
         public MealType MealType { get; set; }
         public int Servings { get; set; } = 1;
-
+        public bool IsCooked { get; set; } = false;
+        
 
         public Group? Group { get; set; }
         public Recipe? Recipe { get; set; }

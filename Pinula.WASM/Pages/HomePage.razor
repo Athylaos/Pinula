@@ -1,0 +1,14 @@
+@page "/home"
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
+@inject NavigationManager NavManager
+
+<PageTitle>@Localizer["HomePage"]</PageTitle>
+
+<button @onclick='() => NavManager.NavigateTo("/profile")'>Account</button>
+<button>Fridge</button>
+<button>Shopping list</button>
+
+@code {
+    
+}
