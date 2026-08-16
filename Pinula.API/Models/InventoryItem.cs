@@ -1,4 +1,4 @@
-namespace Pinual.API.Models;
+namespace Pinula.API.Models;
 
 public class InventoryItem
 {

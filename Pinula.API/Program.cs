@@ -5,10 +5,13 @@ using Npgsql;
 using Pinula.API.Context;
 using Pinula.API.Endpoints;
 using Pinula.API.Services;
+using Mapster;
+using System.Reflection;
 using Pinula.Shared.Interface;
 using Pinula.Shared.Services;
 using Scalar.AspNetCore;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,8 @@ var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<PinulaDbContext>(options =>
     options.UseNpgsql(dataSource).UseSnakeCaseNamingConvention());
+
+TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 
 builder.Services.AddOpenApi(options =>
 {

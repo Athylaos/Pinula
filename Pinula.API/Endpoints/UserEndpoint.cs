@@ -1,7 +1,7 @@
 ﻿using BCrypt.Net;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
-using Pinual.API.Models;
+using Pinula.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;

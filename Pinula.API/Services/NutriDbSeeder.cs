@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Pinula.API.Context;
-using Pinual.API.Models;
+using Pinula.API.Models;
 using System.Globalization;
 using System.Linq;
 using System.Net;

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Pinual.API.Models;
+using Pinula.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -45,6 +45,10 @@ public partial class PinulaDbContext : DbContext
     public virtual DbSet<MealPlan> MealPlans { get; set; }
 
     public virtual DbSet<MealPlanIngredient> MealPlanIngredients { get; set; }
+    
+    public virtual DbSet<InventoryItem> InventoryItems { get; set; }
+    
+    public virtual DbSet<ShoppingListItem> ShoppingListItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -8,6 +8,7 @@ namespace Pinula.Shared.DTOs
         public DateOnly Date { get; set; }
         public MealType MealType { get; set; }
         public int Servings { get; set; }
+        public bool IsCooked { get; set; }
 
         public List<UserDisplayDto> UsersPreviews { get; set; } = new();
         public Guid RecipeId { get; set; }

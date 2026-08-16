@@ -6,7 +6,7 @@ using Pinula.API.Context;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Enums;
 using Pinula.Shared.Interface;
-using Pinual.API.Models;
+using Pinula.API.Models;
 using Pinula.Shared.Services;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;

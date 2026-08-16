@@ -1,7 +1,13 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Security.Claims;
+using Mapster;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Pinula.API.Models;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
+using Pinula.API.Services;
 
 namespace Pinula.API.Endpoints;
 
@@ -11,10 +17,24 @@ public static class InventoryEndpoint
     {
         var group = app.MapGroup("/inventory");
         
+        
         //---------------------------------------------------------------Get all inventory items
         group.MapGet("/getAll", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db) =>
         {
-            
+            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
+            if (authResult != Results.Ok())
+            {
+                return authResult;
+            }
+            string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+
+            var ii = db.InventoryItems
+                .Where(i => i.GroupId == groupDb.Id)
+                .Include(i => i.Ingredient)
+                .Include(i => i.Unit)
+                .AdaptWithRequest<List<InventoryItemDisplayDto>>(request);
+
+            return Results.Ok(ii);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Create inventory item
@@ -26,7 +46,7 @@ public static class InventoryEndpoint
         //---------------------------------------------------------------Update inventory item
         group.MapPut("/update", async (HttpRequest request, InventoryItemUpdateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
         {
-            
+        
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Delete inventory item

@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
-using Pinual.API.Models;
+using Pinula.API.Models;
 using System.Globalization;
 using System.Security.Claims;
 

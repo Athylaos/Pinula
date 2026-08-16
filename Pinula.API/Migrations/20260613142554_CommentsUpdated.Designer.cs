@@ -63,7 +63,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("meal_plan_user", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Category", b =>
+            modelBuilder.Entity("Pinula.API.Models.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +99,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("categories", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Comment", b =>
+            modelBuilder.Entity("Pinula.API.Models.Comment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,7 +170,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("comments", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Group", b =>
+            modelBuilder.Entity("Pinula.API.Models.Group", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -195,7 +195,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("groups", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Ingredient", b =>
+            modelBuilder.Entity("Pinula.API.Models.Ingredient", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -245,7 +245,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("ingredients", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.IngredientUnit", b =>
+            modelBuilder.Entity("Pinula.API.Models.IngredientUnit", b =>
                 {
                     b.Property<Guid>("UnitId")
                         .HasColumnType("uuid")
@@ -269,7 +269,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("ingredient_units", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.MealPlan", b =>
+            modelBuilder.Entity("Pinula.API.Models.MealPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -310,7 +310,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("meal_plans", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Recipe", b =>
+            modelBuilder.Entity("Pinula.API.Models.Recipe", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -412,7 +412,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("recipes", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeIngredient", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeIngredient", b =>
                 {
                     b.Property<Guid>("RecipeId")
                         .HasColumnType("uuid")
@@ -448,7 +448,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("recipe_ingredients", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeStep", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeStep", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -479,7 +479,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("recipe_steps", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeUser", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeUser", b =>
                 {
                     b.Property<Guid>("RecipeId")
                         .HasColumnType("uuid")
@@ -502,7 +502,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("recipe_users", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Unit", b =>
+            modelBuilder.Entity("Pinula.API.Models.Unit", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -528,7 +528,7 @@ namespace Pinula.API.Migrations
                     b.ToTable("units", (string)null);
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.User", b =>
+            modelBuilder.Entity("Pinula.API.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -606,14 +606,14 @@ namespace Pinula.API.Migrations
 
             modelBuilder.Entity("CategoryRecipe", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Category", null)
+                    b.HasOne("Pinula.API.Models.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoriesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_category_recipe_categories_categories_id");
 
-                    b.HasOne("Pinual.API.Models.Recipe", null)
+                    b.HasOne("Pinula.API.Models.Recipe", null)
                         .WithMany()
                         .HasForeignKey("RecipesId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -623,14 +623,14 @@ namespace Pinula.API.Migrations
 
             modelBuilder.Entity("MealPlanUser", b =>
                 {
-                    b.HasOne("Pinual.API.Models.MealPlan", null)
+                    b.HasOne("Pinula.API.Models.MealPlan", null)
                         .WithMany()
                         .HasForeignKey("MealPlansId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_meal_plan_user_meal_plans_meal_plans_id");
 
-                    b.HasOne("Pinual.API.Models.User", null)
+                    b.HasOne("Pinula.API.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -638,9 +638,9 @@ namespace Pinula.API.Migrations
                         .HasConstraintName("fk_meal_plan_user_users_users_id");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Category", b =>
+            modelBuilder.Entity("Pinula.API.Models.Category", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Category", "ParentCategory")
+                    b.HasOne("Pinula.API.Models.Category", "ParentCategory")
                         .WithMany("ChildCategories")
                         .HasForeignKey("ParentCategoryId")
                         .HasConstraintName("fk_categories_categories_parent_category_id");
@@ -648,21 +648,21 @@ namespace Pinula.API.Migrations
                     b.Navigation("ParentCategory");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Comment", b =>
+            modelBuilder.Entity("Pinula.API.Models.Comment", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Comment", "ParentComment")
+                    b.HasOne("Pinula.API.Models.Comment", "ParentComment")
                         .WithMany("Replies")
                         .HasForeignKey("ParentCommentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_comments_comments_parent_comment_id");
 
-                    b.HasOne("Pinual.API.Models.Recipe", "Recipe")
+                    b.HasOne("Pinula.API.Models.Recipe", "Recipe")
                         .WithMany("Comments")
                         .HasForeignKey("RecipeId")
                         .IsRequired()
                         .HasConstraintName("fk_comments_recipes_recipe_id");
 
-                    b.HasOne("Pinual.API.Models.User", "User")
+                    b.HasOne("Pinula.API.Models.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .IsRequired()
@@ -675,9 +675,9 @@ namespace Pinula.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Ingredient", b =>
+            modelBuilder.Entity("Pinula.API.Models.Ingredient", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Unit", "DefaultUnit")
+                    b.HasOne("Pinula.API.Models.Unit", "DefaultUnit")
                         .WithMany("Ingredients")
                         .HasForeignKey("DefaultUnitId")
                         .IsRequired()
@@ -686,15 +686,15 @@ namespace Pinula.API.Migrations
                     b.Navigation("DefaultUnit");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.IngredientUnit", b =>
+            modelBuilder.Entity("Pinula.API.Models.IngredientUnit", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Ingredient", "Ingredient")
+                    b.HasOne("Pinula.API.Models.Ingredient", "Ingredient")
                         .WithMany("IngredientUnits")
                         .HasForeignKey("IngredientId")
                         .IsRequired()
                         .HasConstraintName("fk_ingredient_units_ingredients_ingredient_id");
 
-                    b.HasOne("Pinual.API.Models.Unit", "Unit")
+                    b.HasOne("Pinula.API.Models.Unit", "Unit")
                         .WithMany("IngredientUnits")
                         .HasForeignKey("UnitId")
                         .IsRequired()
@@ -705,16 +705,16 @@ namespace Pinula.API.Migrations
                     b.Navigation("Unit");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.MealPlan", b =>
+            modelBuilder.Entity("Pinula.API.Models.MealPlan", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Group", "Group")
+                    b.HasOne("Pinula.API.Models.Group", "Group")
                         .WithMany("MealPlans")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_meal_plans_groups_group_id");
 
-                    b.HasOne("Pinual.API.Models.Recipe", "Recipe")
+                    b.HasOne("Pinula.API.Models.Recipe", "Recipe")
                         .WithMany("MealPlans")
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -726,15 +726,15 @@ namespace Pinula.API.Migrations
                     b.Navigation("Recipe");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Recipe", b =>
+            modelBuilder.Entity("Pinula.API.Models.Recipe", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Unit", "ServingUnit")
+                    b.HasOne("Pinula.API.Models.Unit", "ServingUnit")
                         .WithMany("Recipes")
                         .HasForeignKey("ServingUnitId")
                         .IsRequired()
                         .HasConstraintName("fk_recipes_units_serving_unit_id");
 
-                    b.HasOne("Pinual.API.Models.User", "User")
+                    b.HasOne("Pinula.API.Models.User", "User")
                         .WithMany("Recipes")
                         .HasForeignKey("UserId")
                         .IsRequired()
@@ -745,21 +745,21 @@ namespace Pinula.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeIngredient", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeIngredient", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Ingredient", "Ingredient")
+                    b.HasOne("Pinula.API.Models.Ingredient", "Ingredient")
                         .WithMany("RecipeIngredients")
                         .HasForeignKey("IngredientId")
                         .IsRequired()
                         .HasConstraintName("fk_recipe_ingredients_ingredients_ingredient_id");
 
-                    b.HasOne("Pinual.API.Models.Recipe", "Recipe")
+                    b.HasOne("Pinula.API.Models.Recipe", "Recipe")
                         .WithMany("RecipeIngredients")
                         .HasForeignKey("RecipeId")
                         .IsRequired()
                         .HasConstraintName("fk_recipe_ingredients_recipes_recipe_id");
 
-                    b.HasOne("Pinual.API.Models.Unit", "Unit")
+                    b.HasOne("Pinula.API.Models.Unit", "Unit")
                         .WithMany("RecipeIngredients")
                         .HasForeignKey("UnitId")
                         .IsRequired()
@@ -772,9 +772,9 @@ namespace Pinula.API.Migrations
                     b.Navigation("Unit");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeStep", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeStep", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Recipe", "Recipe")
+                    b.HasOne("Pinula.API.Models.Recipe", "Recipe")
                         .WithMany("RecipeSteps")
                         .HasForeignKey("RecipeId")
                         .IsRequired()
@@ -783,15 +783,15 @@ namespace Pinula.API.Migrations
                     b.Navigation("Recipe");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.RecipeUser", b =>
+            modelBuilder.Entity("Pinula.API.Models.RecipeUser", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Recipe", "Recipes")
+                    b.HasOne("Pinula.API.Models.Recipe", "Recipes")
                         .WithMany("RecipeUsers")
                         .HasForeignKey("RecipeId")
                         .IsRequired()
                         .HasConstraintName("fk_recipe_users_recipes_recipe_id");
 
-                    b.HasOne("Pinual.API.Models.User", "Users")
+                    b.HasOne("Pinula.API.Models.User", "Users")
                         .WithMany("RecipeUsers")
                         .HasForeignKey("UserId")
                         .IsRequired()
@@ -802,9 +802,9 @@ namespace Pinula.API.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.User", b =>
+            modelBuilder.Entity("Pinula.API.Models.User", b =>
                 {
-                    b.HasOne("Pinual.API.Models.Group", "Group")
+                    b.HasOne("Pinula.API.Models.Group", "Group")
                         .WithMany("Users")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.SetNull)
@@ -813,31 +813,31 @@ namespace Pinula.API.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Category", b =>
+            modelBuilder.Entity("Pinula.API.Models.Category", b =>
                 {
                     b.Navigation("ChildCategories");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Comment", b =>
+            modelBuilder.Entity("Pinula.API.Models.Comment", b =>
                 {
                     b.Navigation("Replies");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Group", b =>
+            modelBuilder.Entity("Pinula.API.Models.Group", b =>
                 {
                     b.Navigation("MealPlans");
 
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Ingredient", b =>
+            modelBuilder.Entity("Pinula.API.Models.Ingredient", b =>
                 {
                     b.Navigation("IngredientUnits");
 
                     b.Navigation("RecipeIngredients");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Recipe", b =>
+            modelBuilder.Entity("Pinula.API.Models.Recipe", b =>
                 {
                     b.Navigation("Comments");
 
@@ -850,7 +850,7 @@ namespace Pinula.API.Migrations
                     b.Navigation("RecipeUsers");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.Unit", b =>
+            modelBuilder.Entity("Pinula.API.Models.Unit", b =>
                 {
                     b.Navigation("IngredientUnits");
 
@@ -861,7 +861,7 @@ namespace Pinula.API.Migrations
                     b.Navigation("Recipes");
                 });
 
-            modelBuilder.Entity("Pinual.API.Models.User", b =>
+            modelBuilder.Entity("Pinula.API.Models.User", b =>
                 {
                     b.Navigation("Comments");
 

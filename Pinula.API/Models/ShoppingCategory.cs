@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Pinual.API.Models
+namespace Pinula.API.Models
 {
     public class ShoppingCategory
     {
