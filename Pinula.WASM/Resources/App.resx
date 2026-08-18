@@ -699,4 +699,70 @@
   <data name="HomePage" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="SelectIngredient" xml:space="preserve">
+    <value>Select ingredient</value>
+  </data>
+  <data name="SearchIngredient" xml:space="preserve">
+    <value>Search ingredient...</value>
+  </data>
+  <data name="CreateNewIngredient" xml:space="preserve">
+    <value>Create new ingredient</value>
+  </data>
+  <data name="SelectUnit" xml:space="preserve">
+    <value>Select unit</value>
+  </data>
+  <data name="AddToRecipe" xml:space="preserve">
+    <value>Add to recipe</value>
+  </data>
+  <data name="ErrorLoadingIngredients" xml:space="preserve">
+    <value>Loading ingredients failed</value>
+  </data>
+  <data name="AddIngredientToRecipeWarn" xml:space="preserve">
+    <value>Please select ingredient and unit.</value>
+  </data>
+  <data name="SelectInventoryIngredient" xml:space="preserve">
+    <value>Select ingredient</value>
+  </data>
+  <data name="SearchInventoryIngredients" xml:space="preserve">
+    <value>Search ingredient...</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Reserved" xml:space="preserve">
+    <value>Reserved</value>
+  </data>
+  <data name="ExpirationDate" xml:space="preserve">
+    <value>Expiration date</value>
+  </data>
+  <data name="Pantry" xml:space="preserve">
+    <value>Pantry</value>
+  </data>
+  <data name="AddToPantry" xml:space="preserve">
+    <value>Add to pantry</value>
+  </data>
+  <data name="NotReserved" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="Expiration" xml:space="preserve">
+    <value>Expires</value>
+  </data>
+  <data name="PantryDescription" xml:space="preserve">
+    <value>Track and oragnize your ingredients</value>
+  </data>
+  <data name="AddInventoryIngredient" xml:space="preserve">
+    <value>Add ingredient</value>
+  </data>
+  <data name="ShoppingList" xml:space="preserve">
+    <value>Shopping list</value>
+  </data>
+  <data name="NoInventoryIngredients" xml:space="preserve">
+    <value>No ingredients found</value>
+  </data>
+  <data name="NoInventoryIngredientsDescription" xml:space="preserve">
+    <value>Your pantry is empty or no ingredients match your search</value>
+  </data>
 </root>

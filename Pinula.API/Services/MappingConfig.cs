@@ -64,6 +64,10 @@ public class MappingConfig : IRegister
         
         #region Ingredient
 
+        config.NewConfig<ShoppingCategory, ShoppingCategoryDisplayDto>()
+            .Map(d => d.Name,
+                src => HelperFunctions.GetLocalizedName(src.Names, GetLanguageCode()));
+
         config.NewConfig<Ingredient, AdminIngredientDisplayDto>()
             .Map(d => d.UserEmail,
                 src => src.Creator.Email)
@@ -71,7 +75,8 @@ public class MappingConfig : IRegister
                 src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl))
             .Map(d => d.AdditionalUnits,
-                src => src.IngredientUnits);
+                src => src.IngredientUnits)
+            .MaxDepth(2);
 
         config.NewConfig<Ingredient, AdminIngredientPreviewDto>()
             .Map(d => d.ImageUrl,
@@ -85,7 +90,8 @@ public class MappingConfig : IRegister
                 src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl))
             .Map(d => d.SelectedUnit,
-                src => src.DefaultUnit);
+                src => src.DefaultUnit)
+            .MaxDepth(2);
 
         #endregion
         
@@ -93,7 +99,11 @@ public class MappingConfig : IRegister
 
         config.NewConfig<InventoryItem, InventoryItemDisplayDto>()
             .Map(d => d.ShoppingCategory,
-                src => src.Ingredient.ShoppingCategory);
+                src => src.Ingredient.ShoppingCategory)
+            .Map(d => d.BaseIngredient,
+                src => src.Ingredient.BaseIngredient)
+            .Map(d => d.Unit.ConversionFactor,
+                src => src.Ingredient.IngredientUnits.First(i => i.UnitId == src.UnitId).AmountInGrams);
 
         #endregion
 

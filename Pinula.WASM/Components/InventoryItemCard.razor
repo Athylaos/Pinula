@@ -1,0 +1,70 @@
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.Interface
+@using Pinula.Shared.DTOs
+@inject IInventoryService InventoryService
+@inject IStringLocalizer<App> Localizer
+
+<div class="pin-inventory-card">
+        <div class="pin-card-header">
+            <div class="flex-column">
+                @if (Item.IsAllocated)
+                {
+                    <p class="pin-badge pin-badge-warning">@Localizer["Reserved"] @Item.AllocatedQuantityInGrams.ToString("0.#") g</p>
+                }
+                else
+                {
+                    <p class="pin-badge">@Localizer["NotReserved"]</p>
+                }
+                <div class="d-flex flex-row gap-2 mt-1">
+                    <img class="pin-card-img" 
+                         src="@(string.IsNullOrWhiteSpace(Item.Ingredient?.ImageUrl) ? "images/icons/food-ingredient.png" : Item.Ingredient.ImageUrl)" 
+                         alt="Ingredient image"
+                         style="filter: @(Item.Ingredient.ImageUrl.EndsWith(".png") ?  "invert(70%)" : "")"/>
+                    <h4 class="pin-ingredient-name m-0 align-self-start">@Item.Ingredient?.Name</h4>
+                </div>
+            </div>
+
+
+            <div class="flex-column">
+                <div class="pin-quantity-tag">
+                    <span class="pin-qty-val">@((Item.Quantity*Item.Unit.ConversionFactor-Item.AllocatedQuantityInGrams).ToString("0.##"))</span>
+                    <span class="pin-qty-unit">@Item.Unit?.Name</span>
+                </div>
+                @if (Item.Unit.Code != "g")
+                {
+                    <div class="pin-quantity-tag pin-quantity-tag-small">
+                        <span class="pin-qty-val">@((Item.QuantityInGrams-Item.AllocatedQuantityInGrams).ToString("0.##"))</span>
+                        <span class="pin-qty-unit">g</span>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="pin-card-actions">
+            @if (Item.ExpirationDate.HasValue)
+            {
+                <div class="pin-expiration @(SoonExpired ? "soon-expired" : "") @(IsExpired ? "expired" : "")">
+                    <span class="pin-expiration-text">@Localizer["Expiration"]:</span>
+                    <span class="pin-expiration-value">@Item.ExpirationDate.Value.ToString("d.M.yyyy")</span>
+                </div>
+            }
+            <div class="flex-spacer"></div>
+        </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public InventoryItemDisplayDto Item { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> OnItemDeleted { get; set; }
+    [Parameter] public EventCallback<InventoryItemDisplayDto> OnEdit { get; set; }
+
+    private bool IsExpired => Item.ExpirationDate.HasValue && Item.ExpirationDate.Value.Date < DateTime.Today;
+    private bool SoonExpired => Item.ExpirationDate.HasValue && Item.ExpirationDate.Value.Date <= DateTime.Today.AddDays(3);
+    private async Task HandleDelete()
+    {
+        var success = await InventoryService.DeleteInventoryItemAsync(Item.Id);
+        if (success)
+        {
+            await OnItemDeleted.InvokeAsync(Item.Id);
+        }
+    }
+}

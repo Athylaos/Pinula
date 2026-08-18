@@ -9,4 +9,5 @@ public class InventoryItemUpdateDto
     
     public DateTime? ExpirationDate { get; set; }
     public bool? IsAllocated { get; set; } = false;
+    public decimal? AllocatedQuantityInGrams { get; set; }
 }

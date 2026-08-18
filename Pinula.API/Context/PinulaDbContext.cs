@@ -215,9 +215,10 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<InventoryItem>(entity =>
         {
-            entity.Property(e => e.Quantity).IsRequired();
-            entity.Property(e => e.QuantityInGrams).IsRequired();
+            entity.Property(e => e.Quantity).HasPrecision(10,3).IsRequired();
+            entity.Property(e => e.QuantityInGrams).HasPrecision(10,3).IsRequired();
             entity.Property(e => e.IsAllocated).HasDefaultValue(false);
+            entity.Property(e => e.AllocatedQuantityInGrams).HasDefaultValue(0).HasPrecision(10, 3);
 
             entity.HasOne(e => e.Group).WithMany(g => g.InventoryItems).HasForeignKey(e => e.GroupId);
             entity.HasOne(e => e.Ingredient).WithMany(i => i.InventoryItems).HasForeignKey(e => e.IngredientId);

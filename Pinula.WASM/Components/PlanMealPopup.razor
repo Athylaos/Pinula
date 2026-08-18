@@ -14,12 +14,12 @@
         </div>
 
         <div class="modal-body">
-            <div class="form-row-2">
-                <div class="modal-section">
+            <div class="row">
+                <div class="modal-section col-6">
                     <label class="section-label">@Localizer["Date"]</label>
                     <input type="date" @bind="PlanDate" class="modal-input" />
                 </div>
-                <div class="modal-section">
+                <div class="modal-section col-6">
                     <label class="section-label">@Localizer["MealTime"]</label>
                     <select @bind="SelectedMealType" class="modal-input">
                         @foreach (var type in Enum.GetValues<MealType>())
@@ -90,7 +90,7 @@
                         <input type="number" class="custom-input qty" @bind="@ing.Quantity"/>
                         <span class="unit">@ing.Unit.Name</span>
                         <span class="name">@ing.Ingredient.Name</span>
-                        <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
+                        <button type="button" class="btn-delete-mp" @onclick="() => RemoveIngredient(ing)">✕</button>
                     </div>
                 }
             </div>

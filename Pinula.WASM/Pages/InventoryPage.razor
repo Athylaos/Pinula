@@ -1,0 +1,132 @@
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.Interface
+@using Pinula.Shared.DTOs
+@using Pinula.WASM.Components
+@page "/inventory"
+@inject IInventoryService InventoryService
+@inject IStringLocalizer<App> Localizer
+
+<LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
+    <div class="planner-container">
+            <header class="planner-header-panel" style="margin-bottom: 15px">
+                <div class="header-brand">
+                    <div class="header-icon-box">
+                        <img src="images/icons/fridge.png" class="header-icon-box p-2" alt="fridge"/>
+                    </div>
+                    <div>
+                        <h1 class="page-title">@Localizer["Pantry"]</h1>
+                        <p class="subtitle">@Localizer["PantryDescription"]</p>
+                    </div>
+                </div>
+
+                <div class="mp-header-actions">
+                    <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
+                        <img src="images/icons/plus.png" alt="plus" style="max-height: 20px; max-width: 20px"/>
+                        <span>@Localizer["AddInventoryIngredient"]</span>
+                    </button>
+                    <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
+                        <img src="images/icons/plus.png" alt="plus" style="max-height: 20px; max-width: 20px"/>
+                        <span>@Localizer["ShoppingList"]</span>
+                    </button>
+                </div>
+            </header>
+
+        <div class="pin-search-filter-bar">
+                <div class="search-bar" style="height: 45px;">
+                    <input type="text" class="search-input" placeholder="@Localizer["SearchInventoryIngredients"]" @bind="searchQuery" @bind:event="oninput"/>
+                    <img src="images/icons/search.png" alt="searchIcon"/>
+                </div>
+        </div>
+        
+        @if (!FilteredItems.Any())
+        {
+            <div class="pin-empty-state">
+                <i class="bi bi-basket pin-empty-icon"></i>
+                <h3>@Localizer["NoInventoryIngredients"]</h3>
+                <p>@Localizer["NoInventoryIngredientsDescription"]</p>
+            </div>
+        }
+        else
+        {
+            @if (FilteredItems != null && FilteredItems.Any())
+            {
+                @foreach (var categoryGroup in FilteredItems.GroupBy(i => i.ShoppingCategory?.Id))
+                {
+                    var categoryName = categoryGroup.FirstOrDefault()?.ShoppingCategory?.Name ?? "Unknown";
+
+                    <div class="pin-category-section mb-4">
+                        <div class="section-divider" style="padding: 15px; margin-top: 0">
+                            <div class="title-block">
+                                <h2>@categoryName</h2>
+                            </div>
+                            <div class="line"></div>
+                        </div>
+                        
+                        <div class="pin-inventory-grid">
+                            @foreach (var item in categoryGroup)
+                            {
+                                <InventoryItemCard @key="item.Id" 
+                                                   Item="item" 
+                                                   OnItemDeleted="HandleItemDeleted" 
+                                                   OnEdit="HandleEditItem" />
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</LoadingView>
+
+<AddInventoryPopup 
+    IsVisible="addInventoryItemVisible"
+    OnIngredientAdded="AddInventoryItem"
+    OnClose="ToggleAddInventoryModal">
+</AddInventoryPopup>
+
+@code {
+    private List<InventoryItemDisplayDto> inventoryItems = new();
+    private string searchQuery = string.Empty;
+    private bool isLoading = true;
+    private bool addInventoryItemVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventoryAsync();
+    }
+
+    private async Task LoadInventoryAsync()
+    {
+        isLoading = true;
+        inventoryItems = await InventoryService.GetAllInventoryItemsAsync();
+        isLoading = false;
+    }
+
+    private IEnumerable<InventoryItemDisplayDto> FilteredItems =>
+        string.IsNullOrWhiteSpace(searchQuery)
+            ? inventoryItems.OrderBy(i => i.ExpirationDate)
+            : inventoryItems.Where(i => i.Ingredient?.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true).OrderBy(i => i.ExpirationDate);
+
+    private void HandleItemDeleted(Guid id)
+    {
+        inventoryItems.Remove(inventoryItems.First(i => i.Id == id));
+        InventoryService.DeleteInventoryItemAsync(id);
+    }
+
+    private void ToggleAddInventoryModal()
+    {
+        addInventoryItemVisible = !addInventoryItemVisible;
+    }
+
+    private async Task AddInventoryItem(InventoryItemCreateDto ingredientDto)
+    {
+        await InventoryService.CreateInventoryItemAsync(ingredientDto);
+        await LoadInventoryAsync();
+    }
+
+
+    private void HandleEditItem(InventoryItemDisplayDto item)
+        {
+            // TODO
+        }
+    }

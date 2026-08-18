@@ -28,7 +28,13 @@ public static class InventoryEndpoint
             var ii = await db.InventoryItems
                 .Where(i => i.GroupId == groupDb.Id)
                 .Include(i => i.Ingredient)
+                    .ThenInclude(i => i.ShoppingCategory)
+                .Include(i => i.Ingredient)
+                    .ThenInclude(i => i.BaseIngredient)
+                .Include(i => i.Ingredient)
+                    .ThenInclude(i => i.IngredientUnits)
                 .Include(i => i.Unit)
+                .AsNoTracking()
                 .ToListAsync();
                 
                 
@@ -68,8 +74,9 @@ public static class InventoryEndpoint
                 UnitId = dto.UnitId,
                 Quantity = dto.Quantity,
                 QuantityInGrams = dto.QuantityInGrams,
-                ExpirationDate = dto.ExpirationDate,
-                IsAllocated = dto.IsAllocated
+                ExpirationDate = dto.ExpirationDate.HasValue ? DateTime.SpecifyKind(dto.ExpirationDate.Value, DateTimeKind.Utc) : null,
+                IsAllocated = dto.IsAllocated,
+                AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams
             };
 
             db.InventoryItems.Add(nII);
@@ -102,6 +109,7 @@ public static class InventoryEndpoint
             if(dto.QuantityInGrams.HasValue) item.QuantityInGrams = dto.QuantityInGrams.Value;
             if(dto.ExpirationDate.HasValue) item.ExpirationDate = dto.ExpirationDate.Value;
             if(dto.IsAllocated.HasValue) item.IsAllocated = dto.IsAllocated.Value;
+            if (dto.AllocatedQuantityInGrams.HasValue) item.AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams.Value;
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -144,8 +152,12 @@ public static class InventoryEndpoint
             var si = await db.ShoppingListItems
                 .Where(i => i.GroupId == groupDb.Id)
                 .Include(i => i.Ingredient)
+                .ThenInclude(i => i.ShoppingCategory)
+                .Include(i => i.Ingredient)
+                .ThenInclude(i => i.BaseIngredient)
                 .Include(i => i.Unit)
                 .Include(i => i.ShoppingCategory)
+                .AsNoTracking()
                 .ToListAsync();
             
            var result = si.AdaptWithRequest<List<ShoppingItemDisplayDto>>(request);

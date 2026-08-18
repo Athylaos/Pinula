@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pinula.API.Context;
@@ -12,9 +13,11 @@ using Pinula.API.Context;
 namespace Pinula.API.Migrations
 {
     [DbContext(typeof(PinulaDbContext))]
-    partial class PinulaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817090729_InvetoryModelFix")]
+    partial class InvetoryModelFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -389,13 +392,6 @@ namespace Pinula.API.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<decimal>("AllocatedQuantityInGrams")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(10, 3)
-                        .HasColumnType("numeric(10,3)")
-                        .HasDefaultValue(0m)
-                        .HasColumnName("allocated_quantity_in_grams");
-
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiration_date");
@@ -415,13 +411,11 @@ namespace Pinula.API.Migrations
                         .HasColumnName("is_allocated");
 
                     b.Property<decimal>("Quantity")
-                        .HasPrecision(10, 3)
-                        .HasColumnType("numeric(10,3)")
+                        .HasColumnType("numeric")
                         .HasColumnName("quantity");
 
                     b.Property<decimal>("QuantityInGrams")
-                        .HasPrecision(10, 3)
-                        .HasColumnType("numeric(10,3)")
+                        .HasColumnType("numeric")
                         .HasColumnName("quantity_in_grams");
 
                     b.Property<Guid>("UnitId")

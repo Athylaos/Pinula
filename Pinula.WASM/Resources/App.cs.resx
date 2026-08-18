@@ -673,7 +673,7 @@
     <value>Sacharidy</value>
   </data>
   <data name="Protein" xml:space="preserve">
-    <value>Protein</value>
+    <value>Bílkoviny</value>
   </data>
   <data name="Fat" xml:space="preserve">
     <value>Tuky</value>
@@ -698,5 +698,68 @@
   </data>
   <data name="HomePage" xml:space="preserve">
     <value>Domů</value>
+  </data>
+  <data name="SelectIngredient" xml:space="preserve">
+    <value>Vyberte ingredienci</value>
+  </data>
+  <data name="CreateNewIngredient" xml:space="preserve">
+    <value>Vytvořit novou surovinu</value>
+  </data>
+  <data name="SelectUnit" xml:space="preserve">
+    <value>Vyberte jednotku</value>
+  </data>
+  <data name="SearchIngredient" xml:space="preserve">
+    <value>Hledejte ingredience...</value>
+  </data>
+  <data name="AddToRecipe" xml:space="preserve">
+    <value>Přidat do receptu</value>
+  </data>
+  <data name="ErrorLoadingIngredients" xml:space="preserve">
+    <value>Načítání ingrediencí selhalo</value>
+  </data>
+  <data name="AddIngredientToRecipeWarn" xml:space="preserve">
+    <value>Vyberte ingredienci a jedotku.</value>
+  </data>
+  <data name="SelectInventoryIngredient" xml:space="preserve">
+    <value>Vyberte surovinu</value>
+  </data>
+  <data name="SearchInventoryIngredients" xml:space="preserve">
+    <value>Hledejte suroviny...</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Množství</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>Jednotka</value>
+  </data>
+  <data name="Reserved" xml:space="preserve">
+    <value>Zarezervováno</value>
+  </data>
+  <data name="ExpirationDate" xml:space="preserve">
+    <value>Datum spotřeby</value>
+  </data>
+  <data name="Pantry" xml:space="preserve">
+    <value>Spíž</value>
+  </data>
+  <data name="AddToPantry" xml:space="preserve">
+    <value>Přidat do spíže</value>
+  </data>
+  <data name="NotReserved" xml:space="preserve">
+    <value>K dispozici</value>
+  </data>
+  <data name="PantryDescription" xml:space="preserve">
+    <value>Sledujte a organizujte vaše suroviny</value>
+  </data>
+  <data name="AddInventoryIngredient" xml:space="preserve">
+    <value>Přidejte surovinu</value>
+  </data>
+  <data name="ShoppingList" xml:space="preserve">
+    <value>Nákupní seznam</value>
+  </data>
+  <data name="NoInventoryIngredients" xml:space="preserve">
+    <value>Žádné suroviny ve spíži</value>
+  </data>
+  <data name="NoInventoryIngredientsDescription" xml:space="preserve">
+    <value>Vaše spíž je prázdná, nebo vašemu hledání neodpovídají žádné suroviny</value>
   </data>
 </root>

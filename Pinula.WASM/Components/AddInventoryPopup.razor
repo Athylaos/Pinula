@@ -1,11 +1,11 @@
-﻿@using System.Timers
+@using System.Runtime.ExceptionServices
+@using System.Timers
 @using Microsoft.Extensions.Localization
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
 @inject IIngredientService IngredientService
 @inject IUnitService UnitService
 @inject IStringLocalizer<App> Localizer
-
 
 @if (IsVisible)
 {
@@ -14,21 +14,21 @@
             @if (isAddMode)
             {
                 <div class="modal-header">
-                    <h2 style="display:inline-block">@Localizer["SelectIngredient"]</h2>
+                    <h2 style="display:inline-block"> @Localizer["SelectInventoryIngredient"]</h2>
                     <button class="close-modal-btn" @onclick="Close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <input type="text" class="custom-input"
-                           placeholder="@Localizer["SearchIngredient"]"
+                           placeholder="@Localizer["SearchInventoryIngredients"]"
                            @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
 
-                    <ul class="search-results-list">
+                    <ul class="search-results-list" style="height: 210px;">
                         <LoadingView IsFullScreen="false" IsLoading="IsLoadingSearch" Text="Searching for ingredients">
                             @foreach (var ing in FilteredIngredients)
                             {
                                 <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
                                     @onclick="() => selectedIngredient = ing">
-                                    <img src="@ing.ImageUrl" style="height:50px; width:50px;" />
+                                    <img alt="Ing" src="@ing.ImageUrl" style="height:50px; width:50px;" />
                                     @ing.Name
                                 </li>
                             }
@@ -40,12 +40,14 @@
                     </button>
 
                     <div class="row g-2 mb-3">
-                        <div class="col-4">
-                            <input type="number" class="custom-select" placeholder="Qty" @bind="quantity" />
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["Quantity"]</label>
+                            <input type="number" class="custom-select" placeholder="Qty" @bind="quantity"/>
                         </div>
-                        <div class="col-8">
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["Unit"]</label>
                             <select class="custom-select" @bind="selectedUnitId">
-                                <option value="">@Localizer["SelectUnit"]</option>
+                                <option value="">-----||-----</option>
                                 @if (selectedIngredient?.IngredientUnits != null)
                                 {
                                     @foreach (var unit in selectedIngredient.IngredientUnits)
@@ -56,6 +58,22 @@
                             </select>
                         </div>
                     </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-2 d-flex flex-column">
+                            <label class="section-label">@Localizer["Reserved"]</label>
+                            <div class="d-flex justify-content-center align-items-center flex-grow-1">
+                                <input type="checkbox" class="custom-checkbox" @bind="isAllocated"/>
+                            </div>
+                        </div> 
+                        <div class="col-4">
+                            <label class="section-label">‎ </label>
+                            <input disabled="@(!isAllocated)" type="number" class="custom-select" placeholder="Qty" @bind="quantityAllocated" style="background: @(isAllocated ? "" : "transparent !important")"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["ExpirationDate"]</label>
+                            <input type="date" @bind="expirationDate" class="modal-input"/>
+                        </div>
+                    </div>
                     @if (!string.IsNullOrEmpty(warningText))
                     {
                         <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
@@ -64,7 +82,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn-apply" @onclick="ConfirmSelection">@Localizer["AddToRecipe"]</button>
+                    <button class="btn-apply" @onclick="ConfirmSelection">@Localizer["AddToPantry"]</button>
                 </div>
                 
             }
@@ -172,7 +190,7 @@
 
 @code {
     [Parameter] public bool IsVisible { get; set; }
-    [Parameter] public EventCallback<RecipeIngredientDisplayDto> OnIngredientAdded { get; set; }
+    [Parameter] public EventCallback<InventoryItemCreateDto> OnIngredientAdded { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private bool isAddMode = true;
@@ -193,6 +211,9 @@
     private List<UnitPreviewDto> allUnits = new();
     private Guid? selectedUnitId;
     private decimal quantity;
+    private decimal quantityAllocated;
+    private DateOnly? expirationDate;
+    private bool isAllocated = false;
 
     private string _warningText = "";
     private CancellationTokenSource? _warningTokenSource;
@@ -308,7 +329,7 @@
         }
         catch (Exception ex)
         {
-            warningText = Localizer["ErrorLoadingIngredients"];
+            warningText = "Error loading ingredients.";
         }
     }
 
@@ -361,20 +382,27 @@
         var unit = selectedIngredient.IngredientUnits.FirstOrDefault(u => u.Id == selectedUnitId);
         if (unit == null) return;
 
-        var result = new RecipeIngredientDisplayDto
+        var result = new InventoryItemCreateDto()
         {
+            IngredientId = selectedIngredient.Id,
+            UnitId= unit.Id,
             Quantity = quantity,
-            Unit = unit,
-            Ingredient = selectedIngredient
+            QuantityInGrams = quantity*unit.ConversionFactor,
+            IsAllocated = isAllocated,
+            ExpirationDate = expirationDate.HasValue ? new DateTime(expirationDate.Value.Year, expirationDate.Value.Month, expirationDate.Value.Day) : null,
+            AllocatedQuantityInGrams = quantityAllocated,
         };
+        
 
         await OnIngredientAdded.InvokeAsync(result);
 
-        selectedIngredient = null;
-        selectedUnitId = null;
-        quantity = 0;
-        Close();
-    }
+            selectedIngredient = null;
+            selectedUnitId = null;
+            quantity = 0;
+            isAllocated = false;
+            expirationDate = null;
+            Close();
+        }
 
     private async Task SaveNewIngredient()
     {

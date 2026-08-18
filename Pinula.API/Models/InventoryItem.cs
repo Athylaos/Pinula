@@ -11,6 +11,8 @@ public class InventoryItem
     public decimal QuantityInGrams { get; set; }
     
     public DateTime? ExpirationDate { get; set; }
+    
+    public decimal AllocatedQuantityInGrams { get; set; }
     public bool IsAllocated { get; set; } = false;
 
     public virtual Group Group { get; set; }
