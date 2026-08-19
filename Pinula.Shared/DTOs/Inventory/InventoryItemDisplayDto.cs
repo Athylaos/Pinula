@@ -12,6 +12,5 @@ public class InventoryItemDisplayDto
     public IngredientPreviewDto? BaseIngredient { get; set; }
     
     public DateTime? ExpirationDate { get; set; }
-    public bool IsAllocated { get; set; } = false;
     public decimal AllocatedQuantityInGrams { get; set; } = 0;
 }

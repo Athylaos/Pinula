@@ -33,7 +33,9 @@ public static class InventoryEndpoint
                     .ThenInclude(i => i.BaseIngredient)
                 .Include(i => i.Ingredient)
                     .ThenInclude(i => i.IngredientUnits)
+                        .ThenInclude(i => i.Unit)
                 .Include(i => i.Unit)
+                .Include(i => i.Allocations)
                 .AsNoTracking()
                 .ToListAsync();
                 
@@ -75,8 +77,7 @@ public static class InventoryEndpoint
                 Quantity = dto.Quantity,
                 QuantityInGrams = dto.QuantityInGrams,
                 ExpirationDate = dto.ExpirationDate.HasValue ? DateTime.SpecifyKind(dto.ExpirationDate.Value, DateTimeKind.Utc) : null,
-                IsAllocated = dto.IsAllocated,
-                AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams
+                //AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams
             };
 
             db.InventoryItems.Add(nII);
@@ -100,16 +101,19 @@ public static class InventoryEndpoint
                 return Results.NotFound("Inventory item not found");
             }
             
-            if (dto.QuantityInGrams <= 0 || dto.Quantity <= 0)
+            if (dto.Quantity <= 0)
             {
                 return Results.BadRequest("Quantity can't be 0");
             }
 
-            if(dto.Quantity.HasValue) item.Quantity = dto.Quantity.Value;
-            if(dto.QuantityInGrams.HasValue) item.QuantityInGrams = dto.QuantityInGrams.Value;
+            if(dto.Quantity.HasValue)
+            {
+                var conversionFactor = item.QuantityInGrams / item.Quantity;
+                item.Quantity = dto.Quantity.Value;
+                item.QuantityInGrams = dto.Quantity.Value * conversionFactor;
+            }
             if(dto.ExpirationDate.HasValue) item.ExpirationDate = dto.ExpirationDate.Value;
-            if(dto.IsAllocated.HasValue) item.IsAllocated = dto.IsAllocated.Value;
-            if (dto.AllocatedQuantityInGrams.HasValue) item.AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams.Value;
+            //if (dto.AllocatedQuantityInGrams.HasValue) item.AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams.Value;
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -131,7 +135,10 @@ public static class InventoryEndpoint
             }
 
             db.InventoryItems.Remove(item);
+            db.InventoryMealPlanAllocations.RemoveRange(await db.InventoryMealPlanAllocations.Where(a => a.InventoryItemId == item.Id).ToListAsync()); 
             await db.SaveChangesAsync();
+            
+            //TODO mby automatically make shopping list items?
 
             return Results.NoContent();
         }).RequireAuthorization();

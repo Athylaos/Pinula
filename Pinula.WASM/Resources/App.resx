@@ -765,4 +765,10 @@
   <data name="NoInventoryIngredientsDescription" xml:space="preserve">
     <value>Your pantry is empty or no ingredients match your search</value>
   </data>
+  <data name="EditInventoryItem" xml:space="preserve">
+    <value>Edit ingredient</value>
+  </data>
+  <data name="DeleteFromPantry" xml:space="preserve">
+    <value>Delete from pantry</value>
+  </data>
 </root>

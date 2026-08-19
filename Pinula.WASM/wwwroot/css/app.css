@@ -3247,7 +3247,9 @@ select.custom-select {
         background: linear-gradient(135deg, #255d42, var(--pine-teal));
         border-color: rgba(255,255,255,0.2);
     }
-
+.btn-group-action img{
+    filter: invert(100%);
+}
 .no-group-showcase {
     background: var(--bg-card);
     border-radius: 20px;

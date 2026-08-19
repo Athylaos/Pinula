@@ -103,7 +103,9 @@ public class MappingConfig : IRegister
             .Map(d => d.BaseIngredient,
                 src => src.Ingredient.BaseIngredient)
             .Map(d => d.Unit.ConversionFactor,
-                src => src.Ingredient.IngredientUnits.First(i => i.UnitId == src.UnitId).AmountInGrams);
+                src => src.Ingredient.IngredientUnits.Where(i => i.UnitId == src.UnitId).Select(i => i.AmountInGrams).FirstOrDefault())
+            .Map(d => d.AllocatedQuantityInGrams,
+                src => src.Allocations.Sum(a => a.AllocatedQuantityInGrams));
 
         #endregion
 
@@ -155,6 +157,14 @@ public class MappingConfig : IRegister
         config.NewConfig<Unit, UnitPreviewDto>()
             .Map(d => d.Name,
                 src => HelperFunctions.GetLocalizedName(src.Names, GetLanguageCode()));
+
+        config.NewConfig<IngredientUnit, UnitPreviewDto>()
+            .Map(d => d.Name,
+                src => HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()))
+            .Map(d => d.Code,
+                src => src.Unit.Code)
+            .Map(d => d.ConversionFactor,
+                src => src.AmountInGrams);
 
         #endregion
 

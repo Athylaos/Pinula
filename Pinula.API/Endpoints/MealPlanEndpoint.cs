@@ -62,7 +62,7 @@ namespace Pinula.API.Endpoints
                         {
                             IngredientId = i.IngredientId,
                             IngredientName = i.Ingredient.Names.GetValueOrDefault(languageCode) ?? i.Ingredient.Names.GetValueOrDefault("en") ?? "Ingredient name",
-                            Quantity = i.Quantity??0,
+                            Quantity = i.Quantity,
                             UnitId = i.UnitId,
                             UnitName = i.Unit.Names.GetValueOrDefault(languageCode) ?? i.Unit.Names.GetValueOrDefault("en") ?? "Unit",
                         }).ToList(),
@@ -83,13 +83,12 @@ namespace Pinula.API.Endpoints
                 if (groupId is null) return Results.BadRequest("User is not in group");
 
                 var users = await db.Users.Where(u => dto.UsersId.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
-
                 if (!users.Any()) return Results.BadRequest("At least one user from the group has to be selected.");
                 
-                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).ToList();
-                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).ToList();
+                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).Distinct().ToList();
+                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).Distinct().ToList();
 
-                var existingIngredients = await db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).ToListAsync();
+                var existingIngredients = await db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).Include(i => i.IngredientUnits).ToListAsync();
                 if (existingIngredients.Count != ingredientIds.Count)
                 {
                     return Results.NotFound("Some ingredients do not exist in the database.");
@@ -111,8 +110,9 @@ namespace Pinula.API.Endpoints
                     GroupId = groupId.Value,
                     Servings = dto.Servings,
                     Users = users,
-                    MealPlanIngredients = dto.Ingredients.Select(i => new MealPlanIngredient()
+                    MealPlanIngredients = dto.Ingredients.Select(i => new MealPlanIngredient
                     {
+                        Id = Guid.NewGuid(),
                         MealPlanId = newMPId,
                         IngredientId = i.Ingredient.Id,
                         UnitId = i.Unit.Id,
@@ -122,8 +122,79 @@ namespace Pinula.API.Endpoints
                 };
 
                 db.MealPlans.Add(mealPlan);
-                await db.SaveChangesAsync();
+                
+                foreach (var ingredient in mealPlan.MealPlanIngredients)
+                {
+                    var dbIngredient = existingIngredients.First(i => i.Id == ingredient.IngredientId);
+                    var dbConversionFactor = dbIngredient.IngredientUnits.Where(u => u.UnitId == ingredient.UnitId)
+                        .Select(u => u.AmountInGrams).FirstOrDefault();
+                    
+                    var inventoryItems = await db.InventoryItems
+                        .Include(ii => ii.Allocations)
+                        .Where(ii => ii.GroupId == groupId.Value && (ii.IngredientId == ingredient.IngredientId || ii.Ingredient.BaseIngredientId == ingredient.IngredientId))
+                        .ToListAsync();
 
+                    var sortedItems = inventoryItems
+                        .OrderBy(i => !i.ExpirationDate.HasValue)
+                        .ThenBy(i => i.ExpirationDate)
+                        .ToList();
+
+                    var quantityToAllocate = ingredient.Quantity * dbConversionFactor;
+
+                    foreach (var sortedItem in sortedItems)
+                    {
+                        if (quantityToAllocate <= 0) break;
+
+                        var currentlyAllocatedQuantity = sortedItem.Allocations.Sum(a => a.AllocatedQuantityInGrams);
+                        var itemAvailableQuantity = sortedItem.QuantityInGrams - currentlyAllocatedQuantity;
+
+                        if (itemAvailableQuantity <= 0) continue;
+
+                        if (itemAvailableQuantity <= quantityToAllocate)
+                        {
+                            quantityToAllocate -= itemAvailableQuantity;
+                            db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
+                            {
+                                Id = Guid.NewGuid(),
+                                InventoryItemId = sortedItem.Id,
+                                MealPlanIngredientId = ingredient.Id,
+                                AllocatedQuantityInGrams = itemAvailableQuantity,
+                                AllocatedAt = DateTime.UtcNow
+                            });
+                        }
+                        else
+                        {
+                            db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
+                            {
+                                Id = Guid.NewGuid(),
+                                InventoryItemId = sortedItem.Id,
+                                MealPlanIngredientId = ingredient.Id,
+                                AllocatedQuantityInGrams = quantityToAllocate,
+                                AllocatedAt = DateTime.UtcNow
+                            });
+                            quantityToAllocate = 0;
+                            break;
+                        }
+                    }
+                    
+                    if (quantityToAllocate > 0)
+                    {
+                        db.ShoppingListItems.Add(new ShoppingListItem
+                        {
+                            Id = Guid.NewGuid(),
+                            GroupId = groupId.Value,
+                            IngredientId = ingredient.IngredientId,
+                            UnitId = ingredient.UnitId,
+                            Quantity = quantityToAllocate / dbConversionFactor,
+                            QuantityInGrams = quantityToAllocate,
+                            ShoppingCategoryId = dbIngredient.ShoppingCategoryId,
+                            IsPurchased = false,
+                            MealPlanIngredientId = ingredient.Id
+                        });
+                    }
+                }
+
+                await db.SaveChangesAsync();
                 return Results.Ok();
 
             }).RequireAuthorization();
@@ -138,11 +209,33 @@ namespace Pinula.API.Endpoints
                 var groupId = userDb.GroupId;
                 if (groupId is null) return Results.BadRequest("User is not in group");
 
-                var mealPlan = await db.MealPlans.FirstOrDefaultAsync(mp => mp.Id == id);
+                var mealPlan = await db.MealPlans.Include(mp => mp.MealPlanIngredients).FirstOrDefaultAsync(mp => mp.Id == id);
                 if (mealPlan is null) return Results.NotFound();
 
                 if (mealPlan.GroupId != groupId) return Results.Unauthorized();
+                
+                var mpiIds = mealPlan.MealPlanIngredients.Select(mpi => mpi.Id).ToList();
 
+                if (mpiIds.Any())
+                {
+                    var allocations = await db.InventoryMealPlanAllocations
+                        .Where(a => mpiIds.Contains(a.MealPlanIngredientId))
+                        .ToListAsync();
+
+                    if (allocations.Any())
+                    {
+                        db.InventoryMealPlanAllocations.RemoveRange(allocations);
+                    }
+                    
+                    var shoppingListItems = await db.ShoppingListItems
+                        .Where(si => si.MealPlanIngredientId.HasValue && mpiIds.Contains(si.MealPlanIngredientId.Value) && !si.IsPurchased)
+                        .ToListAsync();
+
+                    if (shoppingListItems.Any())
+                    {
+                        db.ShoppingListItems.RemoveRange(shoppingListItems);
+                    }
+                }
                 db.MealPlans.Remove(mealPlan);
                 await db.SaveChangesAsync();
 
@@ -163,9 +256,6 @@ namespace Pinula.API.Endpoints
                 var mealPlan = await db.MealPlans
                     .Include(mp => mp.Users)
                     .Include(mp => mp.MealPlanIngredients)
-                        .ThenInclude(mpi => mpi.Ingredient)
-                    .Include(mp => mp.MealPlanIngredients)
-                        .ThenInclude(mpi => mpi.Unit)
                     .FirstOrDefaultAsync(mp => mp.Id == id);
 
                 if (mealPlan is null) return Results.NotFound();
@@ -175,8 +265,9 @@ namespace Pinula.API.Endpoints
                 if (!newUsers.Any()) return Results.BadRequest("At least one user must be selected.");
 
                 if (!dto.Ingredients.Any()) return Results.BadRequest("At least one ingredient must be selected.");
-                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).ToList();
-                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).ToList();
+                
+                var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).Distinct().ToList();
+                var unitIds = dto.Ingredients.Select(i => i.Unit.Id).Distinct().ToList();
 
                 var existingIngredients = await db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).ToListAsync();
                 if (existingIngredients.Count != ingredientIds.Count)
@@ -190,22 +281,56 @@ namespace Pinula.API.Endpoints
                     return Results.NotFound("Some units do not exist in the database.");
                 }
                 
+                var mpiToAllocate = new List<MealPlanIngredient>();
+                
                 foreach (var mpi in mealPlan.MealPlanIngredients.ToList())
                 {
-                    if (!dto.Ingredients.Any(i => i.Ingredient.Id == mpi.IngredientId))
+                    var dtoIngredient = dto.Ingredients.FirstOrDefault(i => i.Ingredient.Id == mpi.IngredientId);
+
+                    if (dtoIngredient is null)
                     {
+                        //deleted ingredients
+                        var allocations = await db.InventoryMealPlanAllocations.Where(a => a.MealPlanIngredientId == mpi.Id).ToListAsync();
+                        db.InventoryMealPlanAllocations.RemoveRange(allocations);
+
+                        var shoppingItems = await db.ShoppingListItems.Where(s => s.MealPlanIngredientId == mpi.Id && !s.IsPurchased).ToListAsync();
+                        db.ShoppingListItems.RemoveRange(shoppingItems);
+
                         db.MealPlanIngredients.Remove(mpi);
+                    }
+                    else
+                    {
+                        var oldQuantityGrams = mpi.Quantity * mpi.ConversionFactor;
+                        var newQuantityGrams = dtoIngredient.Quantity * dtoIngredient.ConversionFactor;
+
+                        if (oldQuantityGrams != newQuantityGrams || mpi.UnitId != dtoIngredient.Unit.Id)
+                        {
+                            //changed ingredients
+                            var allocations = await db.InventoryMealPlanAllocations.Where(a => a.MealPlanIngredientId == mpi.Id).ToListAsync();
+                            db.InventoryMealPlanAllocations.RemoveRange(allocations);
+
+                            var shoppingItems = await db.ShoppingListItems.Where(s => s.MealPlanIngredientId == mpi.Id && !s.IsPurchased).ToListAsync();
+                            db.ShoppingListItems.RemoveRange(shoppingItems);
+                            
+                            mpi.ConversionFactor = dtoIngredient.ConversionFactor;
+                            mpi.Quantity = dtoIngredient.Quantity;
+                            mpi.UnitId = dtoIngredient.Unit.Id;
+                            
+                            mpiToAllocate.Add(mpi);
+                        }
+                        //unchanged ingredients
                     }
                 }
                 
+
                 foreach (var ingredientDto in dto.Ingredients)
                 {
-                    var existingMPI = mealPlan.MealPlanIngredients.FirstOrDefault(mpi => mpi.IngredientId == ingredientDto.Ingredient.Id);
-
-                    if (existingMPI is null)
+                    if (!mealPlan.MealPlanIngredients.Any(mpi => mpi.IngredientId == ingredientDto.Ingredient.Id))
                     {
-                        var newMPI = new MealPlanIngredient()
+                        //new ingredients
+                        var newMPI = new MealPlanIngredient
                         {
+                            Id = Guid.NewGuid(),
                             MealPlanId = mealPlan.Id,
                             IngredientId = ingredientDto.Ingredient.Id,
                             UnitId = ingredientDto.Unit.Id,
@@ -213,18 +338,85 @@ namespace Pinula.API.Endpoints
                             Quantity = ingredientDto.Quantity
                         };
                         db.MealPlanIngredients.Add(newMPI);
-                    }
-                    else
-                    {
-                        existingMPI.ConversionFactor = ingredientDto.ConversionFactor;
-                        existingMPI.Quantity = ingredientDto.Quantity;
+                        mpiToAllocate.Add(newMPI);
                     }
                 }
-
+                
                 mealPlan.Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 mealPlan.MealType = dto.MealType;
                 mealPlan.Servings = dto.Servings;
                 mealPlan.Users = newUsers;
+                
+                //allocation of new and changed ingredients
+                foreach (var ingredient in mpiToAllocate)
+                {
+                    var dbIngredient = existingIngredients.First(i => i.Id == ingredient.IngredientId);
+
+                    var inventoryItems = await db.InventoryItems
+                        .Include(ii => ii.Allocations)
+                        .Where(ii => ii.GroupId == groupId.Value && (ii.IngredientId == ingredient.IngredientId || ii.Ingredient.BaseIngredientId == ingredient.IngredientId))
+                        .ToListAsync();
+
+                    var sortedItems = inventoryItems
+                        .OrderBy(i => !i.ExpirationDate.HasValue)
+                        .ThenBy(i => i.ExpirationDate)
+                        .ToList();
+
+                    var quantityToAllocate = ingredient.Quantity * ingredient.ConversionFactor;
+
+                    foreach (var sortedItem in sortedItems)
+                    {
+                        if (quantityToAllocate <= 0) break;
+                        var activeAllocations = sortedItem.Allocations.Where(a => db.Entry(a).State != EntityState.Deleted); //due to staged changes
+                        var currentAllocatedGrams = activeAllocations.Sum(a => a.AllocatedQuantityInGrams);
+                        
+                        var itemAvailableQuantity = sortedItem.QuantityInGrams - currentAllocatedGrams;
+
+                        if (itemAvailableQuantity <= 0) continue;
+
+                        if (itemAvailableQuantity <= quantityToAllocate)
+                        {
+                            quantityToAllocate -= itemAvailableQuantity;
+                            db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
+                            {
+                                Id = Guid.NewGuid(),
+                                InventoryItemId = sortedItem.Id,
+                                MealPlanIngredientId = ingredient.Id,
+                                AllocatedQuantityInGrams = itemAvailableQuantity,
+                                AllocatedAt = DateTime.UtcNow
+                            });
+                        }
+                        else
+                        {
+                            db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
+                            {
+                                Id = Guid.NewGuid(),
+                                InventoryItemId = sortedItem.Id,
+                                MealPlanIngredientId = ingredient.Id,
+                                AllocatedQuantityInGrams = quantityToAllocate,
+                                AllocatedAt = DateTime.UtcNow
+                            });
+                            quantityToAllocate = 0;
+                            break;
+                        }
+                    }
+                    
+                    if (quantityToAllocate > 0)
+                    {
+                        db.ShoppingListItems.Add(new ShoppingListItem
+                        {
+                            Id = Guid.NewGuid(),
+                            GroupId = groupId.Value,
+                            IngredientId = ingredient.IngredientId,
+                            UnitId = ingredient.UnitId,
+                            Quantity = quantityToAllocate / ingredient.ConversionFactor,
+                            QuantityInGrams = quantityToAllocate,
+                            ShoppingCategoryId = dbIngredient.ShoppingCategoryId,
+                            IsPurchased = false,
+                            MealPlanIngredientId = ingredient.Id
+                        });
+                    }
+                }
 
                 await db.SaveChangesAsync();
                 return Results.Ok();

@@ -12,6 +12,8 @@ public class ShoppingListItem
     public Guid? ShoppingCategoryId { get; set; }
     public bool IsPurchased { get; set; }
     
+    public Guid? MealPlanIngredientId { get; set; }
+    public MealPlanIngredient MealPlanIngredient { get; set; }
     
     public virtual Group Group { get; set; }
     public virtual Ingredient Ingredient { get; set; }

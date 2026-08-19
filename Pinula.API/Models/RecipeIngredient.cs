@@ -9,11 +9,11 @@ public partial class RecipeIngredient
 
     public Guid IngredientId { get; set; }
 
-    public decimal? Quantity { get; set; }
+    public decimal Quantity { get; set; }
 
     public Guid UnitId { get; set; }
 
-    public decimal? ConversionFactor { get; set; }
+    public decimal ConversionFactor { get; set; }
 
     public virtual Ingredient Ingredient { get; set; } = null!;
 

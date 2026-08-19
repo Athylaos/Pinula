@@ -762,4 +762,13 @@
   <data name="NoInventoryIngredientsDescription" xml:space="preserve">
     <value>Vaše spíž je prázdná, nebo vašemu hledání neodpovídají žádné suroviny</value>
   </data>
+  <data name="Expiration" xml:space="preserve">
+    <value>Expirace</value>
+  </data>
+  <data name="EditInventoryItem" xml:space="preserve">
+    <value>Upravit surovinu</value>
+  </data>
+  <data name="DeleteFromPantry" xml:space="preserve">
+    <value>Odstranit ze spíže</value>
+  </data>
 </root>

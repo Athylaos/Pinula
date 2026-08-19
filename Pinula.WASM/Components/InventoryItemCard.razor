@@ -4,10 +4,10 @@
 @inject IInventoryService InventoryService
 @inject IStringLocalizer<App> Localizer
 
-<div class="pin-inventory-card">
+<div class="pin-inventory-card" @onclick="OnClick">
         <div class="pin-card-header">
             <div class="flex-column">
-                @if (Item.IsAllocated)
+                @if (Item.AllocatedQuantityInGrams > 0)
                 {
                     <p class="pin-badge pin-badge-warning">@Localizer["Reserved"] @Item.AllocatedQuantityInGrams.ToString("0.#") g</p>
                 }
@@ -54,17 +54,11 @@
 
 @code {
     [Parameter, EditorRequired] public InventoryItemDisplayDto Item { get; set; } = null!;
-    [Parameter] public EventCallback<Guid> OnItemDeleted { get; set; }
     [Parameter] public EventCallback<InventoryItemDisplayDto> OnEdit { get; set; }
 
     private bool IsExpired => Item.ExpirationDate.HasValue && Item.ExpirationDate.Value.Date < DateTime.Today;
     private bool SoonExpired => Item.ExpirationDate.HasValue && Item.ExpirationDate.Value.Date <= DateTime.Today.AddDays(3);
-    private async Task HandleDelete()
-    {
-        var success = await InventoryService.DeleteInventoryItemAsync(Item.Id);
-        if (success)
-        {
-            await OnItemDeleted.InvokeAsync(Item.Id);
-        }
-    }
+
+    private async Task OnClick() => await OnEdit.InvokeAsync(Item);
+
 }

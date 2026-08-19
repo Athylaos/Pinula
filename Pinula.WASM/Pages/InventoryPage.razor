@@ -5,6 +5,7 @@
 @page "/inventory"
 @inject IInventoryService InventoryService
 @inject IStringLocalizer<App> Localizer
+@inject NavigationManager NavManager
 
 <LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
     <div class="planner-container">
@@ -24,8 +25,8 @@
                         <img src="images/icons/plus.png" alt="plus" style="max-height: 20px; max-width: 20px"/>
                         <span>@Localizer["AddInventoryIngredient"]</span>
                     </button>
-                    <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
-                        <img src="images/icons/plus.png" alt="plus" style="max-height: 20px; max-width: 20px"/>
+                    <button class="btn-group-action" @onclick="@(() => NavManager.NavigateTo("/inventory/shoppingList"))">
+                        <img src="images/icons/shopping-list.png" alt="plus" style="max-height: 20px; max-width: 20px"/>
                         <span>@Localizer["ShoppingList"]</span>
                     </button>
                 </div>
@@ -67,8 +68,7 @@
                             {
                                 <InventoryItemCard @key="item.Id" 
                                                    Item="item" 
-                                                   OnItemDeleted="HandleItemDeleted" 
-                                                   OnEdit="HandleEditItem" />
+                                                   OnEdit="ToggleEditInventoryModal" />
                             }
                         </div>
                     </div>
@@ -84,11 +84,21 @@
     OnClose="ToggleAddInventoryModal">
 </AddInventoryPopup>
 
+<EditInventoryItemPopup
+    IsVisible="editInventoryItemVisible"
+    OnClose="@(() => editInventoryItemVisible = false)"
+    OnSave="HandleEditItem"
+    InventoryItem="updatingItem"
+    OnDelete="HandleDeleteItem">
+</EditInventoryItemPopup>
+
 @code {
     private List<InventoryItemDisplayDto> inventoryItems = new();
     private string searchQuery = string.Empty;
     private bool isLoading = true;
     private bool addInventoryItemVisible = false;
+    private bool editInventoryItemVisible = false;
+    private InventoryItemDisplayDto updatingItem = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -106,12 +116,7 @@
         string.IsNullOrWhiteSpace(searchQuery)
             ? inventoryItems.OrderBy(i => i.ExpirationDate)
             : inventoryItems.Where(i => i.Ingredient?.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true).OrderBy(i => i.ExpirationDate);
-
-    private void HandleItemDeleted(Guid id)
-    {
-        inventoryItems.Remove(inventoryItems.First(i => i.Id == id));
-        InventoryService.DeleteInventoryItemAsync(id);
-    }
+    
 
     private void ToggleAddInventoryModal()
     {
@@ -123,10 +128,24 @@
         await InventoryService.CreateInventoryItemAsync(ingredientDto);
         await LoadInventoryAsync();
     }
-
-
-    private void HandleEditItem(InventoryItemDisplayDto item)
-        {
-            // TODO
-        }
+    
+    private void ToggleEditInventoryModal(InventoryItemDisplayDto dto)
+    {
+        updatingItem = dto;
+        editInventoryItemVisible = !editInventoryItemVisible;
     }
+
+    private async Task HandleEditItem(InventoryItemUpdateDto item)
+    {
+        editInventoryItemVisible = !editInventoryItemVisible;
+        await InventoryService.UpdateInventoryItemAsync(item);
+        await LoadInventoryAsync();
+    }
+    
+    private void HandleDeleteItem(Guid id)
+    {
+        editInventoryItemVisible = !editInventoryItemVisible;
+        inventoryItems.Remove(inventoryItems.First(i => i.Id == id));
+        InventoryService.DeleteInventoryItemAsync(id);
+    }
+}

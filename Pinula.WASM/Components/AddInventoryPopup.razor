@@ -388,7 +388,6 @@
             UnitId= unit.Id,
             Quantity = quantity,
             QuantityInGrams = quantity*unit.ConversionFactor,
-            IsAllocated = isAllocated,
             ExpirationDate = expirationDate.HasValue ? new DateTime(expirationDate.Value.Year, expirationDate.Value.Month, expirationDate.Value.Day) : null,
             AllocatedQuantityInGrams = quantityAllocated,
         };

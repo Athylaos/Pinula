@@ -1,0 +1,139 @@
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Enums
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer 
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal plan-meal-modal">
+
+            <div class="modal-header">
+                <img src="images/icons/calendar.png" style="filter: invert(1); width:30px; height:30px; margin-right:10px;" />
+                <h2 style="display:inline-block">@Localizer["EditInventoryItem"]</h2>
+                <button class="close-modal-btn" @onclick="Close">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["Quantity"]</label>
+                            <input type="number" class="custom-select" placeholder="Qty" @bind="InventoryItem.Quantity"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["Unit"]</label>
+                            <select class="custom-select" @bind="InventoryItem.Unit.Id">
+                                <option value="">-----||-----</option>
+                                @if (InventoryItem.Ingredient?.IngredientUnits != null)
+                                {
+                                    @foreach (var unit in InventoryItem.Ingredient.IngredientUnits)
+                                    {
+                                        <option value="@unit.Id">@unit.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 d-flex flex-column">
+                            <label class="section-label">@Localizer["Reserved"]</label>
+                            <input disabled="@(true)" type="number" class="custom-select" placeholder="Qty" @bind="InventoryItem.AllocatedQuantityInGrams" style="background: @(false ? "" : "transparent !important")"/>
+                        </div> 
+                        <div class="col-6">
+                            <label class="section-label">@Localizer["ExpirationDate"]</label>
+                            <input type="date" @bind="InventoryItem.ExpirationDate" class="modal-input"/>
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(warningText))
+                {
+                    <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                }
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-delete-mp" @onclick="HandleDelete">@Localizer["DeleteFromPantry"]</button>
+                    <div class="flex-spacer"></div>
+                    <button type="button" class="btn-accent" @onclick="HandleSave">@Localizer["SaveChanges"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<InventoryItemUpdateDto> OnSave { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+    [Parameter] public InventoryItemDisplayDto InventoryItem { get; set; } = new();
+    
+    private string _warningText = "";
+    private CancellationTokenSource? _warningTokenSource;
+    private string warningText
+    {
+        get => _warningText;
+        set
+        {
+            if (_warningText == value) return;
+            _warningText = value;
+
+            _warningTokenSource?.Cancel();
+            _warningTokenSource?.Dispose();
+
+            if (!string.IsNullOrEmpty(_warningText))
+            {
+                _warningTokenSource = new CancellationTokenSource();
+                var token = _warningTokenSource.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(2000, token);
+
+                        _warningText = "";
+                        await InvokeAsync(StateHasChanged);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }, token);
+            }
+        }
+    }
+    
+    private Guid? selectedUnitId;
+    private decimal quantity;
+    private decimal quantityAllocated;
+    private DateOnly? expirationDate;
+
+    private void Close()
+    {
+        OnClose.InvokeAsync();
+    }
+    
+
+    private void HandleSave()
+    {
+        var updateModel = new InventoryItemUpdateDto()
+        {
+            Id = InventoryItem.Id,
+            Quantity = InventoryItem.Quantity,
+            ExpirationDate = InventoryItem.ExpirationDate
+        };
+
+        OnSave.InvokeAsync(updateModel);
+        IsVisible = false;
+    }
+
+    private void HandleDelete()
+    {
+        OnDelete.InvokeAsync(InventoryItem.Id);
+        IsVisible = false;
+    }
+    
+    
+}
+}

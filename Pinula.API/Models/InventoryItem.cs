@@ -9,11 +9,9 @@ public class InventoryItem
     
     public decimal Quantity { get; set; }
     public decimal QuantityInGrams { get; set; }
-    
     public DateTime? ExpirationDate { get; set; }
     
-    public decimal AllocatedQuantityInGrams { get; set; }
-    public bool IsAllocated { get; set; } = false;
+    public virtual ICollection<InventoryMealPlanAllocation> Allocations { get; set; } = new List<InventoryMealPlanAllocation>();
 
     public virtual Group Group { get; set; }
     public virtual Ingredient Ingredient { get; set; }
