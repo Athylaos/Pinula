@@ -1,0 +1,149 @@
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.Interface
+@using Pinula.Shared.DTOs
+@using Pinula.WASM.Components
+@page "/inventory/shoppingList"
+@inject IInventoryService InventoryService
+@inject IStringLocalizer<App> Localizer
+@inject NavigationManager NavManager
+
+<LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
+    <div class="planner-container">
+            <header class="planner-header-panel" style="margin-bottom: 15px">
+                <div class="header-brand">
+                    <div class="header-icon-box">
+                        <img src="images/icons/shopping-list.png" class="header-icon-box p-2" alt="fridge"/>
+                    </div>
+                    <div>
+                        <h1 class="page-title">@Localizer["ShoppingList"]</h1>
+                        <p class="subtitle">@Localizer["ShoppingListDescription"]</p>
+                    </div>
+                </div>
+
+                <div class="mp-header-actions">
+                    <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
+                        <img src="images/icons/plus.png" alt="plus"/>
+                        <!--<span>@Localizer[""]</span>-->
+                    </button>
+                    <button class="btn-group-action" title="@Localizer["AddShoppingListItemsToPantry"]">
+                        <img src="images/icons/shopping-list.png" alt="plus"/>
+                        <span>-></span>
+                        <img src="images/icons/fridge.png" alt="plus"/>
+                        <!--<span>@Localizer[""]</span>-->
+                    </button>
+                </div>
+            </header>
+            
+        
+        @if (!ShoppingItems.Any())
+        {
+            <div class="pin-empty-state">
+                <i class="bi bi-basket pin-empty-icon"></i>
+                <h3>@Localizer[""] No items on shopping list</h3>
+                <p>@Localizer[""] dscription</p>
+            </div>
+        }
+        else
+        {
+            @if (ShoppingItems != null && ShoppingItems.Any())
+            {
+                @foreach (var categoryGroup in ShoppingItems.GroupBy(i => i.ShoppingCategory?.Id))
+                {
+                    var categoryName = categoryGroup.FirstOrDefault()?.ShoppingCategory?.Name ?? "Neznámá kategorie";
+
+                    <div class="pin-category-section mb-4">
+                        <div class="section-divider">
+                            <div class="title-block">
+                                <h2>@categoryName</h2>
+                            </div>
+                            <div class="line"></div>
+                        </div>
+
+                        <ul class="shopping-list-grid">
+                            @foreach (var item in categoryGroup)
+                            {
+                                <li class="shopping-item-card @(item.IsPurchased ? "purchased" : "") @(!string.IsNullOrWhiteSpace(item.RecipeAllocationName) ? "allocated" : "")">
+                                    <div class="item-left">
+                                        <input class="custom-checkbox" type="checkbox" @bind="@item.IsPurchased">
+                                        <div class="item-details">
+                                            <span class="item-name">
+                                                @item.Ingredient.Name
+                                                @if (item.BaseIngredient is not null)
+                                                {
+                                                    <small class="base-name">(@item.BaseIngredient.Name)</small>
+                                                }
+                                            </span>
+            
+                                            @if (item.RecipeAllocationName != null && item.MealPlanDate != null)
+                                            {
+                                                <span class="allocation-badge" title="Vyžadováno pro recept">
+                                                     @item.RecipeAllocationName (@DateOnly.FromDateTime(item.MealPlanDate.Value).ToString("dd MMM"))
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="item-right">
+                                        <div class="item-qty-badge">
+                                            <span>@item.Quantity.ToString("0.##")</span>
+                                            <span class="unit">@item.Unit.Name</span>
+                                            @if (item.QuantityInGrams > 0 && item.Unit.Code != "g")
+                                            {
+                                                <span class="grams">(@item.QuantityInGrams.ToString("0.##")g)</span>
+                                            }
+                                        </div>
+                                        <button type="button" class="btn-delete-mp" @onclick="() => RemoveItem(item)">✕</button>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+        }
+    </div>
+</LoadingView>
+
+
+@code {
+    private List<ShoppingItemDisplayDto> ShoppingItems = new();
+    private bool isLoading = true;
+    private bool addToShoppingListVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadShoppingList();
+    }
+
+    private async Task LoadShoppingList()
+    {
+        isLoading = true;
+        ShoppingItems = await InventoryService.GetAllShoppingItemsAsync();
+        isLoading = false;
+    }
+
+
+    private void HandleItemDeleted(Guid id)
+    {
+        ShoppingItems.Remove(ShoppingItems.First(i => i.Id == id));
+        InventoryService.DeleteShoppingItemAsync(id);
+    }
+
+    private void ToggleAddInventoryModal()
+    {
+        addToShoppingListVisible = !addToShoppingListVisible;
+    }
+
+    private async Task AddShoppingItem(ShoppingItemCreateDto itemDto)
+    {
+        await InventoryService.CreateShoppingItemAsync(itemDto);
+        await LoadShoppingList();
+    }
+
+    private async Task RemoveItem(ShoppingItemDisplayDto item)
+    {
+        ShoppingItems.Remove(item);
+        await InventoryService.DeleteShoppingItemAsync(item.Id);
+    }
+
+}

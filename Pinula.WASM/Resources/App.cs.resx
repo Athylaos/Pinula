@@ -771,4 +771,10 @@
   <data name="DeleteFromPantry" xml:space="preserve">
     <value>Odstranit ze spíže</value>
   </data>
+  <data name="AddShoppingListItemsToPantry" xml:space="preserve">
+    <value>Přidat zakoupené položky do spíže</value>
+  </data>
+  <data name="ShoppingListDescription" xml:space="preserve">
+    <value>Sledujte suroviny potřebné pro vaše plánované recepty a jídla</value>
+  </data>
 </root>

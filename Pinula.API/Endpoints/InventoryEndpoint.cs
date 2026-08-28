@@ -159,16 +159,19 @@ public static class InventoryEndpoint
             var si = await db.ShoppingListItems
                 .Where(i => i.GroupId == groupDb.Id)
                 .Include(i => i.Ingredient)
-                .ThenInclude(i => i.ShoppingCategory)
+                    .ThenInclude(i => i.ShoppingCategory)
                 .Include(i => i.Ingredient)
-                .ThenInclude(i => i.BaseIngredient)
+                    .ThenInclude(i => i.BaseIngredient)
                 .Include(i => i.Unit)
                 .Include(i => i.ShoppingCategory)
+                .Include(i => i.MealPlanIngredient)
+                    .ThenInclude(mpi => mpi.MealPlan)
+                        .ThenInclude(mp => mp.Recipe)
                 .AsNoTracking()
                 .ToListAsync();
             
            var result = si.AdaptWithRequest<List<ShoppingItemDisplayDto>>(request);
-
+           
             return Results.Ok(result);
         }).RequireAuthorization();
         

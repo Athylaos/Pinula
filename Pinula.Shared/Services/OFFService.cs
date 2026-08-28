@@ -172,7 +172,7 @@ namespace Pinula.Shared.Services
 
                 return new IngredientPreviewDto
                 {
-                    Id = Guid.Empty,
+                    Id = Guid.Empty, //this is causing multiple selection in Add ingredient popup
                     Name = (languageCode == "cs")
                         ? (p.ProductNameCs ?? p.ProductNameEn ?? p.ProductName ?? "Neznámý produkt")
                         : (p.ProductNameEn ?? p.ProductNameCs ?? p.ProductName ?? "Unknown product"),

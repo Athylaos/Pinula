@@ -211,7 +211,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(e => e.Quantity).HasPrecision(10, 3);
 
             entity.HasOne(d => d.Ingredient).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.IngredientId).OnDelete(DeleteBehavior.ClientSetNull);
-            entity.HasOne(d => d.MealPlan).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.MealPlanId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.MealPlan).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.MealPlanId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(d => d.Unit).WithMany(p => p.MealPlanIngredients).HasForeignKey(d => d.UnitId).OnDelete(DeleteBehavior.ClientSetNull);
         });
 

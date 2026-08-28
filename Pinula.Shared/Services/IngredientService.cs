@@ -122,6 +122,7 @@ namespace Pinula.Shared.Services
                 _logger.LogError($"Error fetching local ingredients: {ex.Message}");
             }
 
+            /*
             int remainingAmount = filter.Amount - finalResults.Count;
 
             if (remainingAmount > 0)
@@ -146,7 +147,9 @@ namespace Pinula.Shared.Services
                     _logger.LogError($"Error fetching OFF ingredients: {ex.Message}");
                 }
             }
-
+            */
+            
+            // Taking ingredients from Open food facts is now disabled, might be reimplemented in the future (mostly for barcode scanning)
             return finalResults.Take(filter.Amount).ToList();
         }
 

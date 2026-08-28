@@ -107,6 +107,14 @@ public class MappingConfig : IRegister
             .Map(d => d.AllocatedQuantityInGrams,
                 src => src.Allocations.Sum(a => a.AllocatedQuantityInGrams));
 
+        config.NewConfig<ShoppingListItem, ShoppingItemDisplayDto>()
+            .Map(d => d.BaseIngredient,
+                src => src.Ingredient.BaseIngredient)
+            .Map(d => d.RecipeAllocationName,
+                src => HelperFunctions.GetLocalizedName(src.MealPlanIngredient.MealPlan.Recipe.Titles, GetLanguageCode()))
+            .Map(d => d.MealPlanDate,
+                src => src.MealPlanIngredient.MealPlan.Date);
+
         #endregion
 
         #region MealPlan
@@ -159,6 +167,8 @@ public class MappingConfig : IRegister
                 src => HelperFunctions.GetLocalizedName(src.Names, GetLanguageCode()));
 
         config.NewConfig<IngredientUnit, UnitPreviewDto>()
+            .Map(d => d.Id,
+                src => src.UnitId)
             .Map(d => d.Name,
                 src => HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()))
             .Map(d => d.Code,

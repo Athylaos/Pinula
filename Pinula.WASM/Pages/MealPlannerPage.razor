@@ -50,7 +50,7 @@
             }
 
             <button class="btn-group-action" @onclick="() => showGroupModal = true">
-                <i class="@(isNotInGroup ? "" : "bi bi-gear")"></i>
+                <i class="@(isNotInGroup ? "" : "bi bi-gear")" style="width: 30px; height: 30px; font-size: 1.4rem"></i>
                 <span>@(isNotInGroup ? Localizer["SetupGroup"] : "")</span>
             </button>
         </div>

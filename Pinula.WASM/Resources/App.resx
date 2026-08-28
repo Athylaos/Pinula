@@ -771,4 +771,10 @@
   <data name="DeleteFromPantry" xml:space="preserve">
     <value>Delete from pantry</value>
   </data>
+  <data name="AddShoppingListItemsToPantry" xml:space="preserve">
+    <value>Add purchased items to pantry</value>
+  </data>
+  <data name="ShoppingListDescription" xml:space="preserve">
+    <value>Keep track of ingredients for your planned recipes and meals</value>
+  </data>
 </root>

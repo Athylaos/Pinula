@@ -34,7 +34,7 @@
                         <select class="modal-input" @bind="EditMealType">
                             @foreach (var type in Enum.GetValues<MealType>())
                             {
-                                <option value="@type">@type.ToString()</option>
+                                <option value="@type">@Localizer[type.ToString()]</option>
                             }
                         </select>
                     </div>
@@ -83,7 +83,7 @@
                             <input type="number" class="custom-input qty" @bind="@ing.Quantity"/>
                             <span class="unit">@ing.Unit.Name</span>
                             <span class="name">@ing.Ingredient.Name</span>
-                            <button type="button" class="btn-delete" @onclick="() => RemoveIngredient(ing)">✕</button>
+                            <button type="button" class="btn-delete-mp" @onclick="() => RemoveIngredient(ing)">✕</button>
                         </div>
                     }
                 </div>

@@ -1164,6 +1164,7 @@ namespace Pinula.API.Migrations
                     b.HasOne("Pinula.API.Models.MealPlan", "MealPlan")
                         .WithMany("MealPlanIngredients")
                         .HasForeignKey("MealPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_meal_plan_ingredients_meal_plans_meal_plan_id");
 

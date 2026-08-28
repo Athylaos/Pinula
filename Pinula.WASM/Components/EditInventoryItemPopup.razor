@@ -1,3 +1,4 @@
+@using System.Globalization
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
 @using Microsoft.Extensions.Localization
@@ -19,7 +20,7 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="section-label">@Localizer["Quantity"]</label>
-                            <input type="number" class="custom-select" placeholder="Qty" @bind="InventoryItem.Quantity"/>
+                            <input type="number" class="custom-select" placeholder="Qty" step="any" @bind="QuantityInput"/>
                         </div>
                         <div class="col-6">
                             <label class="section-label">@Localizer["Unit"]</label>
@@ -38,7 +39,7 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6 d-flex flex-column">
                             <label class="section-label">@Localizer["Reserved"]</label>
-                            <input disabled="@(true)" type="number" class="custom-select" placeholder="Qty" @bind="InventoryItem.AllocatedQuantityInGrams" style="background: @(false ? "" : "transparent !important")"/>
+                            <input disabled="@(true)" type="number" class="custom-select" placeholder="Qty" @bind="AllocatedQuantityInGramsInput" style="background: @(false ? "" : "transparent !important")"/>
                         </div> 
                         <div class="col-6">
                             <label class="section-label">@Localizer["ExpirationDate"]</label>
@@ -67,7 +68,64 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<InventoryItemUpdateDto> OnSave { get; set; }
     [Parameter] public EventCallback<Guid> OnDelete { get; set; }
-    [Parameter] public InventoryItemDisplayDto InventoryItem { get; set; } = new();
+    private InventoryItemDisplayDto _inventoryItem = new();
+    [Parameter]
+    public InventoryItemDisplayDto InventoryItem
+    {
+        get => _inventoryItem;
+        set
+        {
+            _inventoryItem = value ?? new();
+            _quantityInput = _inventoryItem.Quantity.ToString("G29");
+            _quantityInGramsInput = _inventoryItem.QuantityInGrams.ToString("G29");
+            _allocatedQuantityInGramsInput = _inventoryItem.AllocatedQuantityInGrams.ToString("G29");
+        }
+    }
+    
+    private string _quantityInput = string.Empty;
+    public string QuantityInput
+    {
+        get => _quantityInput;
+        set
+        {
+            _quantityInput = value;
+            var normalizedValue = value?.Replace(',', '.');
+            if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                _inventoryItem.Quantity = result;
+            }
+        }
+    }
+
+    private string _quantityInGramsInput = string.Empty;
+    public string QuantityInGramsInput
+    {
+        get => _quantityInGramsInput;
+        set
+        {
+            _quantityInGramsInput = value;
+            var normalizedValue = value?.Replace(',', '.');
+            if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                _inventoryItem.QuantityInGrams = result;
+            }
+        }
+    }
+
+    private string _allocatedQuantityInGramsInput = string.Empty;
+    public string AllocatedQuantityInGramsInput
+    {
+        get => _allocatedQuantityInGramsInput;
+        set
+        {
+            _allocatedQuantityInGramsInput = value;
+            var normalizedValue = value?.Replace(',', '.');
+            if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                _inventoryItem.AllocatedQuantityInGrams = result;
+            }
+        }
+    }
     
     private string _warningText = "";
     private CancellationTokenSource? _warningTokenSource;
@@ -135,5 +193,4 @@
     }
     
     
-}
 }

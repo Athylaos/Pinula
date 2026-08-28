@@ -11,11 +11,32 @@ using System.Globalization;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text;
 
 namespace Pinula.API.Endpoints
 {
     public static class IngredientEndpoint
     {
+        public static string RemoveDiacritics(this string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder(normalizedString.Length);
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        }
+        
+        
         public static void MapIngredientEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/ingredients");
@@ -46,12 +67,33 @@ namespace Pinula.API.Endpoints
 
                 if (string.IsNullOrWhiteSpace(filter.Barcode) && !string.IsNullOrWhiteSpace(filter.SearchTerm))
                 {
-                    string term = filter.SearchTerm.ToLower();
+                    var searchTokens = filter.SearchTerm
+                        .RemoveDiacritics()
+                        .ToLowerInvariant()
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                    rawIngredients = rawIngredients.Where(i =>
-                        (i.Names.TryGetValue(languageCode, out var nameCs) && nameCs.ToLower().Contains(term)) ||
-                        (i.Names.TryGetValue("en", out var nameEn) && nameEn.ToLower().Contains(term))
-                    ).ToList();
+                    rawIngredients = rawIngredients
+                        .Select(i => new
+                        {
+                            Ingredient = i,
+                            NormalizedNames = new[]
+                                {
+                                    i.Names.GetValueOrDefault(languageCode),
+                                    i.Names.GetValueOrDefault("en")
+                                }
+                                .Where(name => !string.IsNullOrEmpty(name))
+                                .Select(name => name!.RemoveDiacritics().ToLowerInvariant())
+                                .ToList()
+                        })
+                        .Where(x =>
+                        {
+                            return searchTokens.All(token =>
+                                x.NormalizedNames.Any(name => name.Contains(token))
+                            );
+                        })
+                        .OrderByDescending(x => x.NormalizedNames.Any(name => name.StartsWith(searchTokens[0])))
+                        .Select(x => x.Ingredient)
+                        .ToList();
                 }
 
                 var results = rawIngredients

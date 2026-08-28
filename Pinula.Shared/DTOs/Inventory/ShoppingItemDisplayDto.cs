@@ -11,5 +11,8 @@ public class ShoppingItemDisplayDto
     public ShoppingCategoryDisplayDto ShoppingCategory { get; set; } = new();
     public IngredientPreviewDto? BaseIngredient { get; set; }
     
+    public string? RecipeAllocationName { get; set; }
+    public DateTime? MealPlanDate { get; set; }
+    
     public bool IsPurchased { get; set; } = false;
 }
