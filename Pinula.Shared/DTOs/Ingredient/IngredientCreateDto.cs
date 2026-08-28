@@ -6,7 +6,7 @@
 
         public Dictionary<string, string> Names { get; set; } = new();
         public Guid DefaultUnitId { get; set; }
-        public Guid ShoppingCategoryId { get; set; }
+        public Guid? ShoppingCategoryId { get; set; }
         public Guid? BaseIngredientId { get; set; }
         public string? OffCategoryTag { get; set; }
         public decimal? EdibleRatio { get; set; }

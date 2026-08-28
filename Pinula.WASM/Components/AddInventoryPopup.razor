@@ -33,7 +33,7 @@
                     </LoadingView>
                 </ul>
 
-                <button class="btn btn-link text-gray w-100 mb-1" @onclick="ToggleMode">
+                <button class="btn btn-link text-gray w-100 mb-1" @onclick="() => createPopupVisible = true">
                     @Localizer["CreateNewIngredient"]
                 </button>
 
@@ -88,6 +88,9 @@
             </div>
         </div>
     </div>
+    
+    <CreateIngredientPopup IsVisible="createPopupVisible">
+    </CreateIngredientPopup>
 }
 
 @code {
@@ -95,7 +98,7 @@
     [Parameter] public EventCallback<InventoryItemCreateDto> OnIngredientAdded { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
-    private bool isAddMode = true;
+    private bool createPopupVisible = false;
     private string _searchText = "";
 
     private string SearchText
@@ -157,7 +160,14 @@
     
     protected override async Task OnInitializedAsync()
     {
-        await LoadIngredients();
+        try
+        {
+            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = "ban"});
+        }
+        catch (Exception ex)
+        {
+            warningText = "Error loading ingredients.";
+        }
 
     }
 
@@ -193,17 +203,7 @@
         debounceTimer.AutoReset = false;
         debounceTimer.Start();
     }
-
-    private async Task ToggleMode()
-    {
-        isAddMode = !isAddMode;
-        if (isAddMode) await LoadIngredients();
-        else
-        {
-            //open create popup
-        }
-
-    }
+    
 
     private async Task ConfirmSelection()
     {

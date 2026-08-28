@@ -1,0 +1,396 @@
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@inject IIngredientService IngredientService
+@inject IUnitService UnitService
+@inject ILocalStorage LocalStorage
+@inject IStringLocalizer<App> Localizer
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal">
+            <div class="modal-header">
+                    <h2 style="display:inline-block">@Localizer["CreateIngredient"]</h2>
+                    <button class="close-modal-btn" @onclick="() => IsVisible = false">&times;</button>
+            </div>
+            <div class="modal-body ">
+                <div class="mb-1">
+                    <label class="value-text">@(cultureCode.Contains("en") ? "*" : "") @Localizer["EnglishName"]</label>
+                    <input type="text" class="custom-input" @bind="nameEn"/>
+                </div>
+                <div class="mb-1">
+                    <label class="value-text">@(cultureCode.Contains("cs") ? "*" : "") @Localizer["CzechName"]</label>
+                    <input type="text" class="custom-input" @bind="nameCs"/>
+                </div>
+                <div class="mb-1">
+                    <label class="value-text">* @Localizer["PreferredUnit"]</label>
+                    <select class="custom-select" @onchange="HandleMainUnitChange">
+                        <option value="">@Localizer["SelectUnit"]</option>
+                        @foreach (var unit in allUnits)
+                        {
+                            <option value="@unit.Id">@unit.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="value-text">* @Localizer["Category"]</label>
+                    <select class="custom-select" @bind="shoppingCategoryId">
+                        <option value="">@Localizer["SelectCategory"]</option>
+                        @foreach (var category in shoppingCategories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+                <label class="value-text">@Localizer["Photo"]</label>
+                <div class="w-100 mb-2" style="display: flex; justify-content: center; align-items: center;">
+                    <div class="image-upload" style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                        <div class="image-preview" style="display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto; height: 200px">
+                            @if (!string.IsNullOrEmpty(SelectedImagePreview))
+                            {
+                                <img src="@SelectedImagePreview" alt="Recipe preview" style="max-width: 100%; display: block; margin: 0 auto; " />
+                            }
+                            else
+                            {
+                                <span style="text-align: center; display: block; width: 100%;">@Localizer["NoImageSelected"]</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="custom-file-upload mb-3">
+                    <label class="btn-apply">
+                        @Localizer["SelectImage"]
+                        <InputFile OnChange="LoadPhoto" style="display: none;" />
+                    </label>
+                </div>
+                
+                
+                <h5 class="value fs-4">* Nutrients for 100g</h5>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Calories"] (kcal)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Calories" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Protein"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Proteins" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Fat"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Fats" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["SaturatedFat"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.SaturatedFats" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Carbs"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Carbohydrates" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Sugar"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Sugars" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Fiber"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Fiber" />
+                    </div>
+                    <div class="col-6">
+                        <label class="value-text">@Localizer["Salt"] (g)</label>
+                        <input type="number" class="custom-select" @bind="newIngDto.Salt" />
+                    </div>
+                </div>
+                
+                <h5 class="value fs-4">* @Localizer["Diets"]</h5>
+                <div class="row g-2 mb-3">
+                    <div class="col-6 flex-row" style="padding-right: 30px;">
+                        <label class="value-text">@Localizer["Vegan"]</label>
+                        <div class="flex-spacer"></div>
+                        <input type="checkbox" class="custom-checkbox text-center" @bind="newIngDto.IsVegan" />
+                    </div>
+                    <div class="col-6 flex-row" style="padding-right: 30px;">
+                        <label class="value-text">@Localizer["Vegetarian"]</label>
+                        <div class="flex-spacer"></div>
+                        <input type="checkbox" class="custom-checkbox text-center" @bind="newIngDto.IsVegetarian" />
+                    </div>
+                    <div class="col-6 flex-row" style="padding-right: 30px;">
+                        <label class="value-text">@Localizer["GlutenFree"]</label>
+                        <div class="flex-spacer"></div>
+                        <input type="checkbox" class="custom-checkbox text-center" @bind="newIngDto.IsGlutenFree" />
+                    </div>
+                    <div class="col-6 flex-row" style="padding-right: 30px;">
+                        <label class="value-text">@Localizer["LactoseFree"]</label>
+                        <div class="flex-spacer"></div>
+                        <input type="checkbox" class="custom-checkbox text-center" @bind="newIngDto.IsLactoseFree" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 mt-4">
+                        <h5 class="value fs-4">@Localizer["AdditionalUnits"]</h5>
+                        <p class="value-text text-start">@Localizer["AdditionalUnitsDesc"]</p>
+
+                        @foreach (var opt in additionalUnits)
+                        {
+                            <div class="ingredient-modal w-100 mb-2 flex-column justify-content-between align-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <strong class="value fs-5" style="min-width: 150px">1x @(opt.Unit.Name) =</strong>
+                                    <div class="flex-spacer"></div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="number" class="custom-input"
+                                               @bind="opt.AmountInGrams"
+                                               placeholder="Weight"
+                                               style="max-width: 80px"/>
+                                        <p class="value fs-5 mb-0">g</p>
+                                        @if (opt.Unit.Id != selectedMainUnitId)
+                                        {
+                                            <button type="button" class="btn-delete" @onclick="() => RemoveUnit(opt)">✕</button>
+                                        }
+                                        else
+                                        {
+                                            <div style="width: 30px"></div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-flex gap-2 mt-2 mb-3 align-items-center">
+                            <select class="custom-select w-50" @bind="unitToAddId">
+                                <option value="@Guid.Empty">@Localizer["SelectUnitToAdd"]</option>
+                                @foreach (var u in availableUnits)
+                                {
+                                    <option value="@u.Id">@u.Name</option>
+                                }
+                            </select>
+
+                            <button class="btn-apply w-50"
+                                    @onclick="AddUnitFromSelect"
+                                    disabled="@(unitToAddId == Guid.Empty)">
+                                @Localizer["AddUnit"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="transition: 0.2s ease;">
+                @if (!string.IsNullOrEmpty(warningText))
+                {
+                    <div class="text-danger small mt-1 mb-2 text-center w-100">@warningText</div>
+                }
+                <button class="btn-apply w-100 text-center" @onclick="SaveNewIngredient">@Localizer["ConfirmAndCreate"]</button>
+                <button class="btn btn-link text-gray w-100" @onclick="() => IsVisible = false">@Localizer["BackToSearch"]</button>
+            </div>
+        </div>
+    </div>    
+}
+    
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    
+    private IngredientCreateDto newIngDto = new();
+    private List<IngredientUnitPreviewDto> additionalUnits = new();
+    private List<ShoppingCategoryDisplayDto> shoppingCategories = new();
+    private Guid? selectedMainUnitId;
+    private List<UnitPreviewDto> availableUnits = new();
+    private Guid unitToAddId = Guid.Empty;
+    private List<UnitPreviewDto> allUnits = new();
+    private IngredientPreviewDto? selectedIngredient;
+    private Guid? selectedUnitId;
+    private string cultureCode;
+    private string _warningText = "";
+    private CancellationTokenSource? _warningTokenSource;
+    private string warningText
+    {
+        get => _warningText;
+        set
+        {
+            if (_warningText == value) return;
+            _warningText = value;
+
+            _warningTokenSource?.Cancel();
+            _warningTokenSource?.Dispose();
+
+            if (!string.IsNullOrEmpty(_warningText))
+            {
+                _warningTokenSource = new CancellationTokenSource();
+                var token = _warningTokenSource.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(2000, token);
+
+                        _warningText = "";
+                        await InvokeAsync(StateHasChanged);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }, token);
+            }
+        }
+    }
+    private string nameCs;
+    private string nameEn;
+    private string SelectedImagePreview { get; set; } = string.Empty;
+    private IBrowserFile? _selectedPhoto;
+    private Guid? shoppingCategoryId;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        cultureCode = await LocalStorage.GetStringAsync("culture") ?? string.Empty;
+        allUnits = await UnitService.GetAllUnitsAsync();
+        availableUnits = allUnits;
+        shoppingCategories = await IngredientService.GetAllShoppingCategories();
+    }
+    
+    
+    private async Task HandleMainUnitChange(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var unitId))
+        {
+            selectedMainUnitId = unitId;
+            var unit = allUnits.FirstOrDefault(u => u.Id == unitId);
+
+            if (unit != null)
+            {
+                if (!additionalUnits.Any(a => a.Unit.Id == unitId) && unit.Code != "g" && unit.Code != "kg")
+                {
+                    additionalUnits.Add(new IngredientUnitPreviewDto
+                    {
+                        Ingredient = selectedIngredient??new(),
+                        Unit = unit,
+                        AmountInGrams = unit.Code.ToLower() == "g" ? 1 : 0
+                    });
+                }
+            }
+            UpdateAvailableUnits();
+        }
+    }
+
+    private void UpdateAvailableUnits()
+    {
+        var usedIds = additionalUnits.Select(a => a.Unit.Id).ToList();
+        availableUnits = allUnits
+            .Where(u => !usedIds.Contains(u.Id) && u.Code!="g")
+            .OrderBy(u => u.Name)
+            .ToList();
+    }
+
+    private void AddUnitFromSelect()
+    {
+        if (unitToAddId == Guid.Empty) return;
+
+        var unit = allUnits.FirstOrDefault(u => u.Id == unitToAddId);
+        if (unit != null)
+        {
+            additionalUnits.Add(new IngredientUnitPreviewDto
+            {
+                Unit = unit,
+                AmountInGrams = unit.Code.ToLower() == "g" ? 1 : 0
+            });
+
+            unitToAddId = Guid.Empty;
+            UpdateAvailableUnits();
+        }
+    }
+
+    private void RemoveUnit(IngredientUnitPreviewDto opt)
+    {
+        additionalUnits.Remove(opt);
+        UpdateAvailableUnits();
+    }
+    
+    private async Task LoadPhoto(InputFileChangeEventArgs e)
+    {
+
+        _selectedPhoto = e.File;
+
+
+        var buffer = new byte[_selectedPhoto.Size];
+        using var stream = _selectedPhoto.OpenReadStream(maxAllowedSize: 5120000);
+        await stream.ReadAsync(buffer);
+
+        SelectedImagePreview = $"data:{_selectedPhoto.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+
+    
+    private async Task SaveNewIngredient()
+    {
+        if(cultureCode == "cs" && string.IsNullOrWhiteSpace(nameCs)){ warningText = "Czech name is mandatory"; return; }
+        if(cultureCode == "en" && string.IsNullOrWhiteSpace(nameEn)){ warningText = "English name is mandatory"; return; }
+        if (selectedMainUnitId is null) { warningText = "Preferred unit has to be selected"; return; }
+        if (shoppingCategoryId is null) { warningText = "Category has to be selected"; return; }
+        
+        if (newIngDto.Calories < 0) { warningText = "Calories can't be negative"; return; }
+        if (newIngDto.Proteins < 0) { warningText = "Proteins can't be negative"; return; }
+        if (newIngDto.Fats < 0) { warningText = "Fats can't be negative"; return; }
+        if (newIngDto.SaturatedFats < 0) { warningText = "Saturated fats can't be negative"; return; }
+        if (newIngDto.Carbohydrates < 0) { warningText = "Carbohydrates can't be negative"; return; }
+        if (newIngDto.Sugars < 0) { warningText = "Sugars can't be negative"; return; }
+        if (newIngDto.Fiber < 0) { warningText = "Fiber can't be negative"; return; }
+        if (newIngDto.Salt < 0) { warningText = "Salt can't be negative"; return; }
+
+
+
+        foreach (var opt in additionalUnits)
+        {
+            if (opt.AmountInGrams <= 0)
+            {
+                warningText = $"{opt.Unit.Name} doesn't have proper conversion!";
+                return;
+            }
+        }
+
+        newIngDto.DefaultUnitId = selectedMainUnitId.Value;
+        newIngDto.ShoppingCategoryId = shoppingCategoryId.Value;
+        newIngDto.Names = new Dictionary<string, string>() { { "en", nameEn }, { "cs", nameCs } };
+
+        newIngDto.AdditionalUnits = new();
+        foreach(var unit in additionalUnits)
+        {
+            newIngDto.AdditionalUnits.Add(new() { UnitId = unit.Unit.Id, ToDefaultUnit = unit.AmountInGrams });
+        }
+        if(additionalUnits.FirstOrDefault(u => u.Unit.Code == "g") is null)
+        {
+            var g = allUnits.FirstOrDefault(u => u.Code == "g");
+            newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
+        }
+
+        if (SelectedImagePreview is null)
+        {
+            var result = await IngredientService.CreateIngredientAsync(newIngDto, null, null, null, null);
+            if (result.Successful)
+            {
+                newIngDto = new();
+                additionalUnits.Clear();
+                selectedMainUnitId = null;
+                IsVisible = false;
+            }
+            else
+            {
+                warningText = result.Message;
+            }
+        }
+        else
+        {
+            var result = await IngredientService.CreateIngredientAsync(newIngDto, null, _selectedPhoto.OpenReadStream(), _selectedPhoto.Name, _selectedPhoto.ContentType);
+            if (result.Successful)
+            {
+                newIngDto = new();
+                additionalUnits.Clear();
+                selectedMainUnitId = null;
+                IsVisible = false;
+            }
+            else
+            {
+                warningText = result.Message;
+            }
+        }
+
+
+    }
+}

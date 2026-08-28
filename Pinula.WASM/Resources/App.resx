@@ -777,4 +777,61 @@
   <data name="ShoppingListDescription" xml:space="preserve">
     <value>Keep track of ingredients for your planned recipes and meals</value>
   </data>
+  <data name="CreateIngredient" xml:space="preserve">
+    <value>Create ingredient</value>
+  </data>
+  <data name="EnglishName" xml:space="preserve">
+    <value>English name</value>
+  </data>
+  <data name="CzechName" xml:space="preserve">
+    <value>Czech name</value>
+  </data>
+  <data name="PreferredUnit" xml:space="preserve">
+    <value>Prefferd unit</value>
+  </data>
+  <data name="SelectCategory" xml:space="preserve">
+    <value>Select category</value>
+  </data>
+  <data name="Photo" xml:space="preserve">
+    <value>Photo</value>
+  </data>
+  <data name="SaturatedFat" xml:space="preserve">
+    <value>Saturated fat</value>
+  </data>
+  <data name="Sugar" xml:space="preserve">
+    <value>Sugar</value>
+  </data>
+  <data name="Salt" xml:space="preserve">
+    <value>Salt</value>
+  </data>
+  <data name="Diets" xml:space="preserve">
+    <value>Diets</value>
+  </data>
+  <data name="Vegan" xml:space="preserve">
+    <value>Vegan</value>
+  </data>
+  <data name="Vegetarian" xml:space="preserve">
+    <value>Vegetarian</value>
+  </data>
+  <data name="GlutenFree" xml:space="preserve">
+    <value>Gluten free</value>
+  </data>
+  <data name="LactoseFree" xml:space="preserve">
+    <value>Lactose free</value>
+  </data>
+  <data name="AdditionalUnis" xml:space="preserve">
+    <value>Additional units</value>
+  </data>
+  <data name="AdditionalUnitsDesc" xml:space="preserve">
+    <value>Enter how many grams are in one unit (e.g. 1 piece = 60g)</value>
+  </data>
+  <data name="SelectUnitToAdd" xml:space="preserve">
+    <value>Select unit to add</value>
+  </data>
+  <data name="AddUnit" xml:space="preserve">
+    <value>Add unit</value>
+  </data>
+  <data name="BackToSearch" xml:space="preserve">
+    <value>Back to search</value>
+  </data>
 </root>

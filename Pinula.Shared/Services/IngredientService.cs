@@ -257,5 +257,22 @@ namespace Pinula.Shared.Services
             var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleChecked/{id}", null);
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<List<ShoppingCategoryDisplayDto>> GetAllShoppingCategories()
+        {
+            try
+            {
+                var url = $"{BaseUrl}/shoppingCategories/getAll";
+                var response = await _httpClient.GetFromJsonAsync<List<ShoppingCategoryDisplayDto>>(url);
+                if(response is null) return new();
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching categories");
+                return new();
+            }
+        }
     }
 }

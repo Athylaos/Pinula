@@ -12,6 +12,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text;
+using Pinula.Shared.Interface;
 
 namespace Pinula.API.Endpoints
 {
@@ -124,7 +125,7 @@ namespace Pinula.API.Endpoints
 
 
             //---------------------------------------------------------------Create ingredient
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var userId = user.GetUserId();
@@ -137,6 +138,22 @@ namespace Pinula.API.Endpoints
                 var dto = JsonSerializer.Deserialize<IngredientCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (dto == null) return Results.BadRequest("Invalid recipe data.");
 
+                if (string.IsNullOrWhiteSpace(dto.Names[languageCode])) Results.BadRequest("Missing ingredient data.");
+                if (languageCode == "en")
+                {
+                    if(string.IsNullOrWhiteSpace(dto.Names["cs"]))
+                    {
+                        var translatedName = await translationService.TranslateTextAsync(dto.Names["en"], "cs");
+                        dto.Names["cs"] = translatedName??dto.Names["en"];
+                    }
+                    else if (string.IsNullOrWhiteSpace(dto.Names["en"]))
+                    {
+                        var translatedName = await translationService.TranslateTextAsync(dto.Names["cs"], "en");
+                        dto.Names["en"] = translatedName??dto.Names["cs"];
+                    }
+                }
+                
+                
                 string finalPhotoUrl = "default_ingredient_picture.png";
                 var file = form.Files.GetFile("image");
 
@@ -160,8 +177,8 @@ namespace Pinula.API.Endpoints
                         {
                             image.Mutate(x => x.Resize(new ResizeOptions
                             {
-                                Mode = ResizeMode.Crop,
-                                Size = new Size(1200, 1200)
+                                Mode = ResizeMode.Max,
+                                Size = new Size(1200, 0)
                             }));
 
                             await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
@@ -178,34 +195,41 @@ namespace Pinula.API.Endpoints
                     }
                 }
 
-                if(finalPhotoUrl == "default_ingredient_picture.png" && !string.IsNullOrWhiteSpace(dto.ImageUrl)) finalPhotoUrl = dto.ImageUrl;
-
                 try
                 {
                     ShoppingCategory? ct = null;
-                    if(dto.CategoryTagId is not null)
+                    if (dto.ShoppingCategoryId is null)
                     {
-                        ct = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(ct => ct.Id == dto.CategoryTagId);
+                        if(dto.CategoryTagId is not null)
+                        {
+                            ct = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(ct => ct.Id == dto.CategoryTagId);
+                        }
+                        else
+                        {
+                            foreach(var cs in dto.CategoryTags)
+                            {
+                                var cts = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(sc => sc.Code == cs);
+                                if(cts is not null)
+                                {
+                                    ct = cts;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (ct is null)
+                        {
+                            ct = await db.ShoppingCategories
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(t => t.Code == "other");
+                        }  
                     }
                     else
                     {
-                        foreach(var cs in dto.CategoryTags)
-                        {
-                            var cts = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(sc => sc.Code == cs);
-                            if(cts is not null)
-                            {
-                                ct = cts;
-                                break;
-                            }
-                        }
+                        ct = new() { Id = dto.ShoppingCategoryId.Value };
                     }
 
-                    if (ct is null)
-                    {
-                        ct = await db.ShoppingCategories
-                             .AsNoTracking()
-                             .FirstOrDefaultAsync(t => t.Code == "other");
-                    }
+                    
 
 
                     var ingredient = new Ingredient
@@ -217,7 +241,11 @@ namespace Pinula.API.Endpoints
                         ImageUrl = finalPhotoUrl,
                         ShoppingCategoryId = ct.Id,
                         DefaultUnitId = dto.DefaultUnitId,
-
+                        IngredientCreated = DateTime.UtcNow,
+                        BaseIngredientId = dto.BaseIngredientId,
+                        OffCategoryTag = dto.OffCategoryTag,
+                        EdibleRatio = dto.EdibleRatio,
+                        
                         Calories = dto.Calories,
                         Proteins = dto.Proteins,
                         Fats = dto.Fats,
@@ -248,7 +276,51 @@ namespace Pinula.API.Endpoints
                         }
                     }
 
+                    var allUnits = await db.Units.Select(u => new Unit(){Id = u.Id, Code = u.Code}).ToListAsync();
+                    var g = allUnits.FirstOrDefault(u => u.Code == "g");
+                    var kg = allUnits.FirstOrDefault(u => u.Code == "kg");
+                    var ml = allUnits.FirstOrDefault(u => u.Code == "ml");
+                    var l = allUnits.FirstOrDefault(u => u.Code == "l");
+                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == g.Id) is null)
+                    {
+                        ingredient.IngredientUnits.Add(new IngredientUnit
+                        {
+                            IngredientId = ingredient.Id,
+                            UnitId = g.Id,
+                            AmountInGrams = 1
+                        });
+                    }
 
+                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == kg.Id) is null)
+                    {
+                        ingredient.IngredientUnits.Add(new IngredientUnit
+                        {
+                            IngredientId = ingredient.Id,
+                            UnitId = kg.Id,
+                            AmountInGrams = 1000
+                        });
+                    }
+                    
+                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id) is not null && ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id) is null)
+                    {
+                        ingredient.IngredientUnits.Add(new IngredientUnit
+                        {
+                            IngredientId = ingredient.Id,
+                            UnitId = l.Id,
+                            AmountInGrams = ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id).AmountInGrams*1000
+                        });
+                    }
+                    
+                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id) is not null && ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id) is null)
+                    {
+                        ingredient.IngredientUnits.Add(new IngredientUnit
+                        {
+                            IngredientId = ingredient.Id,
+                            UnitId = ml.Id,
+                            AmountInGrams = ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id).AmountInGrams/1000
+                        });
+                    }
+                    
 
                     db.Ingredients.Add(ingredient);
                     await db.SaveChangesAsync();
@@ -500,8 +572,15 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(new { Checked = ingredient.Checked });
 
             }).RequireAuthorization("AdminOnly");
+            
+            //---------------------------------------------------------------Get shopping categories
+            group.MapGet("/shoppingCategories/getAll", async (PinulaDbContext db, HttpRequest request) =>
+            {
+                var categoriesRaw = await db.ShoppingCategories.ToListAsync();
+                var categories = categoriesRaw.AdaptWithRequest<List<ShoppingCategoryDisplayDto>>(request);
 
-
+                return Results.Ok(categories);
+            });
 
         }
 

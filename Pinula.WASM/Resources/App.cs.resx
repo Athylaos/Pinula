@@ -777,4 +777,61 @@
   <data name="ShoppingListDescription" xml:space="preserve">
     <value>Sledujte suroviny potřebné pro vaše plánované recepty a jídla</value>
   </data>
+  <data name="CreateIngredient" xml:space="preserve">
+    <value>Vytvoř surovinu</value>
+  </data>
+  <data name="EnglishName" xml:space="preserve">
+    <value>Anglický název</value>
+  </data>
+  <data name="CzechName" xml:space="preserve">
+    <value>Český název</value>
+  </data>
+  <data name="PreferredUnit" xml:space="preserve">
+    <value>Preferovaná jednotka</value>
+  </data>
+  <data name="SelectCategory" xml:space="preserve">
+    <value>Vyberte kategorii</value>
+  </data>
+  <data name="Photo" xml:space="preserve">
+    <value>Obrázek</value>
+  </data>
+  <data name="SaturatedFat" xml:space="preserve">
+    <value>Nasycené tuky</value>
+  </data>
+  <data name="Sugar" xml:space="preserve">
+    <value>Cukry</value>
+  </data>
+  <data name="Salt" xml:space="preserve">
+    <value>Sůl</value>
+  </data>
+  <data name="Diets" xml:space="preserve">
+    <value>Diety</value>
+  </data>
+  <data name="Vegan" xml:space="preserve">
+    <value>Veganské</value>
+  </data>
+  <data name="Vegetarian" xml:space="preserve">
+    <value>Vegetariánské</value>
+  </data>
+  <data name="GlutenFree" xml:space="preserve">
+    <value>Bezlepkové</value>
+  </data>
+  <data name="LactoseFree" xml:space="preserve">
+    <value>Bezlakotózové</value>
+  </data>
+  <data name="AdditionalUnis" xml:space="preserve">
+    <value>Další jednotky</value>
+  </data>
+  <data name="AdditionalUnitsDesc" xml:space="preserve">
+    <value>Zadejte kolik gramů má jedna jednotka (např. 1 kus = 60g)</value>
+  </data>
+  <data name="SelectUnitToAdd" xml:space="preserve">
+    <value>Vyberte jednoku pro přidání</value>
+  </data>
+  <data name="AddUnit" xml:space="preserve">
+    <value>Přidat jednotku</value>
+  </data>
+  <data name="BackToSearch" xml:space="preserve">
+    <value>Zpátky na hledání</value>
+  </data>
 </root>

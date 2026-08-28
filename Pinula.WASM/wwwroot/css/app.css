@@ -1271,7 +1271,7 @@ html, * {
     width: 100%;
     max-width:800px;
     height: 400px;
-    border: 2px solid #1D4934;
+    border: 1px solid #1D4934;
     border-radius: 15px;
     margin-bottom: 15px;
     display: flex;
@@ -1287,7 +1287,6 @@ html, * {
     }
 
 .custom-file-upload .btn-apply {
-    display: inline-block;
     padding: 10px 20px;
     cursor: pointer;
     background-color: var(--pine-teal);

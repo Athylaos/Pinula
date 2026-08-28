@@ -14,5 +14,7 @@ namespace Pinula.Shared.Interface
         public Task<bool> AdminToggleIngredientApprovalAsync(Guid id);
         public Task<bool> AdminToggleIngredientCheckedAsync(Guid id);
 
+        public Task<List<ShoppingCategoryDisplayDto>> GetAllShoppingCategories();
+
     }
 }
