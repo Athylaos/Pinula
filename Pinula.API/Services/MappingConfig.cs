@@ -118,7 +118,7 @@ public class MappingConfig : IRegister
             .Map(d => d.BaseIngredient,
                 src => src.Ingredient.BaseIngredient)
             .Map(d => d.RecipeAllocationName,
-                src => HelperFunctions.GetLocalizedName(src.MealPlanIngredient.MealPlan.Recipe.Titles, GetLanguageCode()))
+                src => src.MealPlanIngredientId.HasValue ? HelperFunctions.GetLocalizedName(src.MealPlanIngredient.MealPlan.Recipe.Titles, GetLanguageCode()) : string.Empty)
             .Map(d => d.MealPlanDate,
                 src => src.MealPlanIngredient.MealPlan.Date);
 

@@ -834,4 +834,13 @@
   <data name="BackToSearch" xml:space="preserve">
     <value>Back to search</value>
   </data>
+  <data name="MoveToPantry" xml:space="preserve">
+    <value>Move to pantry</value>
+  </data>
+  <data name="SetExpirationDatesDescription" xml:space="preserve">
+    <value>Move purchased items to yours pantry. You can add expiration date.</value>
+  </data>
+  <data name="ConfirmTransfer" xml:space="preserve">
+    <value>Confirm tranfer</value>
+  </data>
 </root>

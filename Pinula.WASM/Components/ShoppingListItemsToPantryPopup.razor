@@ -1,0 +1,159 @@
+@using Pinula.Shared.DTOs
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<App> Localizer
+@implements IDisposable
+
+@if (_isVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h2>@Localizer["MoveToPantry"]</h2>
+                    <p class="subtitle">@Localizer["SetExpirationDatesDescription"]</p>
+                </div>
+                <button class="close-modal-btn" @onclick="Close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+
+                
+                <div class="transfer-list">
+                    @foreach (var wrapper in _transferItems)
+                    {
+                        <div class="shopping-item-card transfer-card">
+                            <div class="item-left">
+                                <div class="item-details">
+                                    <span class="item-name">
+                                        @wrapper.SourceItem.Ingredient.Name
+                                        @if (wrapper.SourceItem.BaseIngredient != null)
+                                        {
+                                            <small class="base-name">(@wrapper.SourceItem.BaseIngredient.Name)</small>
+                                        }
+                                    </span>
+                                    <div class="item-qty-badge mt-1" style="width: fit-content;">
+                                        <span>@wrapper.CreateDto.Quantity.ToString("0.##")</span>
+                                        <span class="unit">@wrapper.SourceItem.Unit.Name</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="item-right expiration-wrapper">
+                                <label class="section-label" style="margin-bottom: 4px;">@Localizer["ExpirationDate"]</label>
+                                <input type="date" class="modal-input date-picker" @bind="wrapper.CreateDto.ExpirationDate" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="modal-footer" style="justify-content: space-between;">
+                <div>
+                    @if (!string.IsNullOrEmpty(warningText))
+                    {
+                        <span class="text-danger small fw-bold">@warningText</span>
+                    }
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-cancel-mp" @onclick="Close">@Localizer["Cancel"]</button>
+                    <button class="btn-apply" style="width: auto; padding: 10px 24px;" @onclick="ConfirmSelection">@Localizer["ConfirmTransfer"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<List<InventoryItemCreateDto>> ItemsCreated { get; set; }
+
+    private bool _isVisible = false;
+    private string _warningText = "";
+    private CancellationTokenSource? _warningTokenSource;
+    
+    private class TransferItemWrapper
+    {
+        public ShoppingItemDisplayDto SourceItem { get; set; } = null!;
+        public InventoryItemCreateDto CreateDto { get; set; } = new();
+    }
+
+    private List<TransferItemWrapper> _transferItems = new();
+
+    private string warningText
+    {
+        get => _warningText;
+        set
+        {
+            if (_warningText == value) return;
+            _warningText = value;
+
+            _warningTokenSource?.Cancel();
+            _warningTokenSource?.Dispose();
+
+            if (!string.IsNullOrEmpty(_warningText))
+            {
+                _warningTokenSource = new CancellationTokenSource();
+                _ = AutoResetWarningAsync(_warningTokenSource.Token);
+            }
+        }
+    }
+
+    private async Task AutoResetWarningAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(2000, token);
+            _warningText = "";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    public void Open(List<ShoppingItemDisplayDto> items)
+    {
+
+        _transferItems = items.Select(item => new TransferItemWrapper
+        {
+            SourceItem = item,
+            CreateDto = new InventoryItemCreateDto
+            {
+                ShoppingListItemId = item.Id,
+                IngredientId = item.Ingredient.Id,
+                UnitId = item.Unit.Id,
+                Quantity = item.Quantity,
+                QuantityInGrams = item.QuantityInGrams,
+                ExpirationDate = null
+            }
+        }).ToList();
+
+        _isVisible = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        _isVisible = false;
+        _warningText = "";
+        StateHasChanged();
+    }
+
+    private async Task ConfirmSelection()
+    {
+        if (_transferItems.Any(t => t.CreateDto.ExpirationDate.HasValue && t.CreateDto.ExpirationDate.Value.Date < DateTime.UtcNow.Date))
+        {
+            warningText = Localizer["ExpirationDateCannotBeInPast"];
+            return;
+        }
+        
+        var dtosToSubmit = _transferItems.Select(t => t.CreateDto).ToList();
+        
+        await ItemsCreated.InvokeAsync(dtosToSubmit);
+    }
+
+    public void Dispose()
+    {
+        _warningTokenSource?.Cancel();
+        _warningTokenSource?.Dispose();
+    }
+}

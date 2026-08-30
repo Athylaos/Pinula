@@ -1,0 +1,222 @@
+@using System.Runtime.ExceptionServices
+@using System.Timers
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@inject IIngredientService IngredientService
+@inject IUnitService UnitService
+@inject IStringLocalizer<App> Localizer
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal">
+            <div class="modal-header">
+                <h2 style="display:inline-block"> @Localizer["SelectInventoryIngredient"]</h2>
+                <button class="close-modal-btn" @onclick="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="custom-input"
+                       placeholder="@Localizer["SearchInventoryIngredients"]"
+                       @bind="SearchText" @bind:event="oninput" @onkeyup="HandleSearch" />
+
+                <ul class="search-results-list" style="height: 210px;">
+                    <LoadingView IsFullScreen="false" IsLoading="IsLoadingSearch" Text="Searching for ingredients">
+                        @foreach (var ing in FilteredIngredients)
+                        {
+                            <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
+                                @onclick="() => selectedIngredient = ing">
+                                <img alt="Ing" src="@ing.ImageUrl" style="height:50px; width:50px;" />
+                                @ing.Name
+                            </li>
+                        }
+                    </LoadingView>
+                </ul>
+
+                <button class="btn btn-link text-gray w-100 mb-1" @onclick="() => createPopupVisible = true">
+                    @Localizer["CreateNewIngredient"]
+                </button>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="section-label">@Localizer["Quantity"]</label>
+                        <input type="number" class="custom-select" placeholder="Qty" @bind="quantity"/>
+                    </div>
+                    <div class="col-6">
+                        <label class="section-label">@Localizer["Unit"]</label>
+                        <select class="custom-select" @bind="selectedUnitId">
+                            <option value="">-----||-----</option>
+                            @if (selectedIngredient?.IngredientUnits != null)
+                            {
+                                @foreach (var unit in selectedIngredient.IngredientUnits)
+                                {
+                                    <option value="@unit.Id">@unit.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(warningText))
+                {
+                    <div class="text-danger small mt-1 mb-2 text-center">@warningText</div>
+                }
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-apply" @onclick="ConfirmSelection">@Localizer["AddToPantry"]</button>
+            </div>
+        </div>
+    </div>
+    
+    <CreateIngredientPopup IsVisible="createPopupVisible">
+    </CreateIngredientPopup>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<ShoppingItemCreateDto> OnItemAdded { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool createPopupVisible = false;
+    private string _searchText = "";
+
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            _searchText = value;
+            HandleSearch();
+        }
+    }
+
+    private List<IngredientPreviewDto> FilteredIngredients = new();
+    private IngredientPreviewDto? selectedIngredient;
+    private Guid? selectedUnitId;
+    private decimal quantity;
+    
+    private string _warningText = "";
+    private CancellationTokenSource? _warningTokenSource;
+    private string warningText
+    {
+        get => _warningText;
+        set
+        {
+            if (_warningText == value) return;
+            _warningText = value;
+
+            _warningTokenSource?.Cancel();
+            _warningTokenSource?.Dispose();
+
+            if (!string.IsNullOrEmpty(_warningText))
+            {
+                _warningTokenSource = new CancellationTokenSource();
+                var token = _warningTokenSource.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(2000, token);
+
+                        _warningText = "";
+                        await InvokeAsync(StateHasChanged);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }, token);
+            }
+        }
+    }
+
+    private System.Timers.Timer? debounceTimer;
+    bool IsLoadingSearch = false;
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = "ban"});
+        }
+        catch (Exception ex)
+        {
+            warningText = "Error loading ingredients.";
+        }
+
+    }
+
+    private async Task LoadIngredients()
+    {
+        try
+        {
+            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = _searchText});
+        }
+        catch (Exception ex)
+        {
+            warningText = "Error loading ingredients.";
+        }
+    }
+
+    private void HandleSearch()
+    {
+        debounceTimer?.Stop();
+        debounceTimer?.Dispose();
+
+        debounceTimer = new System.Timers.Timer(350);
+        debounceTimer.Elapsed += async (s, e) =>
+        {
+            debounceTimer.Stop();
+            await InvokeAsync(async () =>
+            {
+                IsLoadingSearch = true;
+                await LoadIngredients();
+                IsLoadingSearch = false;
+                StateHasChanged();
+            });
+        };
+        debounceTimer.AutoReset = false;
+        debounceTimer.Start();
+    }
+    
+
+    private async Task ConfirmSelection()
+    {
+        if (selectedIngredient == null || selectedUnitId == null || quantity <= 0)
+        {
+            warningText = Localizer["AddIngredientToRecipeWarn"];
+            return;
+        }
+
+        var unit = selectedIngredient.IngredientUnits.FirstOrDefault(u => u.Id == selectedUnitId);
+        if (unit == null) return;
+
+        var result = new ShoppingItemCreateDto()
+        {
+            IngredientId = selectedIngredient.Id,
+            UnitId= unit.Id,
+            Quantity = quantity,
+            QuantityInGrams = quantity*unit.ConversionFactor,
+        };
+        
+
+        await OnItemAdded.InvokeAsync(result);
+
+        quantity = 0;
+        SearchText = "";
+        selectedUnitId = null;
+        Close();
+    }
+
+    private void Close()
+    {
+        debounceTimer?.Dispose();
+        IsVisible = false;
+        quantity = 0;
+        selectedUnitId = null;
+        SearchText = "";
+        OnClose.InvokeAsync();
+    }
+}

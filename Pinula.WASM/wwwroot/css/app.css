@@ -3419,6 +3419,16 @@ select.custom-select {
         border-color: var(--pine-teal);
     }
 
+    .modal-input::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.6;
+        transition: 0.2s;
+    }
+    
+    .modal-input::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+
 .preselected-recipe-card {
     background: rgba(29, 73, 52, 0.15);
     border: 1px dashed var(--pine-teal);
@@ -3947,4 +3957,61 @@ select.custom-select {
     text-overflow: ellipsis;
 }
 
+/* #endregion */
+
+/*---------- Shopping List ----------*/
+/* #region Shopping List */
+.transfer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 5px;
+}
+
+.transfer-card {
+    align-items: center;
+    padding: 12px 16px;
+}
+
+.expiration-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 140px;
+}
+
+.date-picker {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.date-picker::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+.date-picker::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+
+@media (max-width: 500px) {
+    .transfer-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .expiration-wrapper {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .date-picker {
+        width: 100%;
+    }
+}
 /* #endregion */

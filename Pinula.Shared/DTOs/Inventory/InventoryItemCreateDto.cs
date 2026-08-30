@@ -2,6 +2,7 @@ namespace Pinula.Shared.DTOs;
 
 public class InventoryItemCreateDto
 {
+    public Guid? ShoppingListItemId { get; set; }
     public Guid IngredientId { get; set; }
     public Guid UnitId { get; set; }
     

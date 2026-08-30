@@ -240,5 +240,84 @@ public static class InventoryEndpoint
             return Results.NoContent();
         }).RequireAuthorization();
         
+        //---------------------------------------------------------------Delete shopping item
+        group.MapPut("/shoppingListItems/changePurchased/{id:guid}", async (Guid id, ClaimsPrincipal user, PinulaDbContext db) =>
+        {
+            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
+            if (authResult != Results.Ok())
+            {
+                return authResult;
+            }
+            var item = await db.ShoppingListItems.FirstOrDefaultAsync(i => i.Id == id);
+            if (item is null)
+            {
+                return Results.NotFound("Shopping list item not found");
+            }
+
+            item.IsPurchased = !item.IsPurchased;
+            await db.SaveChangesAsync();
+
+            return Results.NoContent();
+        }).RequireAuthorization();
+        
+        //---------------------------------------------------------------Make inventory items from shopping items
+        group.MapPost("/shoppingListItemsToPantry", async (List<InventoryItemCreateDto> inventoryItems, ClaimsPrincipal user, PinulaDbContext db) =>
+        {
+            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
+            if (authResult != Results.Ok())
+            {
+                return authResult;
+            }
+            
+            var shoppingItemIds = inventoryItems
+                .Where(i => i.ShoppingListItemId.HasValue)
+                .Select(i => i.ShoppingListItemId!.Value)
+                .ToList();
+
+            var shoppingItemsDb = await db.ShoppingListItems
+                .Where(i => i.GroupId == groupDb.Id && shoppingItemIds.Contains(i.Id))
+                .ToDictionaryAsync(i => i.Id);
+
+            foreach (var item in inventoryItems)
+            {
+                if (!item.ShoppingListItemId.HasValue || !shoppingItemsDb.TryGetValue(item.ShoppingListItemId.Value, out var itemDb))
+                {
+                    continue;
+                }
+
+                var itemId = Guid.NewGuid();
+                
+                var newInventoryItem = new InventoryItem
+                {
+                    Id = itemId,
+                    GroupId = groupDb.Id,
+                    IngredientId = item.IngredientId,
+                    UnitId = item.UnitId,
+                    ExpirationDate = item.ExpirationDate.HasValue ? DateTime.SpecifyKind(item.ExpirationDate.Value, DateTimeKind.Utc) : null,
+                    Quantity = item.Quantity,
+                    QuantityInGrams = item.QuantityInGrams,
+                };
+
+                db.InventoryItems.Add(newInventoryItem);
+                
+                if (itemDb.MealPlanIngredientId.HasValue)
+                {
+                    db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryItemId = itemId,
+                        MealPlanIngredientId = itemDb.MealPlanIngredientId.Value,
+                        AllocatedQuantityInGrams = item.QuantityInGrams
+                    });
+                }
+                
+                db.ShoppingListItems.Remove(itemDb);
+            }
+
+            await db.SaveChangesAsync();
+
+            return Results.Created("/inventory/getAll", null);
+        }).RequireAuthorization();
+        
     }
 }

@@ -834,4 +834,13 @@
   <data name="BackToSearch" xml:space="preserve">
     <value>Zpátky na hledání</value>
   </data>
+  <data name="MoveToPantry" xml:space="preserve">
+    <value>Přesuňte do spíže</value>
+  </data>
+  <data name="SetExpirationDatesDescription" xml:space="preserve">
+    <value>Přesuňte nakoupené suroviny do spižírny. Můžete přidat datum spotřeby.</value>
+  </data>
+  <data name="ConfirmTransfer" xml:space="preserve">
+    <value>Potvrdit přesun</value>
+  </data>
 </root>

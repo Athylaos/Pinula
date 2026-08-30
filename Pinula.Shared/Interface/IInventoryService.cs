@@ -12,4 +12,7 @@ public interface IInventoryService
     public Task<List<ShoppingItemDisplayDto>> GetAllShoppingItemsAsync();
     public Task<bool> CreateShoppingItemAsync(ShoppingItemCreateDto dto);
     public Task<bool> DeleteShoppingItemAsync(Guid id);
+    public Task<bool> ChangeShoppingItemPurchasedAsync(Guid id);
+
+    public Task<bool> AddShoppingListItemToPantry(List<InventoryItemCreateDto> dtos);
 }

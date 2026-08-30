@@ -9,30 +9,30 @@
 
 <LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
     <div class="planner-container">
-            <header class="planner-header-panel" style="margin-bottom: 15px">
-                <div class="header-brand">
-                    <div class="header-icon-box">
-                        <img src="images/icons/shopping-list.png" class="header-icon-box p-2" alt="fridge"/>
-                    </div>
-                    <div>
-                        <h1 class="page-title">@Localizer["ShoppingList"]</h1>
-                        <p class="subtitle">@Localizer["ShoppingListDescription"]</p>
-                    </div>
+        <header class="planner-header-panel" style="margin-bottom: 15px">
+            <div class="header-brand">
+                <div class="header-icon-box">
+                    <img src="images/icons/shopping-list.png" class="header-icon-box p-2" alt="fridge"/>
                 </div>
+                <div>
+                    <h1 class="page-title">@Localizer["ShoppingList"]</h1>
+                    <p class="subtitle">@Localizer["ShoppingListDescription"]</p>
+                </div>
+            </div>
 
-                <div class="mp-header-actions">
-                    <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
-                        <img src="images/icons/plus.png" alt="plus"/>
-                        <!--<span>@Localizer[""]</span>-->
-                    </button>
-                    <button class="btn-group-action" title="@Localizer["AddShoppingListItemsToPantry"]">
-                        <img src="images/icons/shopping-list.png" alt="plus"/>
-                        <span>-></span>
-                        <img src="images/icons/fridge.png" alt="plus"/>
-                        <!--<span>@Localizer[""]</span>-->
-                    </button>
-                </div>
-            </header>
+            <div class="mp-header-actions">
+                <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
+                    <img src="images/icons/plus.png" alt="plus"/>
+                    <!--<span>@Localizer[""]</span>-->
+                </button>
+                <button class="btn-group-action" title="@Localizer["AddShoppingListItemsToPantry"]" @onclick="OpenShoppingListItemsToPantryPopup">
+                    <img src="images/icons/shopping-list.png" alt="plus"/>
+                    <span>-></span>
+                    <img src="images/icons/fridge.png" alt="plus"/>
+                    <!--<span>@Localizer[""]</span>-->
+                </button>
+            </div>
+        </header>
             
         
         @if (!ShoppingItems.Any())
@@ -64,7 +64,11 @@
                             {
                                 <li class="shopping-item-card @(item.IsPurchased ? "purchased" : "") @(!string.IsNullOrWhiteSpace(item.RecipeAllocationName) ? "allocated" : "")">
                                     <div class="item-left">
-                                        <input class="custom-checkbox" type="checkbox" @bind="@item.IsPurchased">
+                                        <input class="custom-checkbox" 
+                                               type="checkbox" 
+                                               @bind="@item.IsPurchased" 
+                                               @bind:after="() => ChangePurchasedStatus(item)" 
+                                               disabled="@_pendingItems.Contains(item.Id)" />
                                         <div class="item-details">
                                             <span class="item-name">
                                                 @item.Ingredient.Name
@@ -77,7 +81,7 @@
                                             @if (item.RecipeAllocationName != null && item.MealPlanDate != null)
                                             {
                                                 <span class="allocation-badge" title="Vyžadováno pro recept">
-                                                     @item.RecipeAllocationName (@DateOnly.FromDateTime(item.MealPlanDate.Value).ToString("dd MMM"))
+                                                    @item.RecipeAllocationName (@DateOnly.FromDateTime(item.MealPlanDate.Value).ToString("dd MMM"))
                                                 </span>
                                             }
                                         </div>
@@ -104,12 +108,25 @@
     </div>
 </LoadingView>
 
+<AddShoppingListItemPopup
+    IsVisible="addToShoppingListVisible"
+    OnClose="ToggleAddInventoryModal"
+    OnItemAdded="AddShoppingItem">
+</AddShoppingListItemPopup>
+
+<ShoppingListItemsToPantryPopup
+    @ref="_popupRef"
+    ItemsCreated="AddShoppingListItemsToPantry">
+</ShoppingListItemsToPantryPopup>
+
 
 @code {
+    private ShoppingListItemsToPantryPopup? _popupRef;
     private List<ShoppingItemDisplayDto> ShoppingItems = new();
     private bool isLoading = true;
     private bool addToShoppingListVisible = false;
-
+    private readonly HashSet<Guid> _pendingItems = new();
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadShoppingList();
@@ -128,7 +145,7 @@
         ShoppingItems.Remove(ShoppingItems.First(i => i.Id == id));
         InventoryService.DeleteShoppingItemAsync(id);
     }
-
+    
     private void ToggleAddInventoryModal()
     {
         addToShoppingListVisible = !addToShoppingListVisible;
@@ -144,6 +161,49 @@
     {
         ShoppingItems.Remove(item);
         await InventoryService.DeleteShoppingItemAsync(item.Id);
+    }
+
+    private async Task ChangePurchasedStatus(ShoppingItemDisplayDto item)
+    {
+        if (!_pendingItems.Add(item.Id)) return;
+
+        try
+        {
+            var success = await InventoryService.ChangeShoppingItemPurchasedAsync(item.Id);
+        
+            if (!success)
+            {
+                item.IsPurchased = !item.IsPurchased;
+            }
+        }
+        finally
+        {
+            _pendingItems.Remove(item.Id);
+            StateHasChanged();
+        }
+    }
+
+    private void OpenShoppingListItemsToPantryPopup()
+    {
+        var itemsToConvert = ShoppingItems.Where(si => si.IsPurchased).ToList();
+        
+        if (!itemsToConvert.Any())
+        {
+            return;
+        }
+
+        _popupRef?.Open(itemsToConvert);
+    }
+
+    private async Task AddShoppingListItemsToPantry(List<InventoryItemCreateDto> dtos)
+    {
+        var success = await InventoryService.AddShoppingListItemToPantry(dtos);
+        if (success)
+        {
+            ShoppingItems.RemoveAll(si => si.IsPurchased);
+            
+            _popupRef?.Close();
+        }
     }
 
 }

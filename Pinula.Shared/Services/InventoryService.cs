@@ -160,4 +160,42 @@ public class InventoryService : IInventoryService
             return false;
         }
     }
+
+    public async Task<bool> ChangeShoppingItemPurchasedAsync(Guid id)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsync($"{BaseUrl}/shoppingListItems/changePurchased/{id}", null);
+
+            if (response.IsSuccessStatusCode) return true;
+            
+            var errorBody = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to change purchased status for shopping list item. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while changing purchased status for shopping list item");
+            return false;
+        }
+    }
+
+    public async Task<bool> AddShoppingListItemToPantry(List<InventoryItemCreateDto> dtos)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/shoppingListItemsToPantry",dtos);
+
+            if (response.IsSuccessStatusCode) return true;
+            
+            var errorBody = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to create inventory items. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while creating inventory item");
+            return false;
+        }
+    }
 }
