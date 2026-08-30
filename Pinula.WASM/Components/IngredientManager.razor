@@ -101,7 +101,10 @@
                 @if (isEditing)
                 {
                     <div class="mb-3 text-muted small">ID: @currentIngredient.Id</div>
+                    <div class="mb-3 text-muted small">Creator: @currentIngredient.UserEmail</div>
+                    <div class="mb-3 text-muted small">Created at: @currentIngredient.IngredientCreated</div>
                 }
+                
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Name (English)</label>
@@ -252,6 +255,7 @@
 
                 <hr />
                 <h5 class="mb-3">Image</h5>
+                <img src="@currentIngredient.ImageUrl" alt="oldPicture" style="max-width: 100%; "/>
                 <div class="mb-4">
                     <InputFile class="form-control" OnChange="HandleFileSelected" accept=".jpg,.jpeg,.png,.webp" />
                     @if (selectedFile != null)
@@ -361,11 +365,15 @@
             nameCs = currentIngredient.Names.ContainsKey("cs") ? currentIngredient.Names["cs"] : "";
             isEditing = true;
             selectedFile = null;
-            additionalUnitsList = currentIngredient.AdditionalUnits.Select(u => new CreateIngredientUnitDto()
+            if (currentIngredient.AdditionalUnits.Any())
             {
-                UnitId = u.Unit.Id,
-                ToDefaultUnit = u.AmountInGrams
-            }).ToList();
+                additionalUnitsList = currentIngredient.AdditionalUnits.Select(u => new CreateIngredientUnitDto()
+                {
+                    UnitId = u.Unit.Id,
+                    ToDefaultUnit = u.AmountInGrams
+                }).ToList();
+            }
+            
         }
         else
         {

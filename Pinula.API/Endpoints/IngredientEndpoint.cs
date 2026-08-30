@@ -359,23 +359,19 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get ingredient detail admin
             group.MapGet("/getAdmin/{ingredientId:guid}", async (Guid ingredientId, HttpRequest request, PinulaDbContext db) =>
             {
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
-                var defaultImage = "default_ingredient.png";
-
-                var ingredientDb = await db.Ingredients.AsNoTrackingWithIdentityResolution().Include(i => i.DefaultUnit).Include(i => i.ShoppingCategory).Include(i => i.IngredientUnits).ThenInclude(iu => iu.Unit).Include(i => i.BaseIngredient).FirstOrDefaultAsync(i => i.Id == ingredientId);
+                var ingredientDb = await db.Ingredients
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(i => i.DefaultUnit)
+                    .Include(i => i.ShoppingCategory)
+                    .Include(i => i.BaseIngredient)
+                    .Include(i => i.Creator)
+                    .Include(i => i.IngredientUnits)
+                        .ThenInclude(iu => iu.Unit)
+                    .FirstOrDefaultAsync(i => i.Id == ingredientId);
                 if (ingredientDb is null) return Results.NotFound();
 
-                var ingredientDto = ingredientDb.Adapt<AdminIngredientDisplayDto>();
-
-                ingredientDto.DefaultUnit = new() { Code = ingredientDb.DefaultUnit.Code, Id = ingredientDb.DefaultUnit.Id, Name = ingredientDb.DefaultUnit.Names[languageCode] };
-                ingredientDto.ShoppingCategory = ingredientDb.ShoppingCategory.Adapt<AdminShoppingCategoryDisplayDto>();
-                ingredientDto.AdditionalUnits = ingredientDb.IngredientUnits.Select(i => new IngredientUnitPreviewDto {
-                    AmountInGrams = i.AmountInGrams,
-                    Unit = new() { Code = i.Unit.Code, Id = i.Unit.Id, ConversionFactor = i.AmountInGrams, Name = i.Unit.Names[languageCode] },
-                }).ToList();
-                ingredientDto.ImageUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(ingredientDb.ImageUrl) ? defaultImage : ingredientDb.ImageUrl)}";
-
+                var ingredientDto = ingredientDb.AdaptWithRequest<AdminIngredientDisplayDto>(request);
+                
                 return Results.Ok(ingredientDto);
             }).RequireAuthorization("AdminOnly");
 

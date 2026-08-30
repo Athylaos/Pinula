@@ -76,12 +76,13 @@ public class MappingConfig : IRegister
                     src.ImageUrl))
             .Map(d => d.AdditionalUnits,
                 src => src.IngredientUnits)
-            .MaxDepth(2);
+            .MaxDepth(3);
 
         config.NewConfig<Ingredient, AdminIngredientPreviewDto>()
             .Map(d => d.ImageUrl,
                 src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl));
+
 
         config.NewConfig<Ingredient, IngredientPreviewDto>()
             .Map(d => d.Name,
@@ -93,6 +94,12 @@ public class MappingConfig : IRegister
                 src => src.DefaultUnit)
             .MaxDepth(2);
 
+        config.NewConfig<IngredientUnit, IngredientUnitPreviewDto>()
+            .Map(d => d.Unit,
+                src => src.Unit)
+            .MaxDepth(2);
+            
+            
         #endregion
         
         #region Inventory
