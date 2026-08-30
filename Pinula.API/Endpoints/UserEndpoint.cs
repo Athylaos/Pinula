@@ -229,17 +229,9 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get all users
             group.MapGet("/admin/all", async (HttpRequest request, PinulaDbContext db) =>
             {
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/avatars/";
-                var defaultImage = "default_avatar.png";
-
                 var users = await db.Users.ToListAsync();
 
-                foreach(var user in users)
-                {
-                    user.AvatarUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(user.AvatarUrl) ? defaultImage : user.AvatarUrl)}";
-                }
-
-                var usersDb = users.Adapt<List<AdminUserDisplayDto>>();
+                var usersDb = users.AdaptWithRequest<List<AdminUserDisplayDto>>(request);
 
                 return usersDb;
 

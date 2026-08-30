@@ -1,6 +1,7 @@
 using Mapster;
 using Pinula.API.Models;
 using Pinula.Shared.DTOs;
+using Pinula.Shared.Enums;
 
 namespace Pinula.API.Services;
 
@@ -103,16 +104,24 @@ public class MappingConfig : IRegister
         #endregion
         
         #region Inventory
-
+        
         config.NewConfig<InventoryItem, InventoryItemDisplayDto>()
             .Map(d => d.ShoppingCategory,
-                src => src.Ingredient.ShoppingCategory)
+                src => src.Ingredient != null ? src.Ingredient.ShoppingCategory : null)
             .Map(d => d.BaseIngredient,
-                src => src.Ingredient.BaseIngredient)
-            .Map(d => d.Unit.ConversionFactor,
-                src => src.Ingredient.IngredientUnits.Where(i => i.UnitId == src.UnitId).Select(i => i.AmountInGrams).FirstOrDefault())
+                src => src.Ingredient != null ? src.Ingredient.BaseIngredient : null)
             .Map(d => d.AllocatedQuantityInGrams,
-                src => src.Allocations.Sum(a => a.AllocatedQuantityInGrams));
+                src => src.Allocations != null ? src.Allocations.Sum(a => a.AllocatedQuantityInGrams) : 0)
+            .AfterMapping((src, dest) =>
+            {
+                if (dest.Unit != null && src.Ingredient?.IngredientUnits != null)
+                {
+                    var matchingUnit = src.Ingredient.IngredientUnits
+                        .FirstOrDefault(iu => iu != null && iu.UnitId == src.UnitId);
+
+                    dest.Unit.ConversionFactor = matchingUnit?.AmountInGrams ?? 1;
+                }
+            });
 
         config.NewConfig<ShoppingListItem, ShoppingItemDisplayDto>()
             .Map(d => d.BaseIngredient,
@@ -139,17 +148,22 @@ public class MappingConfig : IRegister
         #region Recipe
 
         config.NewConfig<Recipe, RecipeDetailsDto>()
+            .PreserveReference(true)
             .Map(d => d.Title,
                 src => HelperFunctions.GetLocalizedName(src.Titles, GetLanguageCode()))
             .Map(d => d.PhotoUrl,
                 src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Recipes,
                     src.PhotoUrl))
+            .Map(d => d.Difficulty,
+                src => (DifficultyLevel)src.Difficulty)
             .Map(d => d.UserName,
-                src => src.User.Name)
+                src => src.User != null ? src.User.Name : string.Empty)
             .Map(d => d.UserSurname,
-                src => src.User.Surname);
+                src => src.User != null ? src.User.Surname : string.Empty)
+            .MaxDepth(2);
         
         config.NewConfig<RecipeIngredient, RecipeIngredientPreviewDto>()
+            .PreserveReference(true)
             .Map(d => d.IngredientName,
                 src => HelperFunctions.GetLocalizedName(src.Ingredient.Names, GetLanguageCode()))
             .Map(d => d.UnitName,

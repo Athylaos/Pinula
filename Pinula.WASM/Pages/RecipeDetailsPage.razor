@@ -81,13 +81,26 @@
                 
                 <div class="ingredients-section">
                     <h2 class="section-title">@Localizer["Ingredients"]:</h2>
-                    <ul class="ingredient-list">
+                    <ul class="recipe-ingredient-list">
                         @foreach (var ing in recipe.RecipeIngredients)
                         {
-                            <li class="ingredient-item">
-                                <input type="checkbox" class="custom-checkbox" />
-                                <span class="ing-name">@ing.IngredientName</span>
-                                <span class="ing-amount">@(ing.Quantity.ToString("0.#")) @ing.UnitName</span>
+                            var isEnough = ing.QuantityInInventory >= ing.Quantity;
+                            var isPartial = ing.QuantityInInventory > 0 && !isEnough;
+
+                            <li class="ingredient-item @(isEnough ? "in-stock" : isPartial ? "partial-stock" : "")">
+                                <div class="ing-left">
+                                    <input type="checkbox" class="custom-checkbox" checked="@isEnough" disabled />
+                                    <span class="ing-name">@ing.IngredientName</span>
+                                </div>
+
+                                <div class="ing-right">
+                                    <span class="ing-amount">@(ing.Quantity.ToString("0.##")) @ing.UnitName</span>
+                    
+                                    <span class="ing-stock-badge @(isEnough ? "stock-ok" : isPartial ? "stock-warn" : "stock-empty")" 
+                                          title="@Localizer["AvailableInPantry"]">
+                                        @(ing.QuantityInInventory.HasValue ? ing.QuantityInInventory.Value.ToString("0.##") : "") @ing.UnitName
+                                    </span>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -221,7 +234,7 @@
         if(recipe is not null)
         {
             isLoading = false;
-        }
+        }   
     }
 
     private void GoBack()

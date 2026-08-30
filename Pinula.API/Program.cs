@@ -28,6 +28,7 @@ builder.Services.AddDbContext<PinulaDbContext>(options =>
     options.UseNpgsql(dataSource).UseSnakeCaseNamingConvention());
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
+TypeAdapterConfig.GlobalSettings.Default.PreserveReference(true);
 
 builder.Services.AddOpenApi(options =>
 {

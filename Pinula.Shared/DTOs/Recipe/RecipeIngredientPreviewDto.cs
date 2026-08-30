@@ -9,5 +9,7 @@
 
         public Guid IngredientId { get; set; }
         public Guid UnitId { get; set; }
+        
+        public decimal? QuantityInInventory { get; set; }
     }
 }

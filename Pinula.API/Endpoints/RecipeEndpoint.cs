@@ -182,80 +182,49 @@ namespace Pinula.API.Endpoints
             //---------------------------------------------------------------Get recipe details
             group.MapGet("/getRecipeDetails/{recipeId:guid}", async (HttpRequest request, Guid recipeId, ClaimsPrincipal user, PinulaDbContext db) =>
             {
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/recipes/";
-                var defaultImage = "default_recipe.png";
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 Guid? currentUserId = user.GetUserId();
+                
+                var recipeDb = await db.Recipes.AsNoTrackingWithIdentityResolution()
+                    .Include(r => r.User)
+                    .Include(r => r.ServingUnit)
+                    .Include(r => r.RecipeIngredients)
+                        .ThenInclude(ri => ri.Ingredient)
+                    .Include(r => r.RecipeIngredients)
+                        .ThenInclude(ri => ri.Unit)
+                    .Include(r => r.RecipeSteps)
+                    .Include(r => r.Categories)
+                    .FirstOrDefaultAsync(r => r.Id == recipeId);
 
-                var recipe = await db.Recipes.AsNoTracking().Where(r => r.Id == recipeId).Select(r => new RecipeDetailsDto()
+                if (recipeDb == null) return Results.NotFound();
+
+                RecipeDetailsDto recipe;
+                try
                 {
-                    Id = r.Id,
-                    UserId = r.UserId,
-                    OriginalLanguage = languageCode,
-                    Title = r.Titles.GetValueOrDefault(languageCode) ?? r.Titles.GetValueOrDefault("en") ?? "Title",
-                    PhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(r.PhotoUrl) ? defaultImage : r.PhotoUrl)}",
-                    CookingTime = r.CookingTime,
-                    ServingsAmount = r.ServingsAmount,
-                    Difficulty = (DifficultyLevel)r.Difficulty,
-                    Calories = r.Calories,
-                    Proteins = r.Proteins,
-                    Fats = r.Fats,
-                    Carbohydrates = r.Carbohydrates,
-                    Fiber = r.Fiber,
-                    RecipeCreated = r.RecipeCreated,
-                    Rating = r.Rating,
-                    UsersRated = r.UsersRated,
-                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientPreviewDto
-                    {
-                        Quantity = ri.Quantity,
-                        ConversionFactor = ri.ConversionFactor,
-                        IngredientName = ri.Ingredient.Names.GetValueOrDefault(languageCode) ?? ri.Ingredient.Names.GetValueOrDefault("en") ?? "Ingredient",
-                        UnitName = ri.Unit.Names.GetValueOrDefault(languageCode) ?? ri.Unit.Names.GetValueOrDefault("en") ?? "Unit",
-                        IngredientId = ri.Ingredient.Id,
-                        UnitId = ri.Unit.Id,
-                    }).ToList(),
-                    RecipeSteps = r.RecipeSteps.Select(rs => new RecipeStepDisplayDto
-                    {
-                        Id = rs.Id,
-                        RecipeId = rs.Id,
-                        StepNumber = rs.StepNumber,
-                        Description = rs.Descriptions.GetValueOrDefault(languageCode) ?? rs.Descriptions.GetValueOrDefault("en") ?? "Step description",
-                    }).ToList(),
-                    ServingUnit = new UnitPreviewDto() { Name = r.ServingUnit.Names.GetValueOrDefault(languageCode) ?? r.ServingUnit.Names.GetValueOrDefault("en") ?? "UnitName", Id = r.ServingUnit.Id },
-                    UserName = r.User.Name,
-                    UserSurname = r.User.Surname,
-                    Categories = r.Categories.Select(c => new CategoryDisplayDto
+                    recipe = recipeDb.AdaptWithRequest<RecipeDetailsDto>(request);
+                }
+                catch (Exception ex)
+                {
+                    return Results.Problem(detail: ex.ToString(), statusCode: 500);
+                }
+                
+                var allComments = await db.Comments.AsNoTracking()
+                    .Where(c => c.RecipeId == recipeId)
+                    .Select(c => new CommentDisplayDto
                     {
                         Id = c.Id,
-                        SortOrder = c.SortOrder,
-                        Name = c.Names.GetValueOrDefault(languageCode) ?? c.Names.GetValueOrDefault("en") ?? "Category",
-                        PictureUrl = c.PictureUrl,
-                        ParentCategoryId = c.ParentCategoryId,
-                    }).ToList(),
-
-                    IsFavorite = currentUserId != null && r.RecipeUsers.Any(ru => ru.UserId == currentUserId && ru.IsFavorite),
-                    UserAlreadyRated = currentUserId != Guid.Empty && db.Comments.Any(c => c.RecipeId == r.Id && c.UserId == currentUserId && c.Rating != null && c.IsApproved)
-
-                }).FirstOrDefaultAsync();
-
-                if (recipe == null) return Results.NotFound();
-
-                var allComments = await db.Comments.AsNoTracking().Where(c => c.RecipeId == recipeId).Select(c => new CommentDisplayDto
-                {
-                    Id = c.Id,
-                    Text = c.Text??string.Empty,
-                    Rating = c.Rating,
-                    CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
-                    UserId =c.User.Id,
-                    UserName = c.User.Name,
-                    UserSurname = c.User.Surname,
-                    IsApproved = c.IsApproved,
-                    IsEdited = c.IsEdited,
-                    IsDeleted = c.IsDeleted,
-                    EditedAt = c.EditedAt,
-                    ParentCommentId = c.ParentCommentId,
-                    Replies = new List<CommentDisplayDto>()
-                }).OrderByDescending(c => c.CreatedAt).ToListAsync();
+                        Text = c.Text ?? string.Empty,
+                        Rating = c.Rating,
+                        CreatedAt = c.CreatedAt ?? DateTime.UtcNow,
+                        UserId = c.User.Id,
+                        UserName = c.User.Name,
+                        UserSurname = c.User.Surname,
+                        IsApproved = c.IsApproved,
+                        IsEdited = c.IsEdited,
+                        IsDeleted = c.IsDeleted,
+                        EditedAt = c.EditedAt,
+                        ParentCommentId = c.ParentCommentId,
+                        Replies = new List<CommentDisplayDto>()
+                    }).OrderByDescending(c => c.CreatedAt).ToListAsync();
 
                 var commentLookup = allComments.ToDictionary(c => c.Id);
                 var rootComments = new List<CommentDisplayDto>();
@@ -272,10 +241,57 @@ namespace Pinula.API.Endpoints
                     }
                 }
 
-                //rootComments.RemoveAll(rc => !rc.Replies.Any() && !rc.IsApproved);
-
                 recipe.Comments = rootComments;
+                
+                if (currentUserId == null || currentUserId == Guid.Empty)
+                {
+                    return Results.Ok(recipe);
+                }
+                
+                var userDb = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
+                
+                if (userDb is null) 
+                {
+                    return Results.Ok(recipe); 
+                }
+                
+                recipe.UserAlreadyRated = allComments.Any(c => c.UserId == currentUserId && c.Rating != null && c.IsApproved);
+                recipe.IsFavorite = await db.RecipeUsers.AnyAsync(ru => ru.UserId == currentUserId && ru.IsFavorite);
 
+                if (userDb.GroupId is null)
+                {
+                    return Results.Ok(recipe);
+                }
+                
+                var ingredientIds = recipe.RecipeIngredients.Select(ri => ri.IngredientId).Distinct().ToList();
+
+                var inventoryItemsDb = await db.InventoryItems
+                    .AsNoTracking()
+                    .Include(i => i.Ingredient)
+                    .Include(i => i.Allocations)
+                    .Where(i => i.GroupId == userDb.GroupId && (ingredientIds.Contains(i.IngredientId) || i.Ingredient.BaseIngredientId.HasValue && ingredientIds.Contains(i.Ingredient.BaseIngredientId.Value)))
+                    .ToListAsync();
+
+                foreach (var ingredient in recipe.RecipeIngredients)
+                {
+                    var inventoryIngredients = inventoryItemsDb.Where(i => 
+                        i.IngredientId == ingredient.IngredientId || 
+                        i.Ingredient.BaseIngredientId == ingredient.IngredientId);
+                    
+                    decimal totalFreeGrams = 0;
+                    foreach (var invItem in inventoryIngredients)
+                    {
+                        var allocatedGrams = invItem.Allocations.Sum(a => a.AllocatedQuantityInGrams);
+                        var freeGrams = invItem.QuantityInGrams - allocatedGrams;
+                        if (freeGrams > 0)
+                        {
+                            totalFreeGrams += freeGrams;
+                        }
+                    }
+                    
+                    ingredient.QuantityInInventory = totalFreeGrams > 0 && ingredient.ConversionFactor > 0 ? totalFreeGrams / ingredient.ConversionFactor : 0;
+                }
+                
                 return Results.Ok(recipe);
             });
 
