@@ -190,7 +190,7 @@
     <value>Speedy meals</value>
   </data>
   <data name="SpeedyMealsSubtitle" xml:space="preserve">
-    <value>Spend less time cooking, more time eating</value>
+    <value>Recipes under 20 minutes</value>
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>Time (Minutes)</value>
@@ -336,8 +336,8 @@
   <data name="PlannerPage" xml:space="preserve">
     <value>Planner</value>
   </data>
-  <data name="KitchenDashboard" xml:space="preserve">
-    <value>Your kitchen dashboard</value>
+  <data name="PlannerDescription1" xml:space="preserve">
+    <value>Planned for today</value>
   </data>
   <data name="StartPlanning" xml:space="preserve">
     <value>Start planning</value>
@@ -750,8 +750,8 @@
   <data name="Expiration" xml:space="preserve">
     <value>Expires</value>
   </data>
-  <data name="PantryDescription" xml:space="preserve">
-    <value>Track and oragnize your ingredients</value>
+  <data name="PantryDescription1" xml:space="preserve">
+    <value>Listed:</value>
   </data>
   <data name="AddInventoryIngredient" xml:space="preserve">
     <value>Add ingredient</value>
@@ -773,9 +773,6 @@
   </data>
   <data name="AddShoppingListItemsToPantry" xml:space="preserve">
     <value>Add purchased items to pantry</value>
-  </data>
-  <data name="ShoppingListDescription" xml:space="preserve">
-    <value>Keep track of ingredients for your planned recipes and meals</value>
   </data>
   <data name="CreateIngredient" xml:space="preserve">
     <value>Create ingredient</value>
@@ -842,5 +839,38 @@
   </data>
   <data name="ConfirmTransfer" xml:space="preserve">
     <value>Confirm tranfer</value>
+  </data>
+  <data name="OriginalLanguageen" xml:space="preserve">
+    <value>english</value>
+  </data>
+  <data name="OriginalLanguagecs" xml:space="preserve">
+    <value>czech</value>
+  </data>
+  <data name="FromDate" xml:space="preserve">
+    <value>at</value>
+  </data>
+  <data name="InLanguage" xml:space="preserve">
+    <value>in</value>
+  </data>
+  <data name="CheckOutThisRecipe" xml:space="preserve">
+    <value>Check out this recipe on Pinula</value>
+  </data>
+  <data name="LinkCopied" xml:space="preserve">
+    <value>Link copied to clipboard!</value>
+  </data>
+  <data name="PantryDescription2" xml:space="preserve">
+    <value>ingredients</value>
+  </data>
+  <data name="PantryDescription3" xml:space="preserve">
+    <value>will expire soon and</value>
+  </data>
+  <data name="PantryDescription4" xml:space="preserve">
+    <value>have already expired</value>
+  </data>
+  <data name="PlannerDescription2" xml:space="preserve">
+    <value>for tomorrow</value>
+  </data>
+  <data name="GroupManagement" xml:space="preserve">
+    <value>Group management</value>
   </data>
 </root>

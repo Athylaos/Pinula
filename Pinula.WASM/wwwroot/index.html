@@ -103,6 +103,31 @@
                 container.onwheel = newWheelHandler;
             });
         };
+
+        window.shareHelper = {
+            shareRecipe: async function (title, text, url) {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: title,
+                            text: text,
+                            url: url
+                        });
+                        return { success: true, native: true };
+                    } catch (err) {
+                        return { success: false, native: true, cancelled: true };
+                    }
+                } else {
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        return { success: true, native: false };
+                    } catch (err) {
+                        console.error("Clipboard write failed", err);
+                        return { success: false, native: false };
+                    }
+                }
+            }
+        };
     </script>
 </body>
 

@@ -1,6 +1,7 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Enums
 @using Microsoft.Extensions.Localization
+@using Pinula.WASM.Services
 @inject IStringLocalizer<App> Localizer 
 
 @if (IsVisible)
@@ -43,7 +44,7 @@
                 <div class="section-header-flex modal-spacer-sm">
                     <label class="section-label">@Localizer["Servings"]</label>
                     <div class="servings-selector">
-                        <input type="number" min="1" max="20" class="input-servings" @bind="EditServings" />
+                        <input type="number" min="1" max="20" class="input-servings" @bind="Servings" />
                         <span>@Localizer["Portions"]</span>
                     </div>
                 </div>
@@ -116,9 +117,34 @@
     private string RecipeName { get; set; } = string.Empty;
     private DateOnly EditDate { get; set; }
     private MealType EditMealType { get; set; }
-    private int EditServings { get; set; }
     private HashSet<Guid> SelectedUserIds { get; set; } = new();
     private List<RecipeIngredientDisplayDto> MealPlanIngredients = new();
+    
+    private Dictionary<RecipeIngredientDisplayDto, decimal> IngredientQuantityPerServing { get; set; } = new();
+    private int _servings = 1;
+
+    public int Servings
+    {
+        get => _servings;
+        set
+        {
+            if (value <= 0 || _servings == value) return;
+            
+            _servings = value;
+            RecalculateIngredients();
+        }
+    }
+
+    private void RecalculateIngredients()
+    {
+        foreach (var ingredient in MealPlanIngredients)
+        {
+            if (IngredientQuantityPerServing.TryGetValue(ingredient, out var baseQty))
+            {
+                ingredient.Quantity = HelperService.FormatSmart(baseQty * _servings, ingredient.Unit?.Code);
+            }
+        }
+    }
 
     public void Open(MealPlanPreviewDto mealPlan)
     {
@@ -127,33 +153,49 @@
         RecipeName = mealPlan.RecipeName;
         EditDate = mealPlan.Date;
         EditMealType = mealPlan.MealType;
-        EditServings = mealPlan.Servings;
         
+        _servings = mealPlan.Servings > 0 ? mealPlan.Servings : 1;
         SelectedUserIds = mealPlan.UsersPreviews.Select(u => u.Id).ToHashSet();
         
-        MealPlanIngredients = MealPlan.Ingredients.Select(ing => new RecipeIngredientDisplayDto()
+        MealPlanIngredients.Clear();
+        IngredientQuantityPerServing.Clear();
+
+        var baseServings = _servings;
+
+        foreach (var ing in mealPlan.Ingredients)
         {
-            Quantity = ing.Quantity,
-            Unit = new()
+            var newMP = new RecipeIngredientDisplayDto()
             {
-                Id = ing.UnitId,
-                Name = ing.UnitName,
-            },
-            Ingredient = new()
-            {
-                Id = ing.IngredientId,
-                Name = ing.IngredientName,
-            },
-        }).ToList();
-        
+                ConversionFactor = ing.ConversionFactor,
+                Unit = new()
+                {
+                    Id = ing.UnitId,
+                    Name = ing.UnitName,
+                    Code = ing.UnitCode
+                },
+                Ingredient = new()
+                {
+                    Id = ing.IngredientId,
+                    Name = ing.IngredientName,
+                },
+            };
+            
+            var perServingQty = ing.Quantity / baseServings;
+            IngredientQuantityPerServing[newMP] = perServingQty;
+            
+            newMP.Quantity = HelperService.FormatSmart(perServingQty * _servings, newMP.Unit.Code);
+
+            MealPlanIngredients.Add(newMP);
+        }
+
         IsVisible = true;
         StateHasChanged();
     }
 
-    private void Close()
+    private async Task Close()
     {
         IsVisible = false;
-        OnClose.InvokeAsync();
+        await OnClose.InvokeAsync();
     }
 
     private void ToggleUser(Guid userId)
@@ -162,43 +204,51 @@
             SelectedUserIds.Remove(userId);
         else
             SelectedUserIds.Add(userId);
+        
+        Servings = SelectedUserIds.Count > 0 ? SelectedUserIds.Count : 1;
     }
 
-    private void HandleSave()
+    private async Task HandleSave()
     {
         var updateModel = new MealPlanUpdateDto
         {
             Id = MealPlanId,
             Date = EditDate,
             MealType = EditMealType,
-            Servings = EditServings,
+            Servings = Servings,
             UsersIds = SelectedUserIds.ToList(),
             Ingredients = MealPlanIngredients
         };
 
-        OnSave.InvokeAsync(updateModel);
+        await OnSave.InvokeAsync(updateModel);
         IsVisible = false;
     }
 
-    private void HandleDelete()
+    private async Task HandleDelete()
     {
-        OnDelete.InvokeAsync(MealPlanId);
+        await OnDelete.InvokeAsync(MealPlanId);
         IsVisible = false;
     }
     
     private void RemoveIngredient(RecipeIngredientDisplayDto ing)
     {
         MealPlanIngredients.Remove(ing);
+        IngredientQuantityPerServing.Remove(ing);
     }
     
     bool showIngredientPopup = false;
     private void ToggleAddIngredientPopup()
     {
-            showIngredientPopup = !showIngredientPopup;          
+        showIngredientPopup = !showIngredientPopup;          
     }
 
-    private async Task HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
+    private Task HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
     {
         MealPlanIngredients.Add(ingredient);
+        
+        var perServing = Servings > 0 ? ingredient.Quantity / Servings : ingredient.Quantity;
+        IngredientQuantityPerServing[ingredient] = perServing;
+
+        return Task.CompletedTask;
     }
 }

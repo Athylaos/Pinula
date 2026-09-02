@@ -190,7 +190,7 @@
     <value>Rychlovky</value>
   </data>
   <data name="SpeedyMealsSubtitle" xml:space="preserve">
-    <value>Méně času u vaření, více času pro jezení</value>
+    <value>Receptu pod 20 minut</value>
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>Čas (Minuty)</value>
@@ -336,8 +336,8 @@
   <data name="PlannerPage" xml:space="preserve">
     <value>Plánovač</value>
   </data>
-  <data name="KitchenDashboard" xml:space="preserve">
-    <value>Přehled vaší kuchyně</value>
+  <data name="PlannerDescription1" xml:space="preserve">
+    <value>Naplánováno na dnešek</value>
   </data>
   <data name="StartPlanning" xml:space="preserve">
     <value>Začněte plánovat</value>
@@ -747,8 +747,8 @@
   <data name="NotReserved" xml:space="preserve">
     <value>K dispozici</value>
   </data>
-  <data name="PantryDescription" xml:space="preserve">
-    <value>Sledujte a organizujte vaše suroviny</value>
+  <data name="PantryDescription1" xml:space="preserve">
+    <value>Zaznamenáno:</value>
   </data>
   <data name="AddInventoryIngredient" xml:space="preserve">
     <value>Přidejte surovinu</value>
@@ -773,9 +773,6 @@
   </data>
   <data name="AddShoppingListItemsToPantry" xml:space="preserve">
     <value>Přidat zakoupené položky do spíže</value>
-  </data>
-  <data name="ShoppingListDescription" xml:space="preserve">
-    <value>Sledujte suroviny potřebné pro vaše plánované recepty a jídla</value>
   </data>
   <data name="CreateIngredient" xml:space="preserve">
     <value>Vytvoř surovinu</value>
@@ -842,5 +839,38 @@
   </data>
   <data name="ConfirmTransfer" xml:space="preserve">
     <value>Potvrdit přesun</value>
+  </data>
+  <data name="OriginalLanguageen" xml:space="preserve">
+    <value>angličtině</value>
+  </data>
+  <data name="OriginalLanguagecs" xml:space="preserve">
+    <value>češtině</value>
+  </data>
+  <data name="FromDate" xml:space="preserve">
+    <value>z</value>
+  </data>
+  <data name="InLanguage" xml:space="preserve">
+    <value>v</value>
+  </data>
+  <data name="CheckOutThisRecipe" xml:space="preserve">
+    <value>Koukni na tento recept z Pinula</value>
+  </data>
+  <data name="LinkCopied" xml:space="preserve">
+    <value>Odkaz zkopírován do schránky!</value>
+  </data>
+  <data name="PantryDescription2" xml:space="preserve">
+    <value>surovin</value>
+  </data>
+  <data name="PantryDescription3" xml:space="preserve">
+    <value>brzo projde a </value>
+  </data>
+  <data name="PantryDescription4" xml:space="preserve">
+    <value>již prošlo.</value>
+  </data>
+  <data name="PlannerDescription2" xml:space="preserve">
+    <value>na zítřek</value>
+  </data>
+  <data name="GroupManagement" xml:space="preserve">
+    <value>Správa skupiny</value>
   </data>
 </root>

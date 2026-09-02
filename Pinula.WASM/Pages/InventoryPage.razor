@@ -16,11 +16,15 @@
                     </div>
                     <div>
                         <h1 class="page-title">@Localizer["Pantry"]</h1>
-                        <p class="subtitle">@Localizer["PantryDescription"]</p>
                     </div>
                 </div>
 
                 <div class="mp-header-actions">
+                    @if (FilteredItems.Any())
+                    {
+                        <p style="text-align: left; padding: 4px" class="subtitle">@Localizer["PantryDescription1"] @FilteredItems.Count() @Localizer["PantryDescription2"], @FilteredItems.Count(i => i.ExpirationDate <= DateTime.Today.AddDays(3) && i.ExpirationDate >= DateTime.Today) @Localizer["PantryDescription3"] @FilteredItems.Count(i => i.ExpirationDate <= DateTime.Today) @Localizer["PantryDescription4"]</p>
+                    }
+                    
                     <button class="btn-group-action" @onclick="ToggleAddInventoryModal">
                         <img src="images/icons/plus.png" alt="plus"/>
                         <!--<span>@Localizer["AddInventoryIngredient"]</span>-->

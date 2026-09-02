@@ -388,6 +388,10 @@ namespace Pinula.API.Endpoints
                     Fiber = 0,
                     Rating = (decimal)0,
                     UsersRated = 0,
+                    IsGlutenFree = true,
+                    IsLactoseFree = true,
+                    IsVegan = true,
+                    IsVegetarian = true
 
                 };
 
@@ -405,20 +409,28 @@ namespace Pinula.API.Endpoints
                         newRecipe.Calories += factor * dbIng.Calories;
                         newRecipe.Proteins += factor * dbIng.Proteins;
                         newRecipe.Fats += factor * dbIng.Fats;
+                        newRecipe.SaturatedFats += factor * dbIng.SaturatedFats;
                         newRecipe.Carbohydrates += factor * dbIng.Carbohydrates;
+                        newRecipe.Sugars += factor * dbIng.Sugars;
                         newRecipe.Fiber += factor * dbIng.Fiber;
+                        newRecipe.Salt += factor * dbIng.Salt;
+                        
+                        newRecipe.RecipeIngredients.Add(new RecipeIngredient
+                        {
+
+                            RecipeId = newRecipe.Id,
+                            IngredientId = i.Ingredient.Id,
+                            Quantity = i.Quantity,
+                            UnitId = i.Unit.Id,
+                            ConversionFactor = dbIng.IngredientUnits.First(u => u.UnitId == i.Unit.Id).AmountInGrams
+                        });
+
+                        if (!dbIng.IsGlutenFree) newRecipe.IsGlutenFree = false;
+                        if (!dbIng.IsLactoseFree) newRecipe.IsLactoseFree = false;
+                        if (!dbIng.IsVegan) newRecipe.IsVegan = false;
+                        if (!dbIng.IsVegetarian) newRecipe.IsVegetarian = false;
                     }
-
-
-                    newRecipe.RecipeIngredients.Add(new RecipeIngredient
-                    {
-
-                        RecipeId = newRecipe.Id,
-                        IngredientId = i.Ingredient.Id,
-                        Quantity = i.Quantity,
-                        UnitId = i.Unit.Id,
-                        ConversionFactor = i.ConversionFactor
-                    });
+                    
                 }
 
                 foreach (var step in dto.RecipeSteps)

@@ -98,17 +98,16 @@
 
                 @if (bestRecipes != null && bestRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="@Localizer["TrendingNow"]" Subtitle="@Localizer["TrendingNow"]" HasMoreToLoad="moreBestToLoad" IsLoading="isBestLoading" OnLoadMore="LoadMoreBest" OnRecipeSelected="RecipeClicked" Recipes="bestRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["TrendingNow"]" Subtitle="@Localizer["TrendingNowSubtitles"]" HasMoreToLoad="moreBestToLoad" IsLoading="isBestLoading" OnLoadMore="LoadMoreBest" OnRecipeSelected="RecipeClicked" Recipes="bestRecipes"></RecipeGridHorizontal>
                 }
 
                 @if (mineRecipes != null && mineRecipes.Any())
                 {
-                    <RecipeGridHorizontal Title="@Localizer["MyRecipes"]" Subtitle="@Localizer["MyReciepsSubtitle"]" HasMoreToLoad="moreMineToLoad" IsLoading="isMineLoading" OnLoadMore="LoadMoreMine" OnRecipeSelected="RecipeClicked" Recipes="mineRecipes"></RecipeGridHorizontal>
+                    <RecipeGridHorizontal Title="@Localizer["MyRecipes"]" Subtitle="@Localizer["MyRecipesSubtitle"]" HasMoreToLoad="moreMineToLoad" IsLoading="isMineLoading" OnLoadMore="LoadMoreMine" OnRecipeSelected="RecipeClicked" Recipes="mineRecipes"></RecipeGridHorizontal>
                 }
 
                 <div class="section-divider">
                     <div class="title-block">
-                        <span class="subtitle">@Localizer["Discovery"]</span>
                         <h2>@Localizer["OtherRecipes"]</h2>
                     </div>
                     <div class="line"></div>

@@ -2,6 +2,7 @@
 @using Pinula.Shared.Enums
 @using Pinula.Shared.Interface
 @using Microsoft.Extensions.Localization
+@using Pinula.WASM.Services
 @inject IRecipeService RecipeService
 @inject IStringLocalizer<App> Localizer
 
@@ -24,7 +25,7 @@
                     <select @bind="SelectedMealType" class="modal-input">
                         @foreach (var type in Enum.GetValues<MealType>())
                         {
-                            <option value="@type">@type.ToString()</option>
+                            <option value="@type">@Localizer[type.ToString()]</option>
                         }
                     </select>
                 </div>
@@ -136,7 +137,26 @@
             }
         }
     }
-    private int Servings = 1;
+
+    private Dictionary<RecipeIngredientDisplayDto, decimal> IngredientQuantityPerServing { get; set; } = new();
+    private int _servings = 1;
+
+    private int Servings
+    {
+        get => _servings;
+        set
+        {
+            if (_servings == value || value <= 0 || _servings <= 0) return;
+            
+            _servings = value;
+            
+            foreach (var ingredient in MealPlanIngredients)
+            {
+                ingredient.Quantity = HelperService.FormatSmart(IngredientQuantityPerServing[ingredient]*_servings, ingredient.Unit.Code);;
+            }
+        }
+    }
+    
     private HashSet<Guid> SelectedUsers = new();
     private RecipeDetailsDto? RecipeDetailsDto;
     private List<RecipeIngredientDisplayDto> MealPlanIngredients = new();
@@ -147,36 +167,43 @@
         MealPlanIngredients.Clear();
         foreach (var ing in RecipeDetailsDto.RecipeIngredients)
         {
-            MealPlanIngredients.Add(new RecipeIngredientDisplayDto()
+            var newMP = new RecipeIngredientDisplayDto()
             {
-                Quantity = ing.Quantity,
                 ConversionFactor = ing.ConversionFactor,
                 Unit = new()
                 {
                     Id = ing.UnitId,
                     Name = ing.UnitName,
+                    Code = ing.UnitCode
                 },
                 Ingredient = new()
                 {
                     Id = ing.IngredientId,
                     Name = ing.IngredientName,
                 },
-            });
+            };
+            
+            var perServingQty = ing.Quantity / RecipeDetailsDto.ServingsAmount;
+            IngredientQuantityPerServing[newMP] = perServingQty;
+            
+            newMP.Quantity = HelperService.FormatSmart(perServingQty * _servings, newMP.Unit.Code);
+
+            MealPlanIngredients.Add(newMP);
         }
         StateHasChanged();
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (PreselectedDate.HasValue) PlanDate = PreselectedDate.Value;
         if (PreselectedMealType.HasValue) SelectedMealType = PreselectedMealType.Value;
         if (PreselectedRecipeId.HasValue) SelectedRecipeId = PreselectedRecipeId.Value;
+        await LoadData();
         foreach (var member in GroupMembers)
         {
             SelectedUsers.Add(member.Id);
         }
         Servings = SelectedUsers.Count > 0 ? SelectedUsers.Count : 1;
-        LoadData();
     }
 
     private async Task LoadData()
@@ -222,6 +249,7 @@
     private void RemoveIngredient(RecipeIngredientDisplayDto ing)
     {
         MealPlanIngredients.Remove(ing);
+        IngredientQuantityPerServing.Remove(ing);
     }
 
     private async Task Cancel() => await OnCancel.InvokeAsync();
@@ -239,6 +267,7 @@
     private async Task HandleNewIngredient(RecipeIngredientDisplayDto ingredient)
     {
         MealPlanIngredients.Add(ingredient);
+        IngredientQuantityPerServing.Add(ingredient, ingredient.Quantity/Servings);
     }
 }
 

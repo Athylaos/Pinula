@@ -161,13 +161,15 @@ public class MappingConfig : IRegister
             .Map(d => d.UserSurname,
                 src => src.User != null ? src.User.Surname : string.Empty)
             .MaxDepth(2);
-        
+
         config.NewConfig<RecipeIngredient, RecipeIngredientPreviewDto>()
             .PreserveReference(true)
             .Map(d => d.IngredientName,
                 src => HelperFunctions.GetLocalizedName(src.Ingredient.Names, GetLanguageCode()))
             .Map(d => d.UnitName,
-                src => HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()));
+                src => HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()))
+            .Map(d => d.UnitCode,
+                src => src.Unit.Code);
 
         config.NewConfig<Recipe, RecipePreviewDto>()
             .Map(d => d.Title,

@@ -125,15 +125,22 @@ public partial class PinulaDbContext : DbContext
 
             entity.Property(e => e.Calories).HasPrecision(10, 3);
             entity.Property(e => e.Carbohydrates).HasPrecision(10, 3);
+            entity.Property(e => e.Sugars).HasPrecision(10, 3);
             entity.Property(e => e.Fats).HasPrecision(10, 3);
+            entity.Property(e => e.SaturatedFats).HasPrecision(10, 3);
             entity.Property(e => e.Proteins).HasPrecision(10, 3);
             entity.Property(e => e.Fiber).HasPrecision(10, 3);
+            entity.Property(e => e.Salt).HasPrecision(10, 3);
             entity.Property(e => e.Rating).HasPrecision(3, 2);
             entity.Property(e => e.RecipeCreated).HasPrecision(0).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsApproved).HasDefaultValue(true);
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Checked).HasDefaultValue(false);
-
+            entity.Property(e => e.IsVegan).HasDefaultValue(false);
+            entity.Property(e => e.IsVegetarian).HasDefaultValue(false);
+            entity.Property(e => e.IsGlutenFree).HasDefaultValue(false);
+            entity.Property(e => e.IsLactoseFree).HasDefaultValue(false);
+            
             entity.HasOne(d => d.ServingUnit).WithMany(p => p.Recipes).HasForeignKey(d => d.ServingUnitId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.User).WithMany(p => p.Recipes).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);
 

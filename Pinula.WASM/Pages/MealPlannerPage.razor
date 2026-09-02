@@ -25,7 +25,7 @@
                 @if (!isNotInGroup)
                 {
                     <h1 class="page-title">@groupDetail?.Name</h1>
-                    <p class="subtitle">@Localizer["KitchenDashboard"]</p>
+                    <p class="subtitle">@Localizer["PlannerDescription1"]: @WeeklyPlans.Count(p => p.Date ==  DateOnly.FromDateTime(DateTime.Today)), @Localizer["PlannerDescription2"]: @WeeklyPlans.Count(p => p.Date ==  DateOnly.FromDateTime(DateTime.Today).AddDays(1))</p>
                 }
                 else
                 {
@@ -50,7 +50,7 @@
             }
 
             <button class="btn-group-action" @onclick="() => showGroupModal = true">
-                <i class="@(isNotInGroup ? "" : "bi bi-gear")" style="width: 30px; height: 30px; font-size: 1.4rem"></i>
+                <i class="bi bi-gear" style="width: 30px; height: 30px; font-size: 1.4rem"></i>
                 <span>@(isNotInGroup ? Localizer["SetupGroup"] : "")</span>
             </button>
         </div>

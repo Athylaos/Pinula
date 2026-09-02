@@ -5,13 +5,9 @@
         public string Title {  get; set; } = string.Empty;
 
         public string PhotoUrl { get; set; } = "default_recipe_picture.png";
-
         public short CookingTime { get; set; }
-
         public short ServingsAmount { get; set; }
-
         public Guid ServingUnit { get; set; }
-
         public short Difficulty { get; set; }
 
         public List<RecipeIngredientDisplayDto> RecipeIngredients { get; set; } = new();

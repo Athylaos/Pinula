@@ -11,6 +11,14 @@
 
 <PageTitle>Pinula - @Localizer["Recipe"]</PageTitle>
 
+@if (_showToast)
+{
+    <div class="pf-alert-toast @(_isExiting ? "toast-exit" : "toast-enter")">
+        <img src="images/icons/check-mark.png" style="max-width: 20px; max-height: 20px; filter: invert(100%)"/>
+        <span>@_toastMessage</span>
+    </div>
+}
+
 <LoadingView IsLoading="isLoading" IsFullScreen="true" Text="@Localizer["LoadingRecipe"]">
     <div class="recipe-page-container">
         <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
@@ -18,10 +26,10 @@
                 <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" />
                 <div class="hero-actions">
                     <button class="icon-btn" @onclick="ToggleFavorite"><img class="info-icon" src="@(recipe.IsFavorite ? "images/icons/favorite_full.png" : "images/icons/favorite.png")" /></button>
-                    <button class="icon-btn"><img src="images/icons/share.png" class="info-icon" /></button>
+                    <button class="icon-btn"><img src="images/icons/share.png" class="info-icon" @onclick="ShareRecipe"/></button>
                 </div>
                 <h1 class="recipe-title">@recipe.Title</h1>
-                <div class="author-info">@Localizer["By"] @recipe.UserName @recipe.UserSurname</div>
+                <div class="author-info">@Localizer["By"] @recipe.UserName @recipe.UserSurname @Localizer["FromDate"] @recipe.RecipeCreated.ToString("Y") @Localizer["InLanguage"] @Localizer[$"OriginalLanguage{recipe.OriginalLanguage}"]</div>
             </div>
         </div>
         <div class="recipe-body">
@@ -65,15 +73,103 @@
                     <h4>@Localizer["PerServing"]:</h4>
                     <div class="calories">
                         <img class="info-icon opacity-100" src="images/icons/calories.png" />
-                        <span class="cal-value">@(recipe.Calories?.ToString("0.#"))</span>
+                        <span class="cal-value">@(recipe.Calories.ToString("0.#"))</span>
                         <span style="margin-bottom:-2px;"> kcal</span>
                     </div>
                 </div>
-                <div class="macros-grid">
-                    <div class="macro-item">@Localizer["Protein"] <span>@recipe.Proteins?.ToString("0.#") g</span></div>
-                    <div class="macro-item">@Localizer["Carbs"] <span>@recipe.Carbohydrates?.ToString("0.#") g</span></div>
-                    <div class="macro-item">@Localizer["Fat"] <span>@recipe.Fats?.ToString("0.#") g</span></div>
-                    <div class="macro-item">@Localizer["Fiber"] <span>@recipe.Fiber?.ToString("0.#") g</span></div>
+    
+                <div class="primary-macros">
+                    <div class="macro-block">
+                        <span class="macro-label">@Localizer["Protein"]</span>
+                        <span class="macro-value">@recipe.Proteins.ToString("0.#") <small>g</small></span>
+                    </div>
+                    <div class="macro-block">
+                        <span class="macro-label">@Localizer["Carbs"]</span>
+                        <span class="macro-value">@recipe.Carbohydrates.ToString("0.#") <small>g</small></span>
+                    </div>
+                    <div class="macro-block">
+                        <span class="macro-label">@Localizer["Fat"]</span>
+                        <span class="macro-value">@recipe.Fats.ToString("0.#") <small>g</small></span>
+                    </div>
+                </div>
+
+                <div class="secondary-macros">
+                    <div class="sub-macro">@Localizer["Sugar"] <span>@recipe.Carbohydrates.ToString("0.#") g</span></div>
+                    <div class="sub-macro">@Localizer["SaturatedFat"] <span>@recipe.Carbohydrates.ToString("0.#") g</span></div>
+                    <div class="sub-macro">@Localizer["Fiber"] <span>@recipe.Fiber.ToString("0.#") g</span></div>
+                    <div class="sub-macro">@Localizer["Salt"] <span>@recipe.Carbohydrates.ToString("0.#") g</span></div>
+                </div>
+            </div>
+            
+            <div class="dietary-card">
+                <div class="dietary-grid">
+                    <div class="dietary-item @(recipe.IsVegan ? "active" : "inactive")">
+                        <div class="dietary-icon-wrapper">
+                            @if (recipe.IsVegan)
+                            {
+                                <img src="images/icons/check-mark.png" alt="check" style="height: 20px; width: 20px; filter: invert(100%)"/>
+                            }
+                            else
+                            {
+                                <img src="images/icons/close.png" alt="check" style="height: 18px; width: 18px; filter: invert(100%)"/>
+                            }
+                        </div>
+                        <div class="dietary-info">
+                            <span class="dietary-name">@Localizer["Vegan"]</span>
+                            <span class="dietary-status">@(recipe.IsVegan ? Localizer["Yes"] : Localizer["No"])</span>
+                        </div>
+                    </div>
+
+                    <div class="dietary-item @(recipe.IsVegetarian ? "active" : "inactive")">
+                        <div class="dietary-icon-wrapper">
+                            @if (recipe.IsVegetarian)
+                            {
+                                <img src="images/icons/check-mark.png" alt="check" style="height: 20px; width: 20px; filter: invert(100%)"/>
+                            }
+                            else
+                            {
+                                <img src="images/icons/close.png" alt="check" style="height: 18px; width: 18px; filter: invert(100%)"/>
+                            }
+                        </div>
+                        <div class="dietary-info">
+                            <span class="dietary-name">@Localizer["Vegetarian"]</span>
+                            <span class="dietary-status">@(recipe.IsVegetarian ? Localizer["Yes"] : Localizer["No"])</span>
+                        </div>
+                    </div>
+
+                    <div class="dietary-item @(recipe.IsLactoseFree ? "active" : "inactive")">
+                        <div class="dietary-icon-wrapper">
+                            @if (recipe.IsLactoseFree)
+                            {
+                                <img src="images/icons/check-mark.png" alt="check" style="height: 20px; width: 20px; filter: invert(100%)"/>
+                            }
+                            else
+                            {
+                                <img src="images/icons/close.png" alt="check" style="height: 18px; width: 18px; filter: invert(100%)"/>
+                            }
+                        </div>
+                        <div class="dietary-info">
+                            <span class="dietary-name">@Localizer["LactoseFree"]</span>
+                            <span class="dietary-status">@(recipe.IsLactoseFree ? Localizer["Yes"] : Localizer["No"])</span>
+                        </div>
+                    </div>
+
+                    <div class="dietary-item @(recipe.IsGlutenFree ? "active" : "inactive")">
+                        <div class="dietary-icon-wrapper">
+                            @if (recipe.IsGlutenFree)
+                            {
+                                <img src="images/icons/check-mark.png" alt="check" style="height: 20px; width: 20px; filter: invert(100%)"/>
+                            }
+                            else
+                            {
+                                <img src="images/icons/close.png" alt="check" style="height: 18px; width: 18px; filter: invert(100%)"/>
+                            }
+                        </div>
+                        <div class="dietary-info">
+                            <span class="dietary-name">@Localizer["GlutenFree"]</span>
+                            <span class="dietary-status">@(recipe.IsGlutenFree ? Localizer["Yes"] : Localizer["No"])</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -96,10 +192,13 @@
                                 <div class="ing-right">
                                     <span class="ing-amount">@(ing.Quantity.ToString("0.##")) @ing.UnitName</span>
                     
-                                    <span class="ing-stock-badge @(isEnough ? "stock-ok" : isPartial ? "stock-warn" : "stock-empty")" 
-                                          title="@Localizer["AvailableInPantry"]">
+                                    @if (isUserLogged)
+                                    {
+                                    <span class="ing-stock-badge @(isEnough ? "stock-ok" : isPartial ? "stock-warn" : "stock-empty")"
+                                    title="@Localizer["AvailableInPantry"]">
                                         @(ing.QuantityInInventory.HasValue ? ing.QuantityInInventory.Value.ToString("0.##") : "") @ing.UnitName
-                                    </span>
+                                    </span>                                       
+                                    }
                                 </div>
                             </li>
                         }
@@ -216,6 +315,11 @@
     private CommentCreateDto editCommentModel = new();
 
     private UserDisplayDto? userDto;
+    
+    private bool _showToast = false;
+    private bool _isExiting = false;
+    private string _toastMessage = "";
+    private CancellationTokenSource? _cts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -425,6 +529,63 @@
 
             StateHasChanged();
         }
+    }
+
+    private async Task ShareRecipe()
+    {
+        var recipeUrl = $"{NavManager.BaseUri}recipe/{recipe.Id}";
+        var title = recipe.Title;
+        var text = $"{Localizer["CheckOutThisRecipe"]}: {recipe.Title}";
+        
+        var result = await JSRuntime.InvokeAsync<ShareResult>("shareHelper.shareRecipe", title, text, recipeUrl);
+
+        if (result.Success)
+        {
+            if (!result.Native)
+            {
+                ShowToast(Localizer["LinkCopied"]);
+            }
+        }
+    }
+
+    public void ShowToast(string message)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
+        _toastMessage = message;
+        _isExiting = false;
+        _showToast = true;
+        StateHasChanged();
+
+        _ = AutoHideAsync(_cts.Token);
+    }
+
+    private async Task AutoHideAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(3000, token);
+            
+            _isExiting = true;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(400, token);
+            
+            _showToast = false;
+            _isExiting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private class ShareResult
+    {
+        public bool Success { get; set; }
+        public bool Native { get; set; }
+        public bool Cancelled { get; set; }
     }
 
 
