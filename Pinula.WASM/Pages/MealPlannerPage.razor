@@ -393,5 +393,16 @@
         await LoadData();
     }
 
-    private void MealClicked(MealPlanPreviewDto mp) => NavManager.NavigateTo($"/recipe/{mp.RecipeId}");
+    private void MealClicked(MealPlanPreviewDto mp)
+    {
+        if (mp.IsCooked)
+        {
+            NavManager.NavigateTo($"/recipe/{mp.RecipeId}");
+        }
+        else
+        {
+            NavManager.NavigateTo($"/cook/{mp.Id}");
+        }
+    }
+
 }

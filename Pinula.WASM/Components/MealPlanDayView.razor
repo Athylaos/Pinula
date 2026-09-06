@@ -22,20 +22,37 @@
                 <div class="meal-cards-grid">
                     @foreach (var meal in mealsInCategory)
                     {
-                        <div class="meal-card" @onclick="() => OnMealSelected.InvokeAsync(meal)">
+                        <div class="meal-card @(meal.IsCooked ? "is-cooked" : "")" @onclick="() => OnMealSelected.InvokeAsync(meal)">
+    
                             <button class="btn-card-edit"
                                     @onclick="() => OnEditMeal.InvokeAsync(meal.Id)"
                                     @onclick:stopPropagation="true"
                                     title="@Localizer["EditMealPlan"]">
-                                <img src="images/icons/pencil.png" style="filter:invert(1); width:13px; height:13px;"/>
+                                <img src="images/icons/pencil.png" class="btn-edit-img" alt="Edit" />
                             </button>
 
-                            <img src="@meal.RecipePhotoUrl" alt="@meal.RecipeName" class="meal-img" />
+                            <div class="meal-img-wrapper">
+                                <img src="@(string.IsNullOrEmpty(meal.RecipePhotoUrl) ? "/img/default-recipe.jpg" : meal.RecipePhotoUrl)" 
+                                     alt="@meal.RecipeName" 
+                                     class="meal-img" />
+             
+                                @if (meal.IsCooked)
+                                {
+                                    <div class="cooked-badge" title="@Localizer["MarkedAsCooked"]">
+                                        <img src="images/icons/check-mark.png" class="cooked-badge-icon" />
+                                        <span>@Localizer["Cooked"]</span>
+                                    </div>
+                                }
+                            </div>
+
                             <div class="meal-info">
-                                <h4>@meal.RecipeName</h4>
-                                <div class="meal-meta">
-                                    <span> @meal.Servings @Localizer["Portions"].</span>
+                                <div class="meal-header-info">
+                                    <h4>@meal.RecipeName</h4>
+                                    <div class="meal-meta">
+                                        <span>@meal.Servings @Localizer["Portions"]</span>
+                                    </div>
                                 </div>
+
                                 <div class="meal-eaters">
                                     @foreach (var user in meal.UsersPreviews)
                                     {

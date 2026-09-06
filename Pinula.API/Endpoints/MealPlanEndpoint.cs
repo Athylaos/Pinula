@@ -14,6 +14,75 @@ namespace Pinula.API.Endpoints
         {
             var group = app.MapGroup("/mealplan");
 
+            
+            
+            //---------------------------------------------------------------Get meal plan 
+            group.MapGet("/get/{id:guid}", async (HttpRequest request, Guid id, ClaimsPrincipal user, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+                var userDb = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+                if (userDb is null) return Results.BadRequest("User not found");
+
+                var groupId = userDb.GroupId;
+                if (groupId is null) return Results.BadRequest("User is not in group");
+
+                var mealplanDb = await db.MealPlans
+                    .AsNoTracking()
+                    .Include(mp => mp.Recipe)
+                    .Include(mp => mp.MealPlanIngredients)
+                    .ThenInclude(i => i.Unit)
+                    .Include(mp => mp.MealPlanIngredients)
+                    .ThenInclude(i => i.Ingredient)
+                    .Include(mp => mp.Users)
+                    .FirstOrDefaultAsync(mp => mp.Id == id && mp.GroupId == userDb.GroupId);
+
+                if (mealplanDb is null || mealplanDb.Recipe is null) return Results.BadRequest("MealPlan not found");
+                try 
+                {
+                    var mealplan = mealplanDb.AdaptWithRequest<MealPlanPreviewDto>(request);
+                    
+                    if (mealplan.Ingredients != null && mealplan.Ingredients.Any())
+                    {
+                        var ingredientIds = mealplan.Ingredients.Select(i => i.IngredientId).Distinct().ToList();
+
+                        var inventoryItemsDb = await db.InventoryItems
+                            .AsNoTracking()
+                            .Include(i => i.Ingredient)
+                            .Include(i => i.Allocations)
+                            .Where(i => i.GroupId == userDb.GroupId && 
+                                   (ingredientIds.Contains(i.IngredientId) || 
+                                   (i.Ingredient.BaseIngredientId.HasValue && ingredientIds.Contains(i.Ingredient.BaseIngredientId.Value))))
+                            .ToListAsync();
+
+                        foreach (var ingredient in mealplan.Ingredients)
+                        {
+                            var inventoryIngredients = inventoryItemsDb.Where(i => 
+                                i.IngredientId == ingredient.IngredientId || 
+                                i.Ingredient.BaseIngredientId == ingredient.IngredientId);
+                            
+                            decimal totalFreeGrams = 0;
+                            foreach (var invItem in inventoryIngredients)
+                            {
+                                var allocatedGrams = invItem.Allocations?.Sum(a => a.AllocatedQuantityInGrams) ?? 0;
+                                var freeGrams = invItem.QuantityInGrams - allocatedGrams;
+                                if (freeGrams > 0)
+                                {
+                                    totalFreeGrams += freeGrams;
+                                }
+                            }
+                            
+                            ingredient.QuantityInInventory = totalFreeGrams > 0 && ingredient.ConversionFactor > 0 ? totalFreeGrams / ingredient.ConversionFactor : 0;
+                        }
+                    }
+
+                    return Results.Ok(mealplan);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                    throw;
+                }
+            }).RequireAuthorization();
 
 
             //---------------------------------------------------------------Get meal plans
@@ -49,6 +118,7 @@ namespace Pinula.API.Endpoints
                         MealType = mp.MealType,
                         Servings = mp.Servings,
                         RecipeId = mp.RecipeId,
+                        IsCooked = mp.IsCooked,
                         RecipeName = mp.Recipe.Titles.GetValueOrDefault(languageCode) ?? mp.Recipe.Titles.GetValueOrDefault("en") ?? "Recipe title",
                         RecipePhotoUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(mp.Recipe.PhotoUrl) ? defaultImage : mp.Recipe.PhotoUrl)}",
                         UsersPreviews = mp.Users.Select(u => new UserDisplayDto
@@ -420,6 +490,68 @@ namespace Pinula.API.Endpoints
 
                 await db.SaveChangesAsync();
                 return Results.Ok();
+
+            }).RequireAuthorization();
+            
+            //---------------------------------------------------------------Toggle as cooked
+            group.MapPost("/markAsCooked/{Id:guid}", async (Guid Id, ClaimsPrincipal user, PinulaDbContext db) =>
+            {
+                var userId = user.GetUserId();
+                var userDb = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+                if (userDb is null) return Results.NotFound("User not found");
+                if (userDb.GroupId is null) return Results.BadRequest("User is not in group");
+                
+                var mealPlan = await db.MealPlans.Include(mp => mp.MealPlanIngredients).FirstOrDefaultAsync(mp => mp.Id == Id && mp.GroupId == userDb.GroupId);
+                    
+                if (mealPlan is null) return Results.NotFound("Meal plan not found");
+                if(mealPlan.IsCooked) return Results.BadRequest("Meal plan already marked as cooked.");
+
+                mealPlan.IsCooked = true;
+
+                var ingredientIds = mealPlan.MealPlanIngredients.Select(i => i.Id).ToList();
+
+                if (ingredientIds.Any())
+                {
+                    var allocations = await db.InventoryMealPlanAllocations
+                        .Include(a => a.InventoryItem)
+                        .Where(a => ingredientIds.Contains(a.MealPlanIngredientId))
+                        .ToListAsync();
+
+                    foreach (var allocation in allocations)
+                    {
+                        var item = allocation.InventoryItem;
+                        if (item is not null)
+                        {
+                            if (item.QuantityInGrams > 0 && item.Quantity > 0)
+                            {
+                                var gramsPerUnit = item.QuantityInGrams / item.Quantity;
+                                if (gramsPerUnit > 0)
+                                {
+                                    item.Quantity -= allocation.AllocatedQuantityInGrams / gramsPerUnit;
+                                }
+                            }
+
+                            item.QuantityInGrams -= allocation.AllocatedQuantityInGrams;
+                            
+                            if (item.QuantityInGrams <= 0.001m || item.Quantity <= 0.001m)
+                            {
+                                db.InventoryItems.Remove(item);
+                            }
+                        }
+                        
+                        db.InventoryMealPlanAllocations.Remove(allocation);
+                    }
+                    
+                    var oldShoppingListItems = await db.ShoppingListItems
+                        .Where(i => i.MealPlanIngredientId.HasValue && ingredientIds.Contains(i.MealPlanIngredientId.Value))
+                        .ToListAsync();
+
+                    db.RemoveRange(oldShoppingListItems);
+                }
+
+                await db.SaveChangesAsync();
+
+                return Results.Ok("Meal plan marked as cooked");
 
             }).RequireAuthorization();
 

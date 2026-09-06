@@ -873,4 +873,13 @@
   <data name="GroupManagement" xml:space="preserve">
     <value>Správa skupiny</value>
   </data>
+  <data name="Cooking" xml:space="preserve">
+    <value>Vaření</value>
+  </data>
+  <data name="InPantry" xml:space="preserve">
+    <value>Ve spíži</value>
+  </data>
+  <data name="MarkAsCooked" xml:space="preserve">
+    <value>Dokončit vaření</value>
+  </data>
 </root>

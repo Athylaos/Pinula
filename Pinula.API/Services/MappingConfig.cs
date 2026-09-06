@@ -40,6 +40,19 @@ public class MappingConfig : IRegister
     
     public void Register(TypeAdapterConfig config)
     {
+        config.NewConfig<DateTime, DateOnly>()
+            .MapWith(src => DateOnly.FromDateTime(src));
+
+        config.NewConfig<DateTime?, DateOnly?>()
+            .MapWith(src => src.HasValue ? DateOnly.FromDateTime(src.Value) : null);
+        
+        config.NewConfig<DateOnly, DateTime>()
+            .MapWith(src => src.ToDateTime(TimeOnly.MinValue));
+
+        config.NewConfig<DateOnly?, DateTime?>()
+            .MapWith(src => src.HasValue ? src.Value.ToDateTime(TimeOnly.MinValue) : null);
+        
+        
         #region Category
 
         config.NewConfig<Category, CategoryDisplayDto>()
@@ -141,7 +154,18 @@ public class MappingConfig : IRegister
             .Map(d => d.RecipePhotoUrl,
                 src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Recipes,src.Recipe.PhotoUrl))
             .Map(d => d.Ingredients,
-                src => src.MealPlanIngredients);
+                src => src.MealPlanIngredients)
+            .Map(d => d.UsersPreviews,
+                src => src.Users)
+            .MaxDepth(2);
+        
+        config.NewConfig<MealPlanIngredient, RecipeIngredientPreviewDto>()
+            .Map(d => d.IngredientName, src => 
+                src.Ingredient != null && src.Ingredient.Names != null  ? HelperFunctions.GetLocalizedName(src.Ingredient.Names, GetLanguageCode()) : string.Empty)
+            .Map(d => d.UnitName, src => 
+                src.Unit != null && src.Unit.Names != null ? HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()) : string.Empty)
+            .Map(d => d.UnitCode, src => 
+                src.Unit != null ? src.Unit.Code : string.Empty);
 
         #endregion
 

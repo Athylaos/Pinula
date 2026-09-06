@@ -873,4 +873,13 @@
   <data name="GroupManagement" xml:space="preserve">
     <value>Group management</value>
   </data>
+  <data name="Cooking" xml:space="preserve">
+    <value>Cooking</value>
+  </data>
+  <data name="InPantry" xml:space="preserve">
+    <value>In pantry</value>
+  </data>
+  <data name="MarkAsCooked" xml:space="preserve">
+    <value>Finish cooking</value>
+  </data>
 </root>

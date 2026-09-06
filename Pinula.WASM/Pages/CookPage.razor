@@ -1,0 +1,209 @@
+@page "/cook/{Id:guid}"
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.DTOs
+@using Pinula.Shared.Interface
+@using Pinula.WASM.Components
+@inject NavigationManager NavManager
+@inject IMealPlanService MealPlanService
+@inject IRecipeService RecipeService
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<App> Localizer
+
+<PageTitle>Pinula - @Localizer["Cooking"]</PageTitle>
+
+<EditMealPopup @ref="editMealPopup"
+    AllGroupMembers="Members"
+    OnClose="ToggleEditMealPlanPopup"
+    IsVisible="isVisibleEditPopup"
+    OnDelete="DeleteMealPlan"
+    OnSave="SaveMealPlan">
+</EditMealPopup>
+
+<LoadingView IsLoading="isLoading" IsFullScreen="true" Text="@Localizer["LoadingRecipe"]">
+    @if (mealPlan is not null && recipe is not null)
+    {
+        <div class="recipe-page-container">
+            <div class="recipe-hero" style="background-image: linear-gradient(to top, #1C1C1C 0%, transparent 100%), url('@(string.IsNullOrEmpty(recipe.PhotoUrl) ? "/img/default-recipe.jpg" : recipe.PhotoUrl)');">
+                <div class="hero-content-recipe-details">
+                    <img src="images/icons/back.png" class="back-btn details-back-btn" @onclick="GoBack" alt="Back" />
+                    <h1 class="recipe-title">@recipe.Title</h1>
+                    <div class="author-info">@Localizer["Servings"]: @mealPlan.Servings</div>
+                </div>
+            </div>
+
+            <div class="recipe-body">
+                <div class="content-grid" style="grid-template-columns: 1fr;">
+                    <div class="ingredients-section">
+                        <div class="section-header">
+                            <h2 class="section-title section-title-clean">@Localizer["Ingredients"]:</h2>
+
+                            <button class="btn-accent btn-edit-meal" @onclick="OpenEditPopup">
+                                <img src="images/icons/pencil.png" class="btn-edit-icon" alt="Edit" />
+                                @Localizer["Edit"]
+                            </button>
+                        </div>
+
+                        <ul class="recipe-ingredient-list">
+                            @foreach (var ing in mealPlan.Ingredients)
+                            {
+                                var isChecked = checkedIngredients.Contains(ing.IngredientName);
+
+                                <li class="ingredient-item @(isChecked ? "is-checked" : "")" 
+                                    @onclick="() => ToggleIngredient(ing.IngredientName)">
+
+                                    <div class="ing-left">
+                                        <input type="checkbox" class="custom-checkbox ing-checkbox" checked="@isChecked" />
+                                        <span class="ing-name">@ing.IngredientName</span>
+                                    </div>
+
+                                    <div class="ing-right-col">
+                                        <div class="ing-amount">
+                                            @(ing.Quantity.ToString("0.##")) @ing.UnitName
+                                        </div>
+
+                                        <div class="ing-stock-badge @GetStockBadgeClass(ing.Quantity, ing.QuantityInInventory)">
+                                            @Localizer["InPantry"]: @(ing.QuantityInInventory?.ToString("0.##") ?? "0") @ing.UnitName
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="steps-section">
+                        <h2 class="section-title">@Localizer["CookingProcess"]:</h2>
+                        <div class="timeline">
+                            @foreach (var step in recipe.RecipeSteps.OrderBy(s => s.StepNumber))
+                            {
+                                var stepStateClass = GetStepClass(step.StepNumber);
+                                
+                                <div class="timeline-item @stepStateClass" @onclick="() => SetActiveStep(step.StepNumber)">
+                                    <div class="step-number">@step.StepNumber</div>
+                                    <div class="step-content">
+                                        <p>@step.Description</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="floating-action-bar">
+            <button class="btn-add-to-calendar" @onclick="CookMealPlan" style="background: var(--pine-teal);">
+                <img src="images/icons/check-mark.png" class="fas fa-check" style="filter: invert(100%);"/>
+                <span>@Localizer["MarkAsCooked"]</span>
+            </button>
+        </div>
+    }
+</LoadingView>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MealPlanPreviewDto? mealPlan;
+    private RecipeDetailsDto? recipe;
+
+    private bool isLoading = false;
+    private bool isVisibleEditPopup = false;
+    
+    private int currentActiveStep = 1;
+    private HashSet<string> checkedIngredients = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        mealPlan = await MealPlanService.GetMealPlanAsync(Id);
+        
+        if (mealPlan != null)
+        {
+            recipe = await RecipeService.GetRecipeDetailsAsync(mealPlan.RecipeId);
+        }
+
+        if (mealPlan is not null && recipe is not null) 
+        {
+            if (mealPlan.IsCooked)
+            {
+                currentActiveStep = recipe.RecipeSteps.Count + 1;
+            }
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        JSRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private void ToggleEditMealPlanPopup()
+    {
+        isVisibleEditPopup = !isVisibleEditPopup;
+    }
+    
+    private EditMealPopup editMealPopup;
+    private List<UserDisplayDto> Members = new();
+    
+    private async Task OpenEditPopup()
+    {
+        Members = await MealPlanService.GetMembersAsync();
+        isVisibleEditPopup = true;
+        editMealPopup.Open(mealPlan);
+    }
+
+    public async Task CookMealPlan()
+    {
+        await MealPlanService.MarkAsCookedAsync(Id);
+        NavManager.NavigateTo("/planner");
+    }
+    
+    public async Task DeleteMealPlan()
+    {
+        await MealPlanService.RemoveRecipeFromPlanAsync(Id);
+        NavManager.NavigateTo("/planner");
+    }
+    
+    public async Task SaveMealPlan(MealPlanUpdateDto dto)
+    {
+        isVisibleEditPopup = false;
+        isLoading = true;
+        await MealPlanService.UpdateMealPlanAsync(dto);
+        
+        mealPlan = await MealPlanService.GetMealPlanAsync(Id);
+        if (mealPlan is not null) isLoading = false;
+    }
+    
+    private void SetActiveStep(int stepNumber)
+    {
+        currentActiveStep = stepNumber;
+    }
+    
+    private string GetStepClass(int stepNumber)
+    {
+        if (stepNumber < currentActiveStep) return "step-completed";
+        if (stepNumber == currentActiveStep) return "step-active";
+        return "step-future";
+    }
+
+    private void ToggleIngredient(string ingredientName)
+    {
+        if (checkedIngredients.Contains(ingredientName))
+        {
+            checkedIngredients.Remove(ingredientName);
+        }
+        else
+        {
+            checkedIngredients.Add(ingredientName);
+        }
+    }
+    
+    private string GetStockBadgeClass(decimal requiredQty, decimal? inventoryQty)
+    {
+        var inStock = inventoryQty ?? 0;
+        if (inStock <= 0) return "stock-none";
+        if (inStock < requiredQty) return "stock-warn";
+        return "stock-ok";
+    }
+}

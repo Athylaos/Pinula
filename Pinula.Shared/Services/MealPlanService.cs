@@ -20,6 +20,20 @@ namespace Pinula.Shared.Services
             _httpClient = httpClient;
         }
 
+        public async Task<MealPlanPreviewDto?> GetMealPlanAsync(Guid id)
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<MealPlanPreviewDto>($"{BaseUrl}/get/{id}");
+                return response ?? new();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while getting meal plan: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<bool> AddRecipeToPlanAsync(MealPlanCreateDto dto)
         {
             try
@@ -69,6 +83,24 @@ namespace Pinula.Shared.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error while deleting meal plan {mealPlanId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> MarkAsCookedAsync(Guid id)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/markAsCooked/{id}", null);
+                if (response.IsSuccessStatusCode) return true;
+
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning($"Failed to mark meal plan as cooked {response.StatusCode} error: {error}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error while marking meal plan as cooked {id}: {ex.Message}");
                 return false;
             }
         }
