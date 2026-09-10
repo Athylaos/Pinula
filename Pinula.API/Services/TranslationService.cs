@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.Interface;
+﻿using Pinula.API.Interface;
 using Microsoft.Extensions.Configuration;
 using DeepL;
 using System;

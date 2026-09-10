@@ -31,4 +31,6 @@ public partial class User
     public Group? Group { get; set; }
     [JsonIgnore]
     public ICollection<MealPlan> MealPlans { get; set; } = new List<MealPlan>();
+
+    public virtual ICollection<VerificationCode> VerificationCodes { get; set; } = new List<VerificationCode>();
 }

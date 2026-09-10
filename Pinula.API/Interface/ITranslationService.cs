@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pinula.Shared.Interface
+namespace Pinula.API.Interface
 {
     public interface ITranslationService
     {
-
         public Task<string?> TranslateTextAsync(string text, string targetLanguage);
     }
 }

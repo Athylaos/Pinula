@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.Services
 {
@@ -211,6 +212,45 @@ namespace Pinula.Shared.Services
             var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleRecipePermission/{userId}", null);
             return response.IsSuccessStatusCode;
         }
+        
+        public async Task<bool> SendCodeRequest(VerificationCodeRequestDto requestDto)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/sendVerificationCode", requestDto);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"SendCodeRequest Error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<VerificationCodeResponseDto> VerifyCodeRequest(VerificationCodeVerifyDto verifyDto)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/verifyCode", verifyDto);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<VerificationCodeResponseDto>();
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                
+                return new VerificationCodeResponseDto(){Success = false, VerificationToken = null};
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"VerifyCodeRequest Error: {ex.Message}");
+                return new VerificationCodeResponseDto(){Success = false, VerificationToken = null};
+            }
+        }
+        
 
     }
 }

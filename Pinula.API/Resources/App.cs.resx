@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="EmailSubject_Registration" xml:space="preserve">
+        <value>Pinula - Ověření registrace</value>
+    </data>
+    <data name="EmailSubject_PasswordReset" xml:space="preserve">
+        <value>Pinula - Obnovení hesla</value>
+    </data>
+    <data name="EmailSubject_EmailChange" xml:space="preserve">
+        <value>Pinula - Změna e-mailu</value>
+    </data>
+    <data name="EmailSubject_SensitiveAction" xml:space="preserve">
+        <value>Pinula - Potvrzení bezpečnostní akce</value>
+    </data>
+    <data name="EmailSubject_Default" xml:space="preserve">
+        <value>Pinula - Ověřovací kód</value>
+    </data>
+    <data name="ActionName_Registration" xml:space="preserve">
+        <value>dokončení registrace</value>
+    </data>
+    <data name="ActionName_PasswordReset" xml:space="preserve">
+        <value>obnovení hesla</value>
+    </data>
+    <data name="ActionName_EmailChange" xml:space="preserve">
+        <value>potvrzení nového e-mailu</value>
+    </data>
+    <data name="ActionName_Default" xml:space="preserve">
+        <value>ověření požadované akce</value>
+    </data>
+    <data name="EmailTemplate_Title" xml:space="preserve">
+        <value>Váš ověřovací kód</value>
+    </data>
+    <data name="EmailTemplate_BodyPrefix" xml:space="preserve">
+        <value>Použijte následující 6místný kód pro {0}:</value>
+    </data>
+    <data name="EmailTemplate_Validity" xml:space="preserve">
+        <value>Kód má platnost &lt;strong&gt;15 minut&lt;/strong&gt;. Pokud jste o tento kód nepožádali, můžete tento e-mail ignorovat.</value>
+    </data>
+    <data name="EmailTemplate_Rights" xml:space="preserve">
+        <value>Všechna práva vyhrazena.</value>
+    </data>
+</root>

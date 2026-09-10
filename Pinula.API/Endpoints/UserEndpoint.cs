@@ -15,6 +15,10 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Mapster;
+using Pinula.API.Services;
+using Pinula.Shared.Enums;
+using System.Globalization;
+using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints
 {
@@ -30,6 +34,16 @@ namespace Pinula.API.Endpoints
                 if (await db.Users.AnyAsync(u => u.Email == registrationDto.Email))
                 {
                     return Results.BadRequest("Email already in use");
+                }
+                var cleanEmail = registrationDto.Email.Trim().ToLower();
+                var verificationCode = await db.VerificationCodes.FirstOrDefaultAsync(c => c.Id == registrationDto.VerificationToken && c.IsUsed && c.ExpiresAt > DateTime.UtcNow && c.Email == cleanEmail && c.Type == VerificationCodeType.Registration);
+                if (verificationCode is null)
+                {
+                    return Results.BadRequest("Wrong verification token");
+                }
+                else
+                {
+                    db.VerificationCodes.Remove(verificationCode);
                 }
 
                 string passwordHash = BCrypt.Net.BCrypt.HashPassword(registrationDto.Password);
@@ -276,8 +290,99 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { canCreateRecipes = user.CanCreateRecipes });
             }).RequireAuthorization("AdminOnly");
+            
+            
+        // --------------------------------------------------------------- Send verification code
+            group.MapPost("/sendVerificationCode", async (VerificationCodeRequestDto dto, PinulaDbContext db, IEmailService emailService) =>
+            {
+                if (string.IsNullOrWhiteSpace(dto.Email))
+                    return Results.BadRequest("Email is required.");
 
-        }
+                var cleanEmail = dto.Email.Trim().ToLower();
+
+                var latestCode = await db.VerificationCodes
+                    .Where(c => c.Email == cleanEmail && c.Type == dto.CodeType)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (latestCode is not null && latestCode.CreatedAt.AddSeconds(60) > DateTime.UtcNow)
+                {
+                    return Results.BadRequest("Please wait before requesting a new code.");
+                }
+
+                var oldCodes = await db.VerificationCodes
+                    .Where(c => c.Email == cleanEmail && c.Type == dto.CodeType)
+                    .ToListAsync();
+                db.VerificationCodes.RemoveRange(oldCodes);
+
+                var generatedCode = Random.Shared.Next(100000, 999999).ToString();
+                var culture = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+
+                await emailService.SendVerificationCodeAsync(cleanEmail, generatedCode, dto.CodeType, culture);
+
+                var newVerificationCode = new VerificationCode
+                {
+                    Email = cleanEmail,
+                    Code = generatedCode,
+                    Type = dto.CodeType,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                    IsUsed = false,
+                    AttemptCount = 0
+                };
+
+                db.VerificationCodes.Add(newVerificationCode);
+                await db.SaveChangesAsync();
+
+                return Results.Ok();
+            });
+
+        // --------------------------------------------------------------- Verify code
+        group.MapPost("/verifyCode", async (VerificationCodeVerifyDto dto, PinulaDbContext db) =>
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
+                return Results.BadRequest("Email and code are required.");
+
+            var cleanEmail = dto.Email.Trim().ToLower();
+            var cleanCode = dto.Code.Trim();
+            
+            var codeRecord = await db.VerificationCodes
+                .Where(c => c.Email == cleanEmail && c.Type == dto.CodeType && !c.IsUsed)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (codeRecord is null)
+                return Results.Ok(new VerificationCodeResponseDto { Success = false, VerificationToken = null, RateLimited = false, WrongCode = false, CodeExpired = true });
+            
+            if (codeRecord.ExpiresAt < DateTime.UtcNow)
+            {
+                codeRecord.IsUsed = true;
+                await db.SaveChangesAsync();
+                return Results.Ok(new VerificationCodeResponseDto(){Success = false, VerificationToken = null, RateLimited = false, WrongCode = false, CodeExpired = true});
+            }
+            
+            if (codeRecord.AttemptCount >= 5)
+            {
+                codeRecord.IsUsed = true;
+                await db.SaveChangesAsync();
+                return Results.Ok(new VerificationCodeResponseDto(){Success = false, VerificationToken = null, RateLimited = true, WrongCode = false, CodeExpired = false});
+            }
+            
+            if (codeRecord.Code != cleanCode)
+            {
+                codeRecord.AttemptCount++;
+                await db.SaveChangesAsync();
+                return Results.Ok(new VerificationCodeResponseDto(){Success = false, VerificationToken = null, RateLimited = false, WrongCode = true, CodeExpired = false});
+            }
+            
+            codeRecord.IsUsed = true;
+            await db.SaveChangesAsync();
+            
+            return Results.Ok(new VerificationCodeResponseDto(){Success = true, VerificationToken = codeRecord.Id, RateLimited = false, WrongCode = false, CodeExpired = false});
+        });
+    }
+
+        
 
         
         private static string GenerateJwtToken(User user, IConfiguration config)

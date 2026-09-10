@@ -51,6 +51,8 @@ public partial class PinulaDbContext : DbContext
     public virtual DbSet<ShoppingListItem> ShoppingListItems { get; set; }
     
     public virtual DbSet<InventoryMealPlanAllocation> InventoryMealPlanAllocations { get; set; }
+    
+    public virtual DbSet<VerificationCode> VerificationCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -253,6 +255,16 @@ public partial class PinulaDbContext : DbContext
             entity.HasOne(e => e.InventoryItem).WithMany(i => i.Allocations).HasForeignKey(e => e.InventoryItemId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.MealPlanIngredient).WithMany(mp => mp.Allocations).HasForeignKey(e => e.MealPlanIngredientId).OnDelete(DeleteBehavior.Cascade);
             
+        });
+
+        modelBuilder.Entity<VerificationCode>(entity =>
+        {
+            entity.Property(e => e.Email).IsRequired();
+            entity.Property(e => e.Code).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+
+            entity.HasOne(e => e.User).WithMany(u => u.VerificationCodes).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasIndex(e => new { e.Email, e.Code, e.Type, e.IsUsed });
         });
         
 

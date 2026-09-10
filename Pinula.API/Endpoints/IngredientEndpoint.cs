@@ -12,7 +12,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text;
-using Pinula.Shared.Interface;
+using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints
 {

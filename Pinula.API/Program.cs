@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Pinula.API.Context;
 using Pinula.API.Endpoints;
+using Pinula.API.Interface;
 using Pinula.API.Services;
 using Mapster;
 using System.Reflection;
@@ -87,6 +88,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddLocalization();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
+builder.Services.AddHttpClient<IEmailService, EmailService>();
 
 var app = builder.Build();
 
@@ -136,6 +138,35 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
+*/
+
+
+/*
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var emailService = services.GetRequiredService<IEmailService>();
+        
+        var testEmail = "davidhykys88@gmail.com"; 
+        
+        await emailService.SendVerificationCodeAsync(
+            testEmail, 
+            "123456", 
+            Pinula.Shared.Enums.VerificationCodeType.Registration,
+            "en"
+        );
+
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Test email successfully sent to email: {Email}", testEmail);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error while sending test email");
     }
 }
 */
