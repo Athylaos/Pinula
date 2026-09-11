@@ -3,12 +3,13 @@
 @using Pinula.Shared.Interface
 @using System.Net.Mail
 @using Microsoft.Extensions.Localization
+@using Pinula.Shared.Enums
 @inject IUserService UserService
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
 
-<PageTitle>Pinula - </PageTitle>
+<PageTitle>Pinula - @Localizer["Register"]</PageTitle>
 
 <div class="login-page">
     <div class="login-container">
@@ -17,46 +18,112 @@
             <h1 class="login-title">@Localizer["Register"]</h1>
             <p class="login-subtitle">@Localizer["JoinUs"]</p>
         </div>
-
-        <div class="form-section">
-            <div class="input-group">
-                <input type="text" placeholder="@Localizer["FirstName"]" @bind="nameEntry" class="custom-input" />
-            </div>
-
-            <div class="input-group">
-                <input type="text" placeholder="@Localizer["LastName"]" @bind="surnameEntry" class="custom-input" />
-            </div>
-
-            <div class="input-group">
-                <input type="email" placeholder="Email" @bind="emailEntry" class="custom-input" />
-            </div>
-
-            <div class="input-group">
-                <input type="password" placeholder="@Localizer["Password"]" @bind="password1" class="custom-input" />
-            </div>
-
-            <div class="input-group">
-                <input type="password" placeholder="@Localizer["PasswordAgain"]" @bind="password2" class="custom-input" />
-            </div>
-
-            @if (indicatorVisibility)
-            {
-                <div class="error-message">
-                    @indicatorText
+        
+        @if (!emailEntered)
+        {
+            <div class="form-section">
+                <div class="input-group">
+                    <input type="email" placeholder="Email" @bind="emailEntry" class="custom-input" />
                 </div>
-            }
+                
+                @if (indicatorVisibility)
+                {
+                    <div class="error-message">
+                        @indicatorText
+                    </div>
+                }
 
-            <button class="btn-continue" @onclick="RegisterBtn" disabled="@isBusy">
-                @if (isBusy)
+                <button class="btn-continue" @onclick="SendCode" disabled="@isBusy">
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <span>@Localizer["Continue"]</span>
+                    }
+                </button>
+            </div>
+        }
+        else if (!codeEntered)
+        {
+            <div class="form-section">
+                <div class="otp-container">
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        int localIndex = i;
+                        <input @ref="inputRefs[localIndex]"
+                               type="text"
+                               inputmode="text"
+                               maxlength="6"
+                               class="otp-input"
+                               value="@codeDigits[localIndex]"
+                               @oninput="@(e => HandleInput(e, localIndex))"
+                               @onkeydown="@(e => HandleKeyDown(e, localIndex))" />
+                    }
+                </div>
+                
+                @if (indicatorVisibility)
                 {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <div class="error-message">
+                        @indicatorText
+                    </div>
                 }
-                else
+
+                <button class="btn-continue" @onclick="VerifyCode" disabled="@isBusy">
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <span>@Localizer["Verify"]</span>
+                    }
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="form-section">
+                <div class="input-group">
+                    <input type="text" placeholder="@Localizer["FirstName"]" @bind="nameEntry" class="custom-input" />
+                </div>
+
+                <div class="input-group">
+                    <input type="text" placeholder="@Localizer["LastName"]" @bind="surnameEntry" class="custom-input" />
+                </div>
+
+                <div class="input-group">
+                    <input type="email" placeholder="Email" @bind="emailEntry" class="custom-input" disabled />
+                </div>
+
+                <div class="input-group">
+                    <input type="password" placeholder="@Localizer["Password"]" @bind="password1" class="custom-input" />
+                </div>
+
+                <div class="input-group">
+                    <input type="password" placeholder="@Localizer["PasswordAgain"]" @bind="password2" class="custom-input" />
+                </div>
+
+                @if (indicatorVisibility)
                 {
-                    <span>Continue</span>
+                    <div class="error-message">
+                        @indicatorText
+                    </div>
                 }
-            </button>
-        </div>
+
+                <button class="btn-continue" @onclick="RegisterBtn" disabled="@isBusy">
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <span>@Localizer["Register"]</span>
+                    }
+                </button>
+            </div>
+        }
 
         <div class="footer-section">
             <button class="btn-link" @onclick="LoginBtn">@Localizer["LoginToExisting"]</button>
@@ -75,22 +142,112 @@
     private string emailEntry = "";
     private string password1 = "";
     private string password2 = "";
+    private string verificationCodeEntry = "";
 
     private bool indicatorVisibility = false;
     private string indicatorText = "";
     private bool isBusy = false;
+
+    private bool emailEntered = false;
+    private bool codeEntered = false;
+    private Guid? authenticationToken;
+    
+    private async Task SendCode()
+    {
+        if (string.IsNullOrWhiteSpace(emailEntry) || !IsValidEmail(emailEntry))
+        {
+            ShowError(Localizer["InvalidEmailFormat"]);
+            return;
+        }
+
+        isBusy = true;
+        indicatorVisibility = false;
+
+        try
+        {
+            var isEmailAvailable = await UserService.IsEmailAvailable(emailEntry);
+
+            if (!isEmailAvailable)
+            {
+                ShowError(Localizer["EmailAlreadyRegistered"]);
+                return;
+            }
+
+            var success = await UserService.SendCodeRequest(new VerificationCodeRequestDto 
+            { 
+                Email = emailEntry, 
+                CodeType = VerificationCodeType.Registration 
+            });
+
+            if (success)
+            {
+                emailEntered = true;
+                indicatorVisibility = false;
+            }
+            else
+            {
+                ShowError(Localizer["ErrorSendingCode"]);
+            }
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task VerifyCode()
+    {
+        if (string.IsNullOrWhiteSpace(verificationCodeEntry))
+        {
+            ShowError(Localizer["EnterCode"]);
+            return;
+        }
+
+        isBusy = true;
+        indicatorVisibility = false;
+
+        try
+        {
+            var result = await UserService.VerifyCodeRequest(new VerificationCodeVerifyDto
+            {
+                Email = emailEntry,
+                CodeType = VerificationCodeType.Registration,
+                Code = verificationCodeEntry
+            });
+
+            if (result.Success && result.VerificationToken != null)
+            {
+                authenticationToken = result.VerificationToken;
+                codeEntered = true;
+                indicatorVisibility = false;
+            }
+            else
+            {
+                if (result.RateLimited)
+                    ShowError(Localizer["TooManyAttempts"]);
+                else if (result.CodeExpired)
+                    ShowError(Localizer["CodeExpired"]);
+                else if (result.WrongCode)
+                    ShowError(Localizer["WrongCode"]);
+                else
+                    ShowError(Localizer["VerificationFailed"]);
+            }
+        }
+        catch
+        {
+            ShowError(Localizer["VerificationError"]);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
 
     private async Task RegisterBtn()
     {
         if (string.IsNullOrWhiteSpace(nameEntry) || string.IsNullOrWhiteSpace(surnameEntry) || string.IsNullOrWhiteSpace(emailEntry))
         {
             ShowError(Localizer["FillAllFields"]);
-            return;
-        }
-
-        if (!IsValidEmail(emailEntry))
-        {
-            ShowError(Localizer["InvalidEmailForamt"]);
             return;
         }
 
@@ -106,6 +263,11 @@
             return;
         }
 
+        if (authenticationToken == null)
+        {
+            ShowError(Localizer["MissingVerificationToken"]);
+            return;
+        }
 
         isBusy = true;
         indicatorVisibility = false;
@@ -117,18 +279,18 @@
                 Name = nameEntry,
                 Surname = surnameEntry,
                 Email = emailEntry,
-                Password = password1
+                Password = password1,
+                VerificationToken = authenticationToken.Value
             };
 
             var success = await UserService.RegisterAsync(registrationDto);
             if (!success)
             {
-                ShowError(Localizer["EmailAlreadyRegistred"]);
+                ShowError(Localizer["RegistrationError"]);
                 return;
             }
-
             var loginResult = await UserService.LoginAsync(new UserLoginDto { Email = emailEntry, Password = password1 });
-            if (loginResult != null)
+            if (loginResult)
             {
                 try
                 {
@@ -171,4 +333,62 @@
     private async Task BackBtn() => await JSRuntime.InvokeVoidAsync("history.go", -2);
 
     private void SkipBtn() => NavManager.NavigateTo("/");
+    
+    //Verification code input
+    private ElementReference[] inputRefs = new ElementReference[6];
+    private string[] codeDigits = new string[6] { "", "", "", "", "", "" };
+
+    private async Task HandleInput(ChangeEventArgs e, int index)
+    {
+        string val = e.Value?.ToString() ?? "";
+        
+        if (val.Length > 1)
+        {
+            var chars = val.Where(char.IsLetterOrDigit).Take(6).ToArray();
+            for (int i = 0; i < 6; i++)
+            {
+                codeDigits[i] = i < chars.Length ? chars[i].ToString().ToUpper() : "";
+            }
+            
+            verificationCodeEntry = string.Join("", codeDigits);
+            
+            if (chars.Length > 0)
+            {
+                await inputRefs[Math.Min(chars.Length, 5)].FocusAsync();
+            }
+            return;
+        }
+        
+        if (!string.IsNullOrEmpty(val) && char.IsLetterOrDigit(val[0]))
+        {
+            codeDigits[index] = val.ToUpper();
+            verificationCodeEntry = string.Join("", codeDigits);
+            
+            if (index < 5)
+            {
+                await inputRefs[index + 1].FocusAsync();
+            }
+        }
+        else
+        {
+            codeDigits[index] = "";
+            verificationCodeEntry = string.Join("", codeDigits);
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, int index)
+    {
+        if (e.Key == "Backspace" && string.IsNullOrEmpty(codeDigits[index]) && index > 0)
+        {
+            await inputRefs[index - 1].FocusAsync();
+        }
+        else if (e.Key == "ArrowLeft" && index > 0)
+        {
+            await inputRefs[index - 1].FocusAsync();
+        }
+        else if (e.Key == "ArrowRight" && index < 5)
+        {
+            await inputRefs[index + 1].FocusAsync();
+        }
+    }
 }

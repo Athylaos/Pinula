@@ -251,6 +251,30 @@ namespace Pinula.Shared.Services
             }
         }
         
+        public async Task<bool> IsEmailAvailable(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                var encodedEmail = Uri.EscapeDataString(email.Trim().ToLower());
+                var response = await _httpClient.GetAsync($"{BaseUrl}/checkEmail?email={encodedEmail}");
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"IsEmailRegistered Error: {ex.Message}");
+                return false; 
+            }
+        }
+        
 
     }
 }

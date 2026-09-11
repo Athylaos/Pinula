@@ -882,4 +882,25 @@
   <data name="MarkAsCooked" xml:space="preserve">
     <value>Finish cooking</value>
   </data>
+  <data name="EmailAlreadyRegistered" xml:space="preserve">
+    <value>This e-mail is already registered. Please log in.</value>
+  </data>
+  <data name="MissingVerificationToken" xml:space="preserve">
+    <value>E-mail verification is missing. Try again.</value>
+  </data>
+  <data name="ErrorSendingCode" xml:space="preserve">
+    <value>Sending e-mail code failed. Try it again later.</value>
+  </data>
+  <data name="WrongCode" xml:space="preserve">
+    <value>Wrong code</value>
+  </data>
+  <data name="CodeExpired" xml:space="preserve">
+    <value>Code expired</value>
+  </data>
+  <data name="VerificationFailed" xml:space="preserve">
+    <value>E-mail verification failed. Try it again.</value>
+  </data>
+  <data name="TooManyAttempts" xml:space="preserve">
+    <value>To many attempts. Request new code.</value>
+  </data>
 </root>

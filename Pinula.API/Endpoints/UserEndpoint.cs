@@ -27,6 +27,19 @@ namespace Pinula.API.Endpoints
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/users");
+            
+            //---------------------------------------------------------------Check email availability
+            group.MapGet("/checkEmail", async (string email, PinulaDbContext db) =>
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    return Results.BadRequest("Email is required.");
+
+                var cleanEmail = email.Trim().ToLower();
+
+                var exists = await db.Users.AnyAsync(u => u.Email == cleanEmail);
+
+                return exists ? Results.NotFound() : Results.Ok();
+            });
 
             //---------------------------------------------------------------UserRegistration
             group.MapPost("/register", async (UserRegistrationDto registrationDto, PinulaDbContext db) =>
@@ -149,7 +162,7 @@ namespace Pinula.API.Endpoints
             });
 
 
-            //---------------------------------------------------------------Upadate user
+            //---------------------------------------------------------------Update user
             group.MapPut("/update", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
             {
                 var form = await request.ReadFormAsync();
@@ -297,6 +310,9 @@ namespace Pinula.API.Endpoints
             {
                 if (string.IsNullOrWhiteSpace(dto.Email))
                     return Results.BadRequest("Email is required.");
+                
+                if(dto.CodeType == VerificationCodeType.Registration && await db.Users.AnyAsync(u => u.Email == dto.Email))
+                    return Results.BadRequest("Email already registered.");
 
                 var cleanEmail = dto.Email.Trim().ToLower();
 

@@ -11,6 +11,7 @@ namespace Pinula.Shared.Interface
         
         Task<bool> SendCodeRequest(VerificationCodeRequestDto requestDto);
         Task<VerificationCodeResponseDto> VerifyCodeRequest(VerificationCodeVerifyDto verifyDto);
+        Task<bool> IsEmailAvailable(string email);
 
         Task<UserDisplayDto?> GetCurrentUserAsync();
         Task<bool> IsUserLoggedInAsync();

@@ -882,4 +882,25 @@
   <data name="MarkAsCooked" xml:space="preserve">
     <value>Dokončit vaření</value>
   </data>
+  <data name="EmailAlreadyRegistered" xml:space="preserve">
+    <value>Tento e-mail je již používán. Prosíme přihlašte se.</value>
+  </data>
+  <data name="MissingVerificationToken" xml:space="preserve">
+    <value>Chybí ověření e-mailu. Zkuste to znovu.</value>
+  </data>
+  <data name="ErrorSendingCode" xml:space="preserve">
+    <value>Odeslání kódu na e-mail selhalo. Zkuste to znovu později.</value>
+  </data>
+  <data name="CodeExpired" xml:space="preserve">
+    <value>Platnost kódu vypršela</value>
+  </data>
+  <data name="VerificationFailed" xml:space="preserve">
+    <value>E-mail oveření selhalo. Zkuste to znovu.</value>
+  </data>
+  <data name="WrongCode" xml:space="preserve">
+    <value>Špatný kód</value>
+  </data>
+  <data name="TooManyAttempts" xml:space="preserve">
+    <value>Příliš mnoho pokusů. Požádejte si o nový kód.</value>
+  </data>
 </root>
