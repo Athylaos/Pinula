@@ -903,4 +903,13 @@
   <data name="TooManyAttempts" xml:space="preserve">
     <value>Příliš mnoho pokusů. Požádejte si o nový kód.</value>
   </data>
+  <data name="ResetPassword" xml:space="preserve">
+    <value>Resetovat heslo</value>
+  </data>
+  <data name="RecoverYourAccount" xml:space="preserve">
+    <value>Obnovte svoje heslo</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Zkontrolovat</value>
+  </data>
 </root>

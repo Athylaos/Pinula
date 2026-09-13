@@ -224,33 +224,47 @@ namespace Pinula.API.Endpoints
                 return Results.Ok();
             }).DisableAntiforgery();
 
-            //---------------------------------------------------------------Change password
-            group.MapPost("/changePassword", async (ClaimsPrincipal user, PasswordChangeDto dto, PinulaDbContext db) =>
+            // --------------------------------------------------------------- Reset / Change password
+            group.MapPost("/changePassword", async (PasswordChangeDto dto, PinulaDbContext db) =>
             {
-                var userId = user.GetUserId();
-                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-                    if (userDb is null) return Results.NotFound();
-
-                if (string.IsNullOrEmpty(dto.OldPassword) || string.IsNullOrEmpty(dto.NewPassword))
+                if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword))
                 {
-                    return Results.BadRequest("Passwords from dtos are null");
+                    return Results.BadRequest("Email and new password are required.");
                 }
 
-                if (!BCrypt.Net.BCrypt.Verify(dto.OldPassword, userDb.PasswordHash))
+                if (dto.NewPassword.Length < 6)
                 {
-                    return Results.Unauthorized();
+                    return Results.BadRequest("Password is too short.");
                 }
 
+                var cleanEmail = dto.Email.Trim().ToLower();
+                
+                var verificationCode = await db.VerificationCodes.FirstOrDefaultAsync(c =>
+                    c.Id == dto.VerificationToken &&
+                    c.Email == cleanEmail &&
+                    c.Type == VerificationCodeType.PasswordReset &&
+                    c.IsUsed &&
+                    c.ExpiresAt > DateTime.UtcNow);
+
+                if (verificationCode is null)
+                {
+                    return Results.BadRequest("Invalid or expired verification token.");
+                }
+                
+                var userDb = await db.Users.FirstOrDefaultAsync(u => u.Email == cleanEmail);
+                if (userDb is null)
+                {
+                    return Results.NotFound("User not found.");
+                }
+                
                 string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-
                 userDb.PasswordHash = passwordHash;
-                db.SaveChanges();
+    
+                db.VerificationCodes.Remove(verificationCode);
+                await db.SaveChangesAsync();
 
                 return Results.Ok();
-
-
-            }).RequireAuthorization();
+            }).AllowAnonymous();
 
 
             //---------------------------------------------------------------Get all users

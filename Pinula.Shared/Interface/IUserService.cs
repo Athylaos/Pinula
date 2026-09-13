@@ -18,7 +18,7 @@ namespace Pinula.Shared.Interface
 
         Task<UserDisplayDto?> GetUserByIdAsync(Guid userId);
         Task<bool> UpdateUserAsync(UserUpdateDto userUpdateDto, Stream? photoStream, string photoName, string contentType);
-        Task<bool> ChangePasswordAsync(string oldPassword, string newPassword);
+        Task<bool> ChangePasswordAsync(PasswordChangeDto passwordDto);
 
         Task<List<AdminUserDisplayDto>> AdminGetAllUsersAsync();
         Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword);

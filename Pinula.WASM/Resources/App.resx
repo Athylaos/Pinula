@@ -903,4 +903,13 @@
   <data name="TooManyAttempts" xml:space="preserve">
     <value>To many attempts. Request new code.</value>
   </data>
+  <data name="ResetPassword" xml:space="preserve">
+    <value>Reset password</value>
+  </data>
+  <data name="RecoverYourAccount" xml:space="preserve">
+    <value>Recover your password</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Verify</value>
+  </data>
 </root>

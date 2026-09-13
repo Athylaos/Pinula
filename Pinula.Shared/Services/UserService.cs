@@ -23,17 +23,16 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-        public async Task<bool> ChangePasswordAsync(string oldPassword, string newPassword)
+        public async Task<bool> ChangePasswordAsync(PasswordChangeDto passwordDto)
         {
             try
             {
-                var dto = new PasswordChangeDto { OldPassword = oldPassword, NewPassword = newPassword};
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/changePassword", dto);
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/changePassword", passwordDto);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while changing psswd: {ex.Message}");
+                _logger.LogError($"Error while changing passwd: {ex.Message}");
                 return false;
             }
         }

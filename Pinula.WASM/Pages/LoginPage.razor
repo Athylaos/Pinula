@@ -66,8 +66,6 @@
             <button class="btn-link" @onclick="CreateAccountBtn">@Localizer["CreateAccount"]</button>
             <button class="btn-link" @onclick="ForgotPasswordBtn">@Localizer["ForgotPassword"]</button>
         </div>
-
-        <button class="btn-skip" @onclick="SkipBtn">@Localizer["Skip"]</button>
     </div>
 </div>
 
@@ -88,7 +86,7 @@
             var loginDto = new UserLoginDto { Email = email, Password = password };
             var result = await UserService.LoginAsync(loginDto);
 
-            if (result == null)
+            if (!result)
             {
                 indicatorText = Localizer["WrongLogin"];
                 indicatorVisibility = true;
@@ -132,9 +130,7 @@
 
     private void ForgotPasswordBtn()
     {
-        indicatorText = Localizer["PasswordResetMsg"];
-        indicatorVisibility = true;
+        NavManager.NavigateTo("/changePassword");
     }
-
-    private void SkipBtn() => JSRuntime.InvokeVoidAsync("history.back");
+    
 }
