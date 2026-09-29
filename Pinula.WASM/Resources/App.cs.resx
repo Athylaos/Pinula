@@ -912,4 +912,130 @@
   <data name="Verify" xml:space="preserve">
     <value>Zkontrolovat</value>
   </data>
+  <data name="Cooked" xml:space="preserve">
+    <value>Uvařeno</value>
+  </data>
+  <data name="Cookies1" xml:space="preserve">
+    <value>Nastavení souborů cookies</value>
+  </data>
+  <data name="Cookies2" xml:space="preserve">
+    <value>Abychom vám mohli poskytnout co nejlepší zážitek z aplikace Pinula, používáme nezbytné technické soubory cookies pro přihlášení a bezpečnost. Více se dozvíte v sekci </value>
+  </data>
+  <data name="Cookies3" xml:space="preserve">
+    <value>Informace o cookies</value>
+  </data>
+  <data name="Privacy1" xml:space="preserve">
+    <value>Zásady ochrany osobních údajů</value>
+  </data>
+  <data name="Privacy2" xml:space="preserve">
+    <value>Kdo zpracovává vaše údaje?</value>
+  </data>
+  <data name="Privacy3" xml:space="preserve">
+    <value>Správcem osobních údajů je David Hykyš, se sídlem Česká Republika Praha, e-mail: business@pinula.app</value>
+  </data>
+  <data name="Privacy4" xml:space="preserve">
+    <value>Jaké údaje shromažďujeme?</value>
+  </data>
+  <data name="Privacy5" xml:space="preserve">
+    <value>Registrační údaje: E-mailová adresa, jméno a příjmení, zašifrované heslo.</value>
+  </data>
+  <data name="Privacy6" xml:space="preserve">
+    <value>Uživatelský obsah: Recepty, plány jídelníčků, nákupní seznamy, inventář surovin, a nahrané fotografie (včetně profilové fotografie).</value>
+  </data>
+  <data name="Privacy7" xml:space="preserve">
+    <value>Technická data: IP adresa, typ prohlížeče a logy aplikace pro zajištění bezpečnosti a funkčnosti (pomocí nezbytných cookies).</value>
+  </data>
+  <data name="Privacy8" xml:space="preserve">
+    <value>Proč údaje zpracováváme?</value>
+  </data>
+  <data name="Privacy9" xml:space="preserve">
+    <value>Vaše údaje potřebujeme pro to, aby aplikace fungovala. Zejména pro vytvoření a správu uživatelského účtu, synchronizaci dat napříč vašimi zařízeními (jídelníčky, recepty), sdílení receptů s rodinou či přáteli ve sdílených skupinách a pro zajištění bezpečnosti služby.</value>
+  </data>
+  <data name="Privacy10" xml:space="preserve">
+    <value>Kdo má k údajům přístup?</value>
+  </data>
+  <data name="Privacy11" xml:space="preserve">
+    <value>Vaše údaje neprodáváme žádným třetím stranám. Při sdílení obsahu (recpety, ingredience atd.) jsou tyto údaje poskytovány dalším uživatelům v rámci aplikace Pinula. Osobní údaje jako e-mail jsou soukromé, viditelné pouze vám a slouží pouze pro funkčnost a bezpečnost aplikace.</value>
+  </data>
+  <data name="Privacy12" xml:space="preserve">
+    <value>Jaká jsou vaše práva?</value>
+  </data>
+  <data name="Privacy13" xml:space="preserve">
+    <value>Podle nařízení GDPR máte mimo jiné právo na přístup ke svým údajům, právo na jejich opravu, přenositelnost a právo na výmaz ("být zapomenut"). </value>
+  </data>
+  <data name="Privacy14" xml:space="preserve">
+    <value>Máte-li jakýkoliv dotaz ohledně vašeho soukromí nebo chcete uplatnit svá práva, kontaktujte nás na e-mailu: support@pinula.app.</value>
+  </data>
+  <data name="Terms1" xml:space="preserve">
+    <value>Podmínky použití služby Pinula</value>
+  </data>
+  <data name="Terms2" xml:space="preserve">
+    <value>Úvodní ustanovení</value>
+  </data>
+  <data name="Terms3" xml:space="preserve">
+    <value>Aplikace Pinula poskytuje uživatelům platformu pro správu receptů, plánování jídelníčků, sledování inventáře, tvorbu nákupních seznamů a další. Provozovatelem služby je David Hykyš. V současnosti je aplikace poskytována zdarma. Provozovatel si vyhrazuje právo v budoucnu zavést placené funkce či předplatné, o čemž budou uživatelé předem informováni.</value>
+  </data>
+  <data name="Terms4" xml:space="preserve">
+    <value>Uživatelský účet</value>
+  </data>
+  <data name="Terms5" xml:space="preserve">
+    <value>Pro plné využívání aplikace je nutná registrace. Jste plně zodpovědní za zabezpečení svého účtu a hesel k němu. Provozovatel nenese odpovědnost za ztrátu dat způsobenou kompromitováním vašeho účtu vaší chybou.</value>
+  </data>
+  <data name="Terms6" xml:space="preserve">
+    <value>Uživatelský obsah a Autorská práva</value>
+  </data>
+  <data name="Terms7" xml:space="preserve">
+    <value>Při nahrávání vlastních receptů, fotografií a textů (dále jen "Obsah") do aplikace prohlašujete, že:</value>
+  </data>
+  <data name="Terms8" xml:space="preserve">
+    <value>Jste výhradním autorem tohoto Obsahu, nebo máte veškerá potřebná práva, licence a souhlasy k jeho publikování.</value>
+  </data>
+  <data name="Terms9" xml:space="preserve">
+    <value>Nahráním Obsahu neporušujete autorská práva, ochranné známky ani práva na ochranu soukromí třetích stran.</value>
+  </data>
+  <data name="Terms10" xml:space="preserve">
+    <value>Provozovatel nenese žádnou odpovědnost za Obsah nahraný uživateli. Provozovatel si vyhrazuje právo (nikoliv však povinnost) jakýkoliv obsah, který porušuje tyto podmínky, platné zákony nebo práva třetích stran, bez předchozího upozornění smazat.</value>
+  </data>
+  <data name="Terms11" xml:space="preserve">
+    <value>Dostupnost služby a Omezení odpovědnosti</value>
+  </data>
+  <data name="Terms12" xml:space="preserve">
+    <value>Aplikace je poskytována "tak, jak je" (as is). I když se snažíme o maximální dostupnost, nezaručujeme, že bude aplikace dostupná nepřetržitě a bez chyb. Provozovatel nenese odpovědnost za případnou ztrátu vašich dat (doporučujeme si důležité recepty zálohovat) ani za případné škody vzniklé nemožností aplikaci využívat.</value>
+  </data>
+  <data name="Terms13" xml:space="preserve">
+    <value>Ukončení / zablokování účtu</value>
+  </data>
+  <data name="Terms14" xml:space="preserve">
+    <value>Svůj účet můžete kdykoliv trvale zrušit prostřednictvím naší podpry. Provozovatel si vyhrazuje právo pozastavit nebo smazat váš účet nebo jeho funkce v případě závažného nebo opakovaného porušování těchto podmínek (např. nahrávání nelegálního obsahu, spamování).</value>
+  </data>
+  <data name="Terms15" xml:space="preserve">
+    <value>Poslední aktualizace:</value>
+  </data>
+  <data name="AboutCookies1" xml:space="preserve">
+    <value>Informace o cookies</value>
+  </data>
+  <data name="AboutCookies2" xml:space="preserve">
+    <value>Technické (Nezbytné) cookies</value>
+  </data>
+  <data name="AboutCookies3" xml:space="preserve">
+    <value>Tyto soubory (a podobné technologie, jako je LocalStorage) jsou naprosto nezbytné pro fungování aplikace. K jejich ukládání nevyžadujeme váš předchozí souhlas. Zahrnují:</value>
+  </data>
+  <data name="AboutCookies4" xml:space="preserve">
+    <value>Autentizační tokeny (JWT):Udržují vás přihlášené během procházení aplikace, abyste se nemuseli na každé stránce znovu přihlašovat.</value>
+  </data>
+  <data name="AboutCookies5" xml:space="preserve">
+    <value>Bezpečnostní funkce: Pomáhají předcházet podvodným přihlášením a chrání vaše uživatelská data.</value>
+  </data>
+  <data name="AboutCookies6" xml:space="preserve">
+    <value>Uživatelské preference: Pamatuje si například vaši volbu jazyka nebo vaši volbu ohledně samotné cookie lišty.</value>
+  </data>
+  <data name="AboutCookies7" xml:space="preserve">
+    <value>Jak mohu spravovat své cookies?</value>
+  </data>
+  <data name="AboutCookies8" xml:space="preserve">
+    <value> Soubory cookies můžete kdykoliv smazat přímo v nastavení vašeho webového prohlížeče. Můžete také nastavit prohlížeč tak, aby ukládání cookies blokoval. Mějte však na paměti, že pokud zablokujete nezbytné technické cookies, aplikace Pinula nebude správně fungovat (nebude možné se přihlásit).</value>
+  </data>
+  <data name="TermsAndConditions" xml:space="preserve">
+    <value>Podmínky užití</value>
+  </data>
 </root>

@@ -912,4 +912,130 @@
   <data name="Verify" xml:space="preserve">
     <value>Verify</value>
   </data>
+  <data name="Cooked" xml:space="preserve">
+    <value>Cooked</value>
+  </data>
+  <data name="Cookies1" xml:space="preserve">
+    <value>Cookies setting</value>
+  </data>
+  <data name="Cookies2" xml:space="preserve">
+    <value>To provide you with the best possible experience on the Pinula app, we use essential technical cookies for login and security. Learn more in the section</value>
+  </data>
+  <data name="Cookies3" xml:space="preserve">
+    <value>About cookies</value>
+  </data>
+  <data name="Privacy1" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="Privacy2" xml:space="preserve">
+    <value>Who processes your data?</value>
+  </data>
+  <data name="Privacy3" xml:space="preserve">
+    <value>The data controller is David Hykyš, with its registered office in Prague, Czech Republic; email: business@pinula.app</value>
+  </data>
+  <data name="Privacy4" xml:space="preserve">
+    <value>What information do we collect?</value>
+  </data>
+  <data name="Privacy5" xml:space="preserve">
+    <value>Registration information: Email address, first and last name, encrypted password.</value>
+  </data>
+  <data name="Privacy6" xml:space="preserve">
+    <value>User-generated content: Recipes, meal plans, shopping lists, ingredient inventories, and uploaded photos (including profile photos).</value>
+  </data>
+  <data name="Privacy7" xml:space="preserve">
+    <value>Technical data: IP address, browser type, and application logs to ensure security and functionality (using essential cookies).</value>
+  </data>
+  <data name="Privacy8" xml:space="preserve">
+    <value>Why do we process data?</value>
+  </data>
+  <data name="Privacy9" xml:space="preserve">
+    <value>We need your information for the app to work. Specifically, to create and manage your user account, synchronize data across your devices (meal plans, recipes), share recipes with family or friends in shared groups, and ensure the security of the service.</value>
+  </data>
+  <data name="Privacy10" xml:space="preserve">
+    <value>Who has access to the data?</value>
+  </data>
+  <data name="Privacy11" xml:space="preserve">
+    <value>We do not sell your data to any third parties. When you share content (recipes, ingredients, etc.), this information is made available to other users within the Pinula app. Personal information such as your email address is private, visible only to you, and is used solely for the app’s functionality and security.</value>
+  </data>
+  <data name="Privacy12" xml:space="preserve">
+    <value>What are your rights?</value>
+  </data>
+  <data name="Privacy13" xml:space="preserve">
+    <value>Under the GDPR, you have, among other things, the right to access your data, the right to have it corrected, the right to data portability, and the right to erasure (“the right to be forgotten”). </value>
+  </data>
+  <data name="Privacy14" xml:space="preserve">
+    <value>If you have any questions regarding your privacy or would like to exercise your rights, please contact us by email at: support@pinula.app.</value>
+  </data>
+  <data name="Terms1" xml:space="preserve">
+    <value>Pinula Terms of Service</value>
+  </data>
+  <data name="Terms2" xml:space="preserve">
+    <value>Introductory Provisions</value>
+  </data>
+  <data name="Terms3" xml:space="preserve">
+    <value>The Pinula app provides users with a platform for managing recipes, planning meals, tracking inventory, creating shopping lists, and more. The service is operated by David Hykyš. The app is currently available for free. The operator reserves the right to introduce paid features or subscriptions in the future, in which case users will be notified in advance.</value>
+  </data>
+  <data name="Terms4" xml:space="preserve">
+    <value>User account</value>
+  </data>
+  <data name="Terms5" xml:space="preserve">
+    <value>Registration is required to use the app to its full extent. You are fully responsible for the security of your account and passwords. The operator is not liable for any data loss caused by your account being compromised due to your own error.</value>
+  </data>
+  <data name="Terms6" xml:space="preserve">
+    <value>User Content and Copyright</value>
+  </data>
+  <data name="Terms7" xml:space="preserve">
+    <value>When uploading your own recipes, photos, and text (hereinafter referred to as “Content”) to the app, you represent that:</value>
+  </data>
+  <data name="Terms8" xml:space="preserve">
+    <value>You are the sole author of this Content, or you have all the necessary rights, licenses, and consents to publish it.</value>
+  </data>
+  <data name="Terms9" xml:space="preserve">
+    <value>By uploading Content, you do not infringe on the copyrights, trademarks, or privacy rights of third parties.</value>
+  </data>
+  <data name="Terms10" xml:space="preserve">
+    <value>The Operator assumes no responsibility for Content uploaded by users. The Operator reserves the right (but is under no obligation) to delete, without prior notice, any content that violates these Terms, applicable laws, or the rights of third parties.</value>
+  </data>
+  <data name="Terms11" xml:space="preserve">
+    <value>Service Availability and Limitation of Liability</value>
+  </data>
+  <data name="Terms12" xml:space="preserve">
+    <value>The app is provided “as is.” Although we strive for maximum availability, we do not guarantee that the app will be available continuously or without errors. The operator is not liable for any loss of your data (we recommend backing up your important recipes) or for any damages resulting from the inability to use the app.</value>
+  </data>
+  <data name="Terms13" xml:space="preserve">
+    <value>Account Closure / Suspension</value>
+  </data>
+  <data name="Terms14" xml:space="preserve">
+    <value>You can permanently delete your account at any time through our support. The operator reserves the right to suspend or delete your account or its features in the event of a serious or repeated violation of these terms (e.g., uploading illegal content, spamming).</value>
+  </data>
+  <data name="Terms15" xml:space="preserve">
+    <value>Last Updated:</value>
+  </data>
+  <data name="AboutCookies1" xml:space="preserve">
+    <value>About cookies</value>
+  </data>
+  <data name="AboutCookies2" xml:space="preserve">
+    <value>Technical (Essential) Cookies</value>
+  </data>
+  <data name="AboutCookies3" xml:space="preserve">
+    <value>These files (and similar technologies, such as LocalStorage) are absolutely essential for the application to function. We do not require your prior consent to store them. They include:</value>
+  </data>
+  <data name="AboutCookies4" xml:space="preserve">
+    <value>Authentication tokens (JWT): They keep you logged in while you navigate the app, so you don't have to log in again on every page.</value>
+  </data>
+  <data name="AboutCookies5" xml:space="preserve">
+    <value>Security features: They help prevent fraudulent logins and protect your user data.</value>
+  </data>
+  <data name="AboutCookies6" xml:space="preserve">
+    <value>User preferences: For example, it remembers your language selection or your preference regarding the cookie banner itself.</value>
+  </data>
+  <data name="AboutCookies7" xml:space="preserve">
+    <value>How can I manage my cookies?</value>
+  </data>
+  <data name="AboutCookies8" xml:space="preserve">
+    <value> You can delete cookies at any time directly in your web browser's settings. You can also configure your browser to block cookies. Please note, however, that if you block essential technical cookies, the Pinula app will not function properly (you will not be able to log in).</value>
+  </data>
+  <data name="TermsAndConditions" xml:space="preserve">
+    <value>Terms &amp; Conditions</value>
+  </data>
 </root>

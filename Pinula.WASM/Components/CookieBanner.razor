@@ -1,0 +1,44 @@
+@using Microsoft.Extensions.Localization
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@inject IStringLocalizer<App> Localizer
+
+@if (showBanner)
+{
+    <div class="cookie-banner-overlay">
+        <div class="cookie-content">
+            <h4>@Localizer["Cookies1"]</h4>
+            <p>
+                @Localizer["Cookies2"]
+                <a href="/terms" class="cookie-link">@Localizer["Cookies3"]</a>.
+            </p>
+        </div>
+        <div class="cookie-actions">
+            <button class="btn-cookie-accept" @onclick='() => SaveConsent("essential")'>OK</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showBanner = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var consent = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "pinula_cookie_consent");
+            if (string.IsNullOrEmpty(consent))
+            {
+                showBanner = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task SaveConsent(string consentType)
+    {
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "pinula_cookie_consent", consentType);
+        showBanner = false;
+        StateHasChanged();
+    }
+}

@@ -166,6 +166,7 @@
                             </button>
                         </div>
                     </div>
+                    <button class="btn-link mt-3" @onclick="GoToTerms">@Localizer["TermsAndConditions"]</button>
                 }
             </div>
 
@@ -440,5 +441,6 @@
     private void HandleAdmin() => NavManager.NavigateTo("/admin");
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
     private void RecipeEditClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/edit/{r.Id}");
+    private void GoToTerms() => NavManager.NavigateTo("/terms");
 
 }

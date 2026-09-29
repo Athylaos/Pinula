@@ -14,8 +14,9 @@
 <PageTitle>Pinula - @Localizer["Recipes"]</PageTitle>
 
 <div class="recipes-container">
-    
-    <RecipesHeader @ref="headerActionsRef" OnSearchApplied="HandleSearch" />
+    <CookieBanner></CookieBanner>
+
+    <RecipesHeader @ref="headerActionsRef" OnSearchApplied="HandleSearch"/>
 
     <div class="main-content">
         @if (isActuallySearching)
@@ -24,7 +25,7 @@
                 <h3 class="d-inline">@Localizer["SearchResults"] (@searchedRecipes.Count)</h3>
                 <button class="btn-cancel" @onclick="ClearAll">@Localizer["CancelFilters"]</button>
             </div>
-            
+
             <div class="recipes-grid">
                 @if (searchedRecipes != null && searchedRecipes.Any())
                 {
@@ -47,7 +48,7 @@
                     <div class="d-flex pb-2 scroll-container">
                         @foreach (var category in categories)
                         {
-                            <CategoryCard Category="category" OnCategorySelected="CategoryClicked" />
+                            <CategoryCard Category="category" OnCategorySelected="CategoryClicked"/>
                         }
                     </div>
                 }
@@ -66,11 +67,11 @@
 						<p>What are we cooking today?</p>
 					</div>
                     *@
-					
+
                     <div class="featured-recipe mb-5">
                         <div class="hero-card" @onclick="() => RecipeClicked(recipeOfTheDay)">
                             <div class="hero-image" style="background-image: url('@recipeOfTheDay.PhotoUrl');"></div>
-            
+
                             <div class="hero-overlay">
                                 <div class="hero-content">
                                     <span class="hero-badge">
@@ -113,7 +114,7 @@
                     <div class="line"></div>
                 </div>
 
-                @if(latestRecipes != null && latestRecipes.Any())
+                @if (latestRecipes != null && latestRecipes.Any())
                 {
                     <RecipeGridVertical HasMoreToLoad="moreLatestToLoad" IsLoading="isLatestLoading" OnLoadMore="LoadMoreLatest" OnRecipeSelected="RecipeClicked" Recipes="latestRecipes"></RecipeGridVertical>
                 }
