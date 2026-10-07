@@ -132,9 +132,11 @@
 }
 
 <EditMealPopup @ref="editMealPopup" 
-                   AllGroupMembers="Members" 
-                   OnSave="SaveUpdatedPlanToDb" 
-                   OnDelete="DeletePlanFromDb" />
+               AllGroupMembers="Members" 
+               OnSave="SaveUpdatedPlanToDb" 
+               OnDelete="DeletePlanFromDb" />
+<LoginPopup>
+</LoginPopup>
 
 @code {
     private bool IsLoading = true;
@@ -186,7 +188,6 @@
     private async Task LoadData()
     {
         IsLoading = true;
-        if(!await UserService.IsUserLoggedInAsync()) NavManager.NavigateTo("/login");
         groupDetail = await MealPlanService.GetMyGroupAsync();
         if (groupDetail is null)
         {

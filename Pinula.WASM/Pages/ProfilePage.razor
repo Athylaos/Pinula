@@ -215,10 +215,10 @@
             @if (fvRecipes != null && fvRecipes.Any())
             {
                 <RecipeGridVertical HasMoreToLoad="@moreFvRecipesToLoad" 
-                                   IsLoading="@isFvRecipesLoading" 
-                                   OnLoadMore="LoadMoreFvRecipes" 
-                                   OnRecipeSelected="RecipeClicked" 
-                                   Recipes="fvRecipes">
+                                    IsLoading="@isFvRecipesLoading" 
+                                    OnLoadMore="LoadMoreFvRecipes" 
+                                    OnRecipeSelected="RecipeClicked" 
+                                    Recipes="fvRecipes">
                 </RecipeGridVertical>
             }
             else
@@ -252,6 +252,9 @@
 
     </LoadingView>
 </div>
+
+<LoginPopup>
+</LoginPopup>
 
 @code {
     private UserDisplayDto? userProfile;
@@ -290,8 +293,7 @@
 
             if (userProfile == null)
             {
-                NavManager.NavigateTo("/login");
-                return;
+                userProfile = new() {CanComment = true, CanCreateRecipes = true};
             }
 
             updateModel.Name = userProfile.Name;

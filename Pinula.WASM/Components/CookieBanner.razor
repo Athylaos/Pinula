@@ -1,11 +1,22 @@
+@using System.Globalization
 @using Microsoft.Extensions.Localization
+@using Pinula.Shared.Interface
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IStringLocalizer<App> Localizer
+@inject ILocalStorage LocalStorage
 
 @if (showBanner)
 {
     <div class="cookie-banner-overlay">
+        <div class="culture-toggle-container position-absolute login-language-container">
+            <button class="btn-culture-toggle @(CurrentCulture == "en" ? "active" : "")" @onclick='() => ChangeCulture("en")'>
+                EN
+            </button>
+            <button class="btn-culture-toggle @(CurrentCulture == "cs" ? "active" : "")" @onclick='() => ChangeCulture("cs")'>
+                CZ
+            </button>
+        </div>
         <div class="cookie-content">
             <h4>@Localizer["Cookies1"]</h4>
             <p>
@@ -40,5 +51,13 @@
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "pinula_cookie_consent", consentType);
         showBanner = false;
         StateHasChanged();
+    }
+    private string CurrentCulture => CultureInfo.CurrentCulture.Name;
+    private async Task ChangeCulture(string cultureCode)
+    {
+        if (CurrentCulture == cultureCode) return;
+        await LocalStorage.SetStringAsync("culture", cultureCode);
+
+        NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
     }
 }

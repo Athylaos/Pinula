@@ -28,6 +28,16 @@ namespace Pinula.API.Endpoints
         {
             var group = app.MapGroup("/users");
             
+            //---------------------------------------------------------------Verify token
+            group.MapGet("/verifyToken", async (PinulaDbContext db, ClaimsPrincipal user) =>
+            {
+                var userId = user.GetUserId();
+
+                var exists = await db.Users.AnyAsync(u => u.Id == userId);
+
+                return exists ? Results.NotFound() : Results.Ok();
+            }).RequireAuthorization();
+            
             //---------------------------------------------------------------Check email availability
             group.MapGet("/checkEmail", async (string email, PinulaDbContext db) =>
             {

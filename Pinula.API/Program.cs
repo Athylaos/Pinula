@@ -38,12 +38,8 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
-#if DEBUG
-var allowedOrigin = builder.Configuration["AllowedCORS"];
-#else
-var allowedOrigin = "https://pinula.hykys.eu";
-#endif
 
+var allowedOrigin = builder.Configuration["AllowedCORS"];
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {

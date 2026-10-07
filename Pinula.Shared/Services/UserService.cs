@@ -85,8 +85,12 @@ namespace Pinula.Shared.Services
 
         public async Task<bool> IsUserLoggedInAsync()
         {
-
             if (string.IsNullOrEmpty(await _tokenStorage.GetTokenAsync()))
+            {
+                return false;
+            }
+            var result = await _httpClient.GetAsync($"{BaseUrl}/verifyToken");
+            if (!result.IsSuccessStatusCode)
             {
                 return false;
             }

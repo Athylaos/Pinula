@@ -6,6 +6,7 @@
 @inject IInventoryService InventoryService
 @inject IStringLocalizer<App> Localizer
 @inject NavigationManager NavManager
+@inject IUserService UserService
 
 <LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
     <div class="planner-container">
@@ -95,6 +96,9 @@
     InventoryItem="updatingItem"
     OnDelete="HandleDeleteItem">
 </EditInventoryItemPopup>
+
+<LoginPopup>
+</LoginPopup>
 
 @code {
     private List<InventoryItemDisplayDto> inventoryItems = new();
