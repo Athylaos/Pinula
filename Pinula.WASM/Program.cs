@@ -16,7 +16,27 @@ builder.Services.AddTransient<AuthHttpMessageHandler>();
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddHttpClient("CookApi", client =>
-        client.BaseAddress = new Uri(builder.Configuration["DefualtApiUrl"]??""))
+    {
+        string configUrl;
+        {
+            var currentHost = builder.HostEnvironment.BaseAddress;
+        
+            if (currentHost.Contains("stage.pinula.app"))
+            {
+                configUrl = "https://stage-api.pinula.app";
+            }
+            else if (currentHost.Contains("pinula.app") && !currentHost.Contains("stage"))
+            {
+                configUrl = "https://api.pinula.app";
+            }
+            else
+            {
+                configUrl = "http://10.0.20.2:5017/";
+            }
+        }
+
+        client.BaseAddress = new Uri(configUrl);
+    })
     .AddHttpMessageHandler<AuthHttpMessageHandler>();
 
 
