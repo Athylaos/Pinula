@@ -39,11 +39,16 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-var allowedOrigin = builder.Configuration["AllowedCORS"];
+var allowedOrigins = new[] 
+    { 
+        "https://stage.pinula.app", 
+        "https://pinula.app", 
+        "http://localhost:5119" 
+    };
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
-    policy.WithOrigins(allowedOrigin)
+    policy.WithOrigins(allowedOrigins)
           .AllowAnyHeader()
           .AllowAnyMethod()
           .AllowCredentials();
