@@ -12,6 +12,7 @@ using Pinula.Shared.Interface;
 using Pinula.Shared.Services;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Threading.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +88,39 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    
+    options.AddPolicy("AuthStrictPolicy", httpContext =>
+    {
+        var clientIp = httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+                       ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                       ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 3,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        });
+    });
+    
+    options.AddPolicy("GeneralApiPolicy", httpContext =>
+    {
+        var clientIp = httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+                       ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                       ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 2
+        });
+    });
+});
+
 builder.Services.AddLocalization();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddHttpClient<IEmailService, EmailService>();
@@ -111,6 +145,7 @@ app.UseRequestLocalization(localizationOptions);
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

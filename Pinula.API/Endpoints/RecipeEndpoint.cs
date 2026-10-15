@@ -23,7 +23,7 @@ namespace Pinula.API.Endpoints
 
         public static void MapRecipeEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/recipes");
+            var group = app.MapGroup("/recipes").RequireRateLimiting("GeneralApiPolicy");
 
             //---------------------------------------------------------------Get previews filtered
             group.MapGet("/getPreviews/filtered", async (HttpRequest request,[AsParameters] RecipeFilterParameters filter, ClaimsPrincipal user, PinulaDbContext db) =>

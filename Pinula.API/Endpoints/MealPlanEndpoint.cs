@@ -12,7 +12,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapMealPlanEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/mealplan");
+            var group = app.MapGroup("/mealplan").RequireRateLimiting("GeneralApiPolicy");
 
             
             

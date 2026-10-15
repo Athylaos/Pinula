@@ -26,7 +26,7 @@
                         {
                             <li class="search-item @(selectedIngredient?.Id == ing.Id ? "selected" : "")"
                                 @onclick="() => selectedIngredient = ing">
-                                <img src="@ing.ImageUrl" style="height:50px; width:50px;" />
+                                <img src="@ing.ImageUrl" style="height:50px; width:50px; margin-right: 10px" />
                                 @ing.Name
                             </li>
                         }

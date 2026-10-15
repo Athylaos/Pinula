@@ -40,10 +40,10 @@ namespace Pinula.API.Endpoints
         
         public static void MapIngredientEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/ingredients");
+            var group = app.MapGroup("/ingredients").RequireRateLimiting("GeneralApiPolicy");
 
             //---------------------------------------------------------------Get filtered previews
-            group.MapGet("/getFilteredPreviews", async ([AsParameters] IngredientFilterParameters filter, PinulaDbContext db) =>
+            group.MapGet("/getFilteredPreviews", async ([AsParameters] IngredientFilterParameters filter, PinulaDbContext db, HttpRequest request) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 filter.Amount = (filter.Amount > 0) ? filter.Amount : 20;
@@ -96,6 +96,9 @@ namespace Pinula.API.Endpoints
                         .Select(x => x.Ingredient)
                         .ToList();
                 }
+                
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
+                var defaultImage = "default_ingredient.png";
 
                 var results = rawIngredients
                     .Take(filter.Amount)
@@ -103,7 +106,7 @@ namespace Pinula.API.Endpoints
                     {
                         Id = i.Id,
                         Name = i.Names.GetValueOrDefault(languageCode) ?? i.Names.GetValueOrDefault("en") ?? "Ingredient",
-                        ImageUrl = i.ImageUrl,
+                        ImageUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(i.ImageUrl) ? defaultImage : i.ImageUrl)}",
                         DefaultUnit = new UnitPreviewDto
                         {
                             Id = i.DefaultUnit.Id,

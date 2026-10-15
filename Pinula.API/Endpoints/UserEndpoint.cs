@@ -26,7 +26,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/users");
+            var group = app.MapGroup("/users").RequireRateLimiting("GeneralApiPolicy");
             
             //---------------------------------------------------------------Verify token
             group.MapGet("/verifyToken", async (PinulaDbContext db, ClaimsPrincipal user) =>
@@ -86,7 +86,7 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.Ok(new { newUser.Id, newUser.Email });
-            });
+            }).RequireRateLimiting("AuthStrictPolicy");
 
             //---------------------------------------------------------------UserLogin
             group.MapPost("/login", async (UserLoginDto loginDto, PinulaDbContext db, IConfiguration config) =>
@@ -106,7 +106,7 @@ namespace Pinula.API.Endpoints
                     UserName = user.Name,
                     UserSurname = user.Surname,
                 });
-            });
+            }).RequireRateLimiting("AuthStrictPolicy");
 
 
             //---------------------------------------------------------------GetMe
@@ -274,7 +274,7 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.Ok();
-            }).AllowAnonymous();
+            }).AllowAnonymous().RequireRateLimiting("AuthStrictPolicy");
 
 
             //---------------------------------------------------------------Get all users
@@ -375,7 +375,7 @@ namespace Pinula.API.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.Ok();
-            });
+            }).RequireRateLimiting("AuthStrictPolicy");
 
         // --------------------------------------------------------------- Verify code
         group.MapPost("/verifyCode", async (VerificationCodeVerifyDto dto, PinulaDbContext db) =>

@@ -13,7 +13,7 @@ public static class InventoryEndpoint
 {
     public static void MapInventoryEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/inventory");
+        var group = app.MapGroup("/inventory").RequireRateLimiting("GeneralApiPolicy");
         
         
         //---------------------------------------------------------------Get all inventory items

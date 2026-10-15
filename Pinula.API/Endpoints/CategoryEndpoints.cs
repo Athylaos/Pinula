@@ -16,7 +16,7 @@ namespace Pinula.API.Endpoints
     {
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/categories");
+            var group = app.MapGroup("/categories").RequireRateLimiting("GeneralApiPolicy");
             group.MapGet("/getAll", async (HttpRequest request, PinulaDbContext db) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
