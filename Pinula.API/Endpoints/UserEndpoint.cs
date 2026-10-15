@@ -35,7 +35,7 @@ namespace Pinula.API.Endpoints
 
                 var exists = await db.Users.AnyAsync(u => u.Id == userId);
 
-                return exists ? Results.NotFound() : Results.Ok();
+                return exists ?  Results.Ok() : Results.NotFound();
             }).RequireAuthorization();
             
             //---------------------------------------------------------------Check email availability
