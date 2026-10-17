@@ -95,14 +95,7 @@
             {
                 var customAuthStateProvider = (ApiAuthenticationStateProvider)AuthStateProvider;
                 customAuthStateProvider.MarkUserAsAuthenticated(await LocalStorage.GetTokenAsync());
-                try
-                {
-                    await JSRuntime.InvokeVoidAsync("history.back");
-                }
-                catch
-                {
-                    NavManager.NavigateTo("/");
-                }
+                NavManager.NavigateTo("/profile");
             }
         }
         catch (Exception ex)

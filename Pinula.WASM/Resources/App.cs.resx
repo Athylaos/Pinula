@@ -1068,4 +1068,7 @@
   <data name="WrongInvitationCode" xml:space="preserve">
     <value>Špatný zvací kód. Zadejte platný kód nebo vytvořte novou skupinu.</value>
   </data>
+  <data name="EmailNotFound" xml:space="preserve">
+    <value>Tento email není zaregistrován</value>
+  </data>
 </root>

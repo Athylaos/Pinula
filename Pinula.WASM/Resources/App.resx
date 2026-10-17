@@ -1068,4 +1068,7 @@
   <data name="WrongInvitationCode" xml:space="preserve">
     <value>Wrong invitation code. Enter correct one or create new group.</value>
   </data>
+  <data name="EmailNotFound" xml:space="preserve">
+    <value>This email is not register</value>
+  </data>
 </root>

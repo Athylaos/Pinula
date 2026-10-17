@@ -84,10 +84,17 @@
     </div>
 
     <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
+        <div class="blazor-error-content">
+            <span>An unhandled error has occurred. If the problem persists, please contact <a href="mailto:support@pinula.app" class="error-support-link">support@pinula.app</a>.</span>
+            <div class="error-actions">
+                <a href="." class="reload error-btn-reload">Reload / Obnovit</a>
+                <button type="button" class="dismiss error-btn-dismiss" aria-label="Dismiss">🗙</button>
+            </div>
+        </div>
     </div>
+    
+    
+    
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script>
         window.setupHorizontalScroll = function () {
