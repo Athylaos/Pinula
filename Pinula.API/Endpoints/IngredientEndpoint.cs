@@ -157,7 +157,7 @@ namespace Pinula.API.Endpoints
                 }
                 
                 
-                string finalPhotoUrl = "default_ingredient_picture.png";
+                string finalPhotoUrl = "default_ingredient.png";
                 var file = form.Files.GetFile("image");
 
                 if (file is { Length: > 0 })

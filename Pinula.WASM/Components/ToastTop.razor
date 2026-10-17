@@ -1,0 +1,68 @@
+@using Microsoft.Extensions.Localization
+@using System.Threading
+@implements IDisposable
+@inject IStringLocalizer<App> Localizer
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="pf-alert-toast toast-enter @(Positive ? "positive" : "negative")">
+        <div class="pf-toast-content">
+            <span>@StatusMessage</span>
+            <button type="button" class="pf-btn-dismiss" @onclick="Dismiss">
+                @Localizer["Dismiss"]
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string StatusMessage { get; set; } = string.Empty;
+    [Parameter] public bool Positive { get; set; } = true;
+    [Parameter] public int VisibleFor { get; set; } = 5;
+
+    private CancellationTokenSource? _cts;
+    private string? _lastMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(StatusMessage) && StatusMessage != _lastMessage)
+        {
+            _lastMessage = StatusMessage;
+            await StartAutoDismissTimerAsync();
+        }
+    }
+
+    private async Task StartAutoDismissTimerAsync()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+
+        if (VisibleFor > 0)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(VisibleFor), _cts.Token);
+                StatusMessage = string.Empty;
+                _lastMessage = null;
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }
+    }
+
+    private void Dismiss()
+    {
+        _cts?.Cancel();
+        StatusMessage = string.Empty;
+        _lastMessage = null;
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

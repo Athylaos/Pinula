@@ -462,7 +462,7 @@
   <data name="ToShortPassword" xml:space="preserve">
     <value>Heslo musí být alespoň 5 znaků dlouhé</value>
   </data>
-  <data name="PasswordUpdateSucess" xml:space="preserve">
+  <data name="PasswordUpdateSuccess" xml:space="preserve">
     <value>Heslo bylo úspěšně změněno</value>
   </data>
   <data name="WrongPassword" xml:space="preserve">
@@ -471,14 +471,14 @@
   <data name="ChangingPasswordError" xml:space="preserve">
     <value>Změna hesla selhala</value>
   </data>
-  <data name="ProfileUpdatedSucess" xml:space="preserve">
+  <data name="ProfileUpdatedSuccess" xml:space="preserve">
     <value>Profil úspěšně upraven</value>
   </data>
   <data name="ProfileUpdateFail" xml:space="preserve">
     <value>Změny na profilu byly odmítnuty</value>
   </data>
   <data name="ProfileUpdateProcessFail" xml:space="preserve">
-    <value>Zpracování selhalo. Obrázek může být typu: .jpg, .jpeg, .png, .webp</value>
+    <value>Zpracování selhalo. Obrázek může být typu: .jpg, .jpeg, .png, .webp. A musí být menší než 10MB.</value>
   </data>
   <data name="LoadingRecipe" xml:space="preserve">
     <value>Připravuji tento recept</value>
@@ -1037,5 +1037,35 @@
   </data>
   <data name="TermsAndConditions" xml:space="preserve">
     <value>Podmínky užití</value>
+  </data>
+  <data name="AdditionalUnits" xml:space="preserve">
+    <value>Další jednotky</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Jednoduché</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Středně obtížné</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Obtížné</value>
+  </data>
+  <data name="Chef" xml:space="preserve">
+    <value>Komplikované</value>
+  </data>
+  <data name="LoginPopupDes" xml:space="preserve">
+    <value>Pro používání této funkce se prosíme přihlašte.</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>Skupina</value>
+  </data>
+  <data name="GroupPopupDes" xml:space="preserve">
+    <value>Pro používání této funkce musíte mýt ve skupině.</value>
+  </data>
+  <data name="ToGroupSetup" xml:space="preserve">
+    <value>Vytvoření skupiny</value>
+  </data>
+  <data name="WrongInvitationCode" xml:space="preserve">
+    <value>Špatný zvací kód. Zadejte platný kód nebo vytvořte novou skupinu.</value>
   </data>
 </root>

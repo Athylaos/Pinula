@@ -462,7 +462,7 @@
   <data name="ToShortPassword" xml:space="preserve">
     <value>Password has to be at least 5 characters long</value>
   </data>
-  <data name="PasswordUpdateSucess" xml:space="preserve">
+  <data name="PasswordUpdateSuccess" xml:space="preserve">
     <value>Password has been changed sucesfully</value>
   </data>
   <data name="WrongPassword" xml:space="preserve">
@@ -471,14 +471,14 @@
   <data name="ChangingPasswordError" xml:space="preserve">
     <value>Changing password failed</value>
   </data>
-  <data name="ProfileUpdatedSucess" xml:space="preserve">
+  <data name="ProfileUpdatedSuccess" xml:space="preserve">
     <value>Profile updated sucesfully</value>
   </data>
   <data name="ProfileUpdateFail" xml:space="preserve">
     <value>Profile update was rejected</value>
   </data>
   <data name="ProfileUpdateProcessFail" xml:space="preserve">
-    <value>Processing changes failed. Photo can be type: .jpg, .jpeg, .png, .webp</value>
+    <value>Processing changes failed. Photo can be type: .jpg, .jpeg, .png, .webp. And has to be smaller than 10MB.</value>
   </data>
   <data name="LoadingRecipe" xml:space="preserve">
     <value>Prepering this recipe</value>
@@ -1037,5 +1037,35 @@
   </data>
   <data name="TermsAndConditions" xml:space="preserve">
     <value>Terms &amp; Conditions</value>
+  </data>
+  <data name="AdditionalUnits" xml:space="preserve">
+    <value>Additionl units</value>
+  </data>
+  <data name="Easy" xml:space="preserve">
+    <value>Easy</value>
+  </data>
+  <data name="Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Hard" xml:space="preserve">
+    <value>Hard</value>
+  </data>
+  <data name="Chef" xml:space="preserve">
+    <value>Chef</value>
+  </data>
+  <data name="LoginPopupDes" xml:space="preserve">
+    <value>To use this feature please log in.</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GroupPopupDes" xml:space="preserve">
+    <value>To use this feature you need to be in group.</value>
+  </data>
+  <data name="ToGroupSetup" xml:space="preserve">
+    <value>Group setup</value>
+  </data>
+  <data name="WrongInvitationCode" xml:space="preserve">
+    <value>Wrong invitation code. Enter correct one or create new group.</value>
   </data>
 </root>

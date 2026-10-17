@@ -96,7 +96,7 @@
                         <select class="custom-select" @bind="Difficulty">
                             @foreach (var diff in DifficultyOptions)
                             {
-                                <option value="@diff">@diff.ToString()</option>
+                                <option value="@diff">@Localizer[diff.ToString()]</option>
                             }
                         </select>
                     </div>

@@ -10,21 +10,21 @@
     <div class="modal-overlay">
         <div class="glass-modal login-prompt-modal">
             <div class="modal-header justify-content-center position-relative">
-                <h2>@Localizer[""] Log in</h2>
+                <h2>@Localizer["LoginPage"]</h2>
             </div>
             <div class="modal-body text-center">
                 <div class="login-modal-icon-wrapper">
                     <div class="glow-sphere-sm"></div>
                     <img src="images/icons/account.png" alt="Account img" class="login-modal-icon" />
                 </div>
-                <p class="login-modal-text">@Localizer[""] For this you need to be logged in.</p>
+                <p class="login-modal-text">@Localizer["LoginPopupDes"]</p>
             </div>
             <div class="modal-footer flex-column gap-2">
                 <button class="btn-continue w-100 m-0" @onclick="GoToLoginPage">
-                    @Localizer[""] Login
+                    @Localizer["Login"]
                 </button>
                 <button class="btn-cancel-mp w-100" @onclick="GoBack">
-                    @Localizer[""] Go back
+                    @Localizer["Back"]
                 </button>
             </div>
         </div>

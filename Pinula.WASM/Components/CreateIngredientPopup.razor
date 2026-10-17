@@ -360,7 +360,7 @@
             newIngDto.AdditionalUnits.Add(new() { UnitId = g.Id, ToDefaultUnit = 1 });
         }
 
-        if (SelectedImagePreview is null)
+        if (_selectedPhoto is null)
         {
             var result = await IngredientService.CreateIngredientAsync(newIngDto, null, null, null, null);
             if (result.Successful)

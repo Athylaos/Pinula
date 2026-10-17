@@ -1,0 +1,56 @@
+@using Microsoft.Extensions.Localization
+@using Pinula.Shared.Interface
+@inject IStringLocalizer<App> Localizer
+@inject NavigationManager NavManager
+@inject IJSRuntime JsRuntime
+@inject IUserService UserService
+@inject IMealPlanService MealPlanService
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="glass-modal login-prompt-modal">
+            <div class="modal-header justify-content-center position-relative">
+                <h2>@Localizer["Group"]</h2>
+            </div>
+            <div class="modal-body text-center">
+                <div class="login-modal-icon-wrapper">
+                    <div class="glow-sphere-sm"></div>
+                    <img src="images/icons/group.png" alt="Account img" class="login-modal-icon" />
+                </div>
+                <p class="login-modal-text">@Localizer["GroupPopupDes"]</p>
+            </div>
+            <div class="modal-footer flex-column gap-2">
+                <button class="btn-continue w-100 m-0" @onclick="GoToLoginPage">
+                    @Localizer["ToGroupSetup"]
+                </button>
+                <button class="btn-cancel-mp w-100" @onclick="GoBack">
+                    @Localizer["Back"]
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool IsVisible = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (await UserService.IsUserLoggedInAsync() && await MealPlanService.GetMyGroupAsync() is null)
+        {
+            IsVisible = true;
+        }
+    }
+
+    public void GoToLoginPage()
+    {
+        NavManager.NavigateTo("/planner");
+    }
+
+    public async Task GoBack()
+    {
+        await JsRuntime.InvokeVoidAsync("history.back");
+    }
+    
+}

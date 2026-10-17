@@ -90,16 +90,6 @@
             </div>
         </div>
 
-        @if (!string.IsNullOrEmpty(statusMessage))
-        {
-            <div class="pf-alert-toast pf-animate-slide" style="border-left: 4px solid var(--pine-teal);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>@statusMessage</span>
-                    <button class="pf-btn-dismiss" @onclick="() => statusMessage = string.Empty">@Localizer["Dismiss"]</button>
-                </div>
-            </div>
-        }
-
         <div class="pf-mid-layout-grid">
             
             <div class="pf-content-card">
@@ -256,6 +246,13 @@
 <LoginPopup>
 </LoginPopup>
 
+<ToastTop
+    StatusMessage="@statusMessage"
+    Positive="@statusPositive"
+    VisibleFor="5">
+    
+</ToastTop>
+
 @code {
     private UserDisplayDto? userProfile;
     private UserUpdateDto updateModel = new();
@@ -273,11 +270,12 @@
     private bool moreFvRecipesToLoad = true;
 
     private string statusMessage = string.Empty;
+    private bool statusPositive = true;
     private readonly RecipeFilterParameters _mineFilter = new() { OnlyMine = true, Amount = 6 };
     private readonly RecipeFilterParameters _fvFilter = new() { OnlyFavorites = true, Amount = 6 };
 
     private IBrowserFile? selectedFile;
-    private long maxFileSize = 1024 * 1024 * 5;
+    private long maxFileSize = 1024 * 1024 * 10;
 
     protected override async Task OnInitializedAsync()
     {
@@ -402,18 +400,21 @@
 
             if (success)
             {
-                statusMessage = Localizer["ProfileUpdatedSucess"];
+                statusPositive = true;
+                statusMessage = Localizer["ProfileUpdatedSuccess"];
                 isEditing = false;
                 selectedFile = null;
                 await LoadProfileData();
             }
             else
             {
+                statusPositive = false;
                 statusMessage = Localizer["ProfileUpdateFail"];
             }
         }
         catch (Exception ex)
         {
+            statusPositive = false;
             statusMessage = Localizer["ProfileUpdateProcessFail"];
         }
         finally

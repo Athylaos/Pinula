@@ -79,6 +79,7 @@
             <div class="no-group-showcase">
                 <div class="showcase-art">
                     <div class="glow-sphere"></div>
+                    <img src="images/icons/group.png" alt="Account img"/>
                 </div>
                 <h2>@Localizer["NotInGroup"]</h2>
                 <p>@Localizer["NotInGroupSubtitle"]</p>
@@ -138,6 +139,13 @@
 <LoginPopup>
 </LoginPopup>
 
+<ToastTop
+    Positive="false"
+    VisibleFor="5"
+    StatusMessage="@statusMsg">
+    
+</ToastTop>
+
 @code {
     private bool IsLoading = true;
     private DateTime WeekStartDate;
@@ -160,6 +168,8 @@
     private string newGroupName = "";
     private string joinGroupCode = "";
 
+    private string statusMsg = string.Empty;
+    
     protected override async Task OnInitializedAsync()
     {
 
@@ -292,6 +302,10 @@
         {
             showGroupModal = false;
             await LoadData();
+        }
+        else
+        {
+            statusMsg = Localizer["WrongInvitationCode"];
         }
         IsLoading = false;
     }

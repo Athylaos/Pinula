@@ -2807,66 +2807,6 @@ select.custom-select {
         color: #ccc;
     }
 
-.pf-alert-toast {
-    max-width: 1200px;
-    width: 80%;
-    
-    background: rgba(14, 51, 37, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-    border-radius: 12px;
-    padding: 14px 20px;
-    
-    border: 1px solid rgba(99, 240, 189, 0.25);
-    
-    box-shadow:
-            0 20px 40px rgba(0, 0, 0, 0.6),
-            0 0 20px rgba(99, 240, 189, 0.15);
-
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.toast-enter {
-    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.toast-exit {
-    animation: slideUp 0.4s cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
-
-@keyframes slideDown {
-    from {
-        top: -100px;
-        opacity: 0;
-    }
-    to {
-        top: 20px;
-        opacity: 1;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        top: 20px;
-        opacity: 1;
-    }
-    to {
-        top: -100px;
-        opacity: 0;
-    }
-}
-
 .pf-invites-empty-state {
     display: flex;
     flex-direction: column;
@@ -3712,6 +3652,15 @@ select.custom-select {
     height: 100px;
     margin: 0 auto 24px auto;
     margin-bottom:50px;
+}
+
+.showcase-art img{
+    position: relative;
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    z-index: 2;
 }
 
 .glow-sphere {
@@ -4724,5 +4673,85 @@ select.custom-select {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(29, 73, 52, 0.6);
     background: linear-gradient(135deg, #255d42, var(--pine-teal));
+}
+/* #endregion */
+
+
+/*---------- Toast top ----------*/
+/* #region ToastTop */
+.pf-alert-toast {
+    max-width: 1200px;
+    width: 80%;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 14px 20px;
+
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.pf-toast-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+.pf-alert-toast.positive {
+    background: rgba(14, 51, 37, 0.85);
+    border: 1px solid rgba(99, 240, 189, 0.25);
+    border-left: 4px solid var(--pine-teal, #63f0bd);
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.6),
+            0 0 20px rgba(99, 240, 189, 0.15);
+}
+
+.pf-alert-toast.negative {
+    background: rgba(51, 18, 22, 0.88);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-left: 4px solid #f87171;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.6),
+            0 0 20px rgba(248, 113, 113, 0.15);
+}
+
+.pf-btn-dismiss {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pf-btn-dismiss:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.toast-enter {
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDown {
+    from {
+        top: -100px;
+        opacity: 0;
+    }
+    to {
+        top: 20px;
+        opacity: 1;
+    }
 }
 /* #endregion */
