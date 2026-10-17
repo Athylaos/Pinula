@@ -8,16 +8,16 @@
 @inject IStringLocalizer<App> Localizer
 
 <div class="header-actions">
-    <img src="favicon.png" class="header-logo"/>
+    <img src="favicon.png" class="header-logo" @onclick="ToHome"/>
     <div class="search-bar">
-        <input type="text" class="search-input" placeholder="@Localizer["SearchRecipesPlaceholder"]" value="@searchTerm" @oninput="HandleSearchInput" />
-        <img src="images/icons/search.png" />
+        <input type="text" class="search-input" placeholder="@Localizer["SearchRecipesPlaceholder"]" value="@searchTerm" @oninput="HandleSearchInput"/>
+        <img src="images/icons/search.png"/>
     </div>
     <button class="btn-icon btn-filter" @onclick="ToggleFilter">
-        <img src="images/icons/filter.png" class="recipe-nav-icon" />
+        <img src="images/icons/filter.png" class="recipe-nav-icon"/>
     </button>
     <button class="btn-icon btn-add" @onclick="AddRecipe">
-        <img src="images/icons/plus.png" class="recipe-nav-icon" />
+        <img src="images/icons/plus.png" class="recipe-nav-icon"/>
     </button>
 </div>
 
@@ -71,7 +71,7 @@
                     {
                         <button class="diff-btn @(filterParams.MaxDifficulty == (int)diff ? "active" : "")"
                                 @onclick="() => SetDifficulty(diff)">
-                            @diff
+                            @Localizer[diff.ToString()] 
                         </button>
                     }
                 </div>
@@ -164,4 +164,6 @@
     {
         debounceTimer?.Dispose();
     }
+    
+    private void ToHome() => NavManager.NavigateTo("/recipes");
 }

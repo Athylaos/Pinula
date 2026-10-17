@@ -1,12 +1,12 @@
 :root {
-    --pine-teal: #1D4934;
-    --evergreen: #112718;
-    --dark-evergreen: #011D04;
+    --pine-teal: #27702E;
+    --evergreen: #0D540A;
+    --dark-evergreen: #083B05;
     --bg-main: #1f1f1f;
     --bg-card: #212121;
     --text-porcelain: #f1f2f6;
     --accent-green: #63f0bd;
-    --true-green: #0E811F;
+    --true-green: #07941D;
 
     --recipe-card-width: 300px;
 }
@@ -44,8 +44,15 @@
 body, html {
     overflow-x: hidden;
     width: 100%;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
-
+*::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
 
 
 article.content {
@@ -240,15 +247,22 @@ html, * {
     width: 65px;
     height: 52px;
     border-radius: 23px;
-    border: 1px solid var(--dark-evergreen);
-    background-color: var(--pine-teal);
+    background: linear-gradient(135deg, var(--pine-teal), var(--evergreen));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-porcelain);
     display: flex;
     align-items: center;
     justify-content: center;
 
-    transition: background-color 0.5s ease;
+    transition: 0.3s ease;
     cursor: pointer;
 }
+    .nav-item:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(29, 73, 52, 0.6);
+        background: linear-gradient(135deg, #255d42, var(--pine-teal));
+        border-color: rgba(255,255,255,0.2);
+    }
 
     .nav-item img {
         padding: 0;
@@ -256,6 +270,7 @@ html, * {
         height: 30px;
         object-fit: scale-down;
         display: block;
+        filter: invert(100%);
     }
 
     .nav-item.active {
@@ -295,7 +310,7 @@ html, * {
 .spinner {
     position: absolute;
     border: 5px solid rgba(255, 255, 255, 0.1);
-    border-left-color: #1D4934;
+    border-left-color: var(--pine-teal);
     border-radius: 50%;
     width: 100%;
     height: 100%;
@@ -335,7 +350,6 @@ html, * {
     cursor: pointer;
     flex-shrink: 0;
     margin-right: 12px;
-    background-color: var(--evergreen);
     border: 1px solid rgba(255, 255, 255, 0.05);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
     box-shadow: 0 8px 20px rgba(0,0,0,0.3);
@@ -595,10 +609,10 @@ html, * {
 
 .value {
     font-size: 0.85rem;
-    color: var(--evergreen);
+    color: var(--pine-teal);
     font-weight: 600;
     font-family: 'Nunito', sans-serif;
-    filter: brightness(3);
+    filter: brightness(1.5);
 }
 
 .author {
@@ -610,7 +624,7 @@ html, * {
     height:35px;
     border-radius: 50%;
     backdrop-filter: blur(10px);
-    background: rgba(29, 73, 52, 0.85);
+    background: var(--pine-teal);
     color: white;
     font-weight: bold;
     font-size: 0.8rem;
@@ -630,6 +644,7 @@ html, * {
     width: 26px;
     height: 26px;
     object-fit: contain;
+    filter: invert(100%);
 }
 
 .header-actions {
@@ -662,6 +677,7 @@ html, * {
    .search-bar img{
        height:25px;
        margin-right:3px;
+       filter: invert(85%);
    }
 
 .btn-icon {
@@ -824,12 +840,12 @@ html, * {
     .diff-btn.active {
         background-color: #1A1A1A;
         color: white;
-        border: 1px solid #1D4934;
+        border: 1px solid var(--pine-teal);
         box-shadow: inset 0 0 10px rgba(29, 73, 52, 0.2);
     }
 
 .btn-apply {
-    background-color: #1D4934;
+    background-color: var(--pine-teal);
     color: white;
     border: none;
     width: 100%;
@@ -1154,6 +1170,18 @@ html, * {
     }
 }
 
+.enter-code-title {
+    color: var(--pine-teal);
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.enter-code-subtitle {
+    color: #A0A0A0;
+    font-size: 19px;
+    margin-bottom: 25px;
+}
+
 
 .otp-container {
     display: flex;
@@ -1317,19 +1345,26 @@ html, * {
         background: linear-gradient(to right, rgba(255,255,255,0.1), transparent);
     }
 
+.scroll-wrapper {
+    position: relative;
+    width: 100%;
+    -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
+    mask-image: linear-gradient(to right, black 75%, transparent 100%);
+}
+
 .scroll-container {
-    padding: 10px 20px 20px 20px;
+    padding: 10px 40px 20px 20px;
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
     width: 100%;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; 
+    scrollbar-width: none;
 }
 
-    .scroll-container::-webkit-scrollbar {
-        display: none;
-    }
+.scroll-container::-webkit-scrollbar {
+    display: none;
+}
 
 .load-more-item {
     padding-right: 20px;
@@ -1352,7 +1387,7 @@ html, * {
     .load-more-card:hover:not(:disabled) {
         background-color: rgba(29, 73, 52, 0.1);
         color: #fff;
-        border: 2px solid #1D4934;
+        border: 2px solid var(--pine-teal);
         transform: scale(1.02);
     }
 
@@ -1431,7 +1466,7 @@ html, * {
     width: 100%;
     max-width:800px;
     height: 400px;
-    border: 1px solid #1D4934;
+    border: 1px solid var(--pine-teal);
     border-radius: 15px;
     margin-bottom: 15px;
     display: flex;
@@ -2129,7 +2164,7 @@ select.custom-select {
 }
 
 .btn-post {
-    background: #1D4934;
+    background: var(--pine-teal);
     color: white;
     border: none;
     padding: 8px 25px;
@@ -2319,7 +2354,7 @@ select.custom-select {
 
     .details-info-icon.rating {
         color: #ffc107;
-        background: rgba(255, 193, 7, 0.1);
+        background: #C4B333;
     }
 
 .details-info-text {
@@ -2498,7 +2533,7 @@ select.custom-select {
 .btn-add-to-calendar {
     width: 100%;
     background: linear-gradient(-135deg, rgb(29, 73, 52, 0.6), transparent);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--pine-teal);
     color: var(--text-porcelain);
     padding: 14px;
     border-radius: 14px;
@@ -2896,7 +2931,7 @@ select.custom-select {
 }
 
 .pf-btn-submit-action {
-    background: #1D4934;
+    background: var(--pine-teal);
     color: white;
     border: none;
     padding: 10px 25px;
@@ -3043,12 +3078,17 @@ select.custom-select {
     }
 
     .day-bubble.selected {
-        background-color: #1f422e;
+        background-color: var(--pine-teal);
         border-color: #2d5a3f;
+        color: var(--text-porcelain) !important;
     }
 
     .day-bubble.today .day-number {
         color: #4caf50;
+    }
+
+    .day-bubble.selected .day-number {
+        color: var(--text-porcelain) !important;
     }
 
 .day-name {
@@ -3643,6 +3683,10 @@ select.custom-select {
     font-size: 1.3rem;
     box-shadow: 0 4px 12px rgba(29, 73, 52, 0.4);
 }
+    .header-icon-box img{
+        filter: invert(100%);
+        height: 45px;
+    }
 
 .page-title {
     font-family: Alegreya, serif;

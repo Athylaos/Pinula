@@ -45,11 +45,13 @@
 
                 @if (categories.Any())
                 {
-                    <div class="d-flex pb-2 scroll-container">
-                        @foreach (var category in categories)
-                        {
-                            <CategoryCard Category="category" OnCategorySelected="CategoryClicked"/>
-                        }
+                    <div class="scroll-wrapper">
+                        <div class="scroll-container">
+                            @foreach (var category in categories)
+                            {
+                                <CategoryCard Category="category" OnCategorySelected="CategoryClicked"/>
+                            }
+                        </div>
                     </div>
                 }
 

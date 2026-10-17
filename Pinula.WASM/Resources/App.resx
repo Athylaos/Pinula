@@ -1071,4 +1071,10 @@
   <data name="EmailNotFound" xml:space="preserve">
     <value>This email is not register</value>
   </data>
+  <data name="DoNotClose" xml:space="preserve">
+    <value>Don't close this windows</value>
+  </data>
+  <data name="CheckEmailInbox" xml:space="preserve">
+    <value>Check your email inbox for verification code</value>
+  </data>
 </root>

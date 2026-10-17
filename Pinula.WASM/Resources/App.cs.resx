@@ -904,7 +904,7 @@
     <value>Příliš mnoho pokusů. Požádejte si o nový kód.</value>
   </data>
   <data name="ResetPassword" xml:space="preserve">
-    <value>Resetovat heslo</value>
+    <value>Resetování hesla</value>
   </data>
   <data name="RecoverYourAccount" xml:space="preserve">
     <value>Obnovte svoje heslo</value>
@@ -1070,5 +1070,11 @@
   </data>
   <data name="EmailNotFound" xml:space="preserve">
     <value>Tento email není zaregistrován</value>
+  </data>
+  <data name="DoNotClose" xml:space="preserve">
+    <value>Nezavírejte toto okno</value>
+  </data>
+  <data name="CheckEmailInbox" xml:space="preserve">
+    <value>Zkontrolujte svojí emailovou schránku pro verifikační kód</value>
   </data>
 </root>

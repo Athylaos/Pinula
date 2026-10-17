@@ -47,6 +47,7 @@
                     <div class="category-hero-container mb-4">
                         <div class="category-hero-card" style="background-image: url('@currentCategory.PictureUrl');">
                             <div class="category-hero-overlay">
+                                <img src="images/icons/back.png" class="back-btn" style="position: absolute; top:10px; left:15px;" @onclick="GoBack" />
                                 <div class="category-hero-content">
                                     <span class="category-badge">@Localizer["Category"]</span>
                                     <h1 class="category-hero-title">@currentCategory.Name</h1>
@@ -58,11 +59,13 @@
 
                 @if (subCategories != null && subCategories.Any())
                 {
-                    <div class="d-flex pb-4 scroll-container">
-                        @foreach (var sub in subCategories)
-                        {
-                            <CategoryCard Category="sub" OnCategorySelected="CategoryClicked" />
-                        }
+                    <div class="scroll-wrapper">
+                        <div class="scroll-container">
+                            @foreach (var sub in subCategories)
+                            {
+                                <CategoryCard Category="sub" OnCategorySelected="CategoryClicked" />
+                            }
+                        </div>
                     </div>
                 }
 
@@ -257,4 +260,8 @@
 
     private void RecipeClicked(RecipePreviewDto r) => NavManager.NavigateTo($"/recipe/{r.Id}");
     private void CategoryClicked(CategoryDisplayDto c) => NavManager.NavigateTo($"/recipes/category/{c.Id}");
+    private void GoBack()
+    {
+        JSRuntime.InvokeVoidAsync("history.back");
+    }
 }
