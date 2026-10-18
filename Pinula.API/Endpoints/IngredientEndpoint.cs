@@ -467,7 +467,7 @@ namespace Pinula.API.Endpoints
                             });
                         }
 
-                        if (!string.IsNullOrEmpty(ingredient.ImageUrl) && ingredient.ImageUrl != "default_ingredient_picture.png")
+                        if (!string.IsNullOrEmpty(ingredient.ImageUrl) && ingredient.ImageUrl != "default_ingredient.png")
                         {
                             var oldFilePath = Path.Combine(uploadFolder, ingredient.ImageUrl);
                             if (File.Exists(oldFilePath))
@@ -492,7 +492,7 @@ namespace Pinula.API.Endpoints
                     {
                         ct = await db.ShoppingCategories
                              .AsNoTracking()
-                             .FirstOrDefaultAsync(t => t.Code == "Uncategorized");
+                             .FirstOrDefaultAsync(t => t.Code == "UNCATEGORIZED");
                     }
 
                     ingredient.Names = dto.Names;
@@ -502,6 +502,7 @@ namespace Pinula.API.Endpoints
                     ingredient.DefaultUnitId = dto.DefaultUnitId;
                     ingredient.OffCategoryTag = dto.OffCategoryTag;
                     ingredient.Barcode = dto.Barcode;
+                    ingredient.BaseIngredientId = dto.BaseIngredientId;
 
                     ingredient.Calories = dto.Calories;
                     ingredient.Proteins = dto.Proteins;
