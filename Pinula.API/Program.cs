@@ -158,6 +158,7 @@ app.MapUnitEndpoints();
 app.MapIngredientEndpoints();
 app.MapMealPlanEndpoints();
 app.MapInventoryEndpoints();
+app.MapScriptEndpoints();
 
 
 /*

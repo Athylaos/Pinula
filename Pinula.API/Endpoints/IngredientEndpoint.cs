@@ -155,8 +155,8 @@ namespace Pinula.API.Endpoints
                         dto.Names["en"] = translatedName??dto.Names["cs"];
                     }
                 }
-                
-                
+
+                var newId = Guid.NewGuid();
                 string finalPhotoUrl = "default_ingredient.png";
                 var file = form.Files.GetFile("image");
 
@@ -171,7 +171,7 @@ namespace Pinula.API.Endpoints
                     var uploadFolder = Path.Combine(env.WebRootPath, "images", "ingredients");
                     if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
 
-                    var fileName = $"{Guid.NewGuid()}.jpg";
+                    var fileName = $"{newId}.webp";
                     var filePath = Path.Combine(uploadFolder, fileName);
 
                     try
@@ -184,7 +184,7 @@ namespace Pinula.API.Endpoints
                                 Size = new Size(1200, 0)
                             }));
 
-                            await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
+                            await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder()
                             {
                                 Quality = 80
                             });
@@ -237,7 +237,7 @@ namespace Pinula.API.Endpoints
 
                     var ingredient = new Ingredient
                     {
-                        Id = Guid.NewGuid(),
+                        Id = newId,
                         UserId = userId,
                         Names = dto.Names,
                         Barcode = dto.Barcode,
