@@ -3,7 +3,7 @@ using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.Interface
 {
-    public interface IUserService
+    public interface IUserApiClient
     {
         Task<bool> RegisterAsync(UserRegistrationDto user);
         Task<bool> LoginAsync(UserLoginDto loginDto);

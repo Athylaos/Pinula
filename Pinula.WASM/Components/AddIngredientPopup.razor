@@ -2,8 +2,8 @@
 @using Microsoft.Extensions.Localization
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IIngredientService IngredientService
-@inject IUnitService UnitService
+@inject IIngredientApiClient IngredientApiClient
+@inject IUnitApiClient UnitApiClient
 @inject IStringLocalizer<App> Localizer
 
 
@@ -139,7 +139,7 @@
     {
         try
         {
-            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = "ban"});
+            FilteredIngredients = await IngredientApiClient.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = "ban"});
         }
         catch (Exception ex)
         {
@@ -152,7 +152,7 @@
     {
         try
         {
-            FilteredIngredients = await IngredientService.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = _searchText});
+            FilteredIngredients = await IngredientApiClient.GetFilteredIngredientPreviewsAsync(new IngredientFilterParameters(){Amount = 30, SearchTerm = _searchText});
         }
         catch (Exception ex)
         {

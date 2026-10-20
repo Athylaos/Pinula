@@ -7,14 +7,14 @@ using System.Text.Json;
 
 namespace Pinula.Shared.Services
 {
-    public class CategoryService : ICategoryService
+    public class CategoryApiClient : ICategoryApiClient
     {
 
         private readonly HttpClient _httpClient;
-        private readonly ILogger<CategoryService> _logger;
+        private readonly ILogger<CategoryApiClient> _logger;
         private const string BaseUrl = "categories";
 
-        public CategoryService(HttpClient httpClient, ILogger<CategoryService> logger)
+        public CategoryApiClient(HttpClient httpClient, ILogger<CategoryApiClient> logger)
         {
             _httpClient = httpClient;
             _logger = logger;

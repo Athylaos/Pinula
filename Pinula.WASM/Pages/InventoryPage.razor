@@ -3,10 +3,10 @@
 @using Pinula.Shared.DTOs
 @using Pinula.WASM.Components
 @page "/inventory"
-@inject IInventoryService InventoryService
+@inject IInventoryApiClient InventoryApiClient
 @inject IStringLocalizer<App> Localizer
 @inject NavigationManager NavManager
-@inject IUserService UserService
+@inject IUserApiClient UserApiClient
 
 <LoadingView IsFullScreen="true" Text="@Localizer["Loading..."]" IsLoading="isLoading">
     <div class="planner-container">
@@ -118,7 +118,7 @@
     private async Task LoadInventoryAsync()
     {
         isLoading = true;
-        inventoryItems = await InventoryService.GetAllInventoryItemsAsync();
+        inventoryItems = await InventoryApiClient.GetAllInventoryItemsAsync();
         isLoading = false;
     }
 
@@ -135,7 +135,7 @@
 
     private async Task AddInventoryItem(InventoryItemCreateDto ingredientDto)
     {
-        await InventoryService.CreateInventoryItemAsync(ingredientDto);
+        await InventoryApiClient.CreateInventoryItemAsync(ingredientDto);
         await LoadInventoryAsync();
     }
     
@@ -148,7 +148,7 @@
     private async Task HandleEditItem(InventoryItemUpdateDto item)
     {
         editInventoryItemVisible = !editInventoryItemVisible;
-        await InventoryService.UpdateInventoryItemAsync(item);
+        await InventoryApiClient.UpdateInventoryItemAsync(item);
         await LoadInventoryAsync();
     }
     
@@ -156,6 +156,6 @@
     {
         editInventoryItemVisible = !editInventoryItemVisible;
         inventoryItems.Remove(inventoryItems.First(i => i.Id == id));
-        InventoryService.DeleteInventoryItemAsync(id);
+        InventoryApiClient.DeleteInventoryItemAsync(id);
     }
 }

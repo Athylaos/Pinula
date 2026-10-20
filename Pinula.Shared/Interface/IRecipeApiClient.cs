@@ -2,7 +2,7 @@
 
 namespace Pinula.Shared.Interface
 {
-    public interface IRecipeService
+    public interface IRecipeApiClient
     {
         public Task<Guid?> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType);
         public Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid id);

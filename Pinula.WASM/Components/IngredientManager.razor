@@ -1,8 +1,8 @@
 ﻿@using System.Diagnostics
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IIngredientService IngredientService
-@inject IUnitService UnitService
+@inject IIngredientApiClient IngredientApiClient
+@inject IUnitApiClient UnitApiClient
 @inject IJSRuntime JS
 
 <div class="container-fluid py-3">
@@ -310,7 +310,7 @@
 
     private async Task LoadUnits()
     {
-        allUnits = await UnitService.GetAllUnitsAdminAsync();
+        allUnits = await UnitApiClient.GetAllUnitsAdminAsync();
     }
 
     private async Task LoadIngredients(bool reset = false)
@@ -324,7 +324,7 @@
         isLoadingList = true;
         StateHasChanged();
 
-        var newItems = await IngredientService.AdminGetIngredients(amountToLoad, currentSkip);
+        var newItems = await IngredientApiClient.AdminGetIngredients(amountToLoad, currentSkip);
         if (newItems != null && newItems.Any())
         {
             ingredients!.AddRange(newItems);
@@ -357,7 +357,7 @@
         isLoadingDetails = true;
         selectedIngredientId = id;
 
-        var details = await IngredientService.AdminGetIngredientDetailsAsync(id);
+        var details = await IngredientApiClient.AdminGetIngredientDetailsAsync(id);
         if (details != null)
         {
             currentIngredient = details;
@@ -453,11 +453,11 @@
 
         if (isEditing)
         {
-            response = await IngredientService.AdminUpdateIngredientAsync(createDto, fileStream, fileName, contentType);
+            response = await IngredientApiClient.AdminUpdateIngredientAsync(createDto, fileStream, fileName, contentType);
         }
         else
         {
-            response = await IngredientService.CreateIngredientAsync(createDto, currentIngredient.Barcode, fileStream, fileName, contentType);
+            response = await IngredientApiClient.CreateIngredientAsync(createDto, currentIngredient.Barcode, fileStream, fileName, contentType);
         }
 
         if (response.Successful)
@@ -475,13 +475,13 @@
 
     private async Task ToggleApproval(Guid id)
     {
-        var success = await IngredientService.AdminToggleIngredientApprovalAsync(id);
+        var success = await IngredientApiClient.AdminToggleIngredientApprovalAsync(id);
         if (success) await RefreshSpecificItem(id);
     }
 
     private async Task ToggleChecked(Guid id)
     {
-        var success = await IngredientService.AdminToggleIngredientCheckedAsync(id);
+        var success = await IngredientApiClient.AdminToggleIngredientCheckedAsync(id);
         if (success) await RefreshSpecificItem(id);
     }
 
@@ -491,7 +491,7 @@
 
         if (confirmed)
         {
-            var response = await IngredientService.DeleteIngredientAsync(id);
+            var response = await IngredientApiClient.DeleteIngredientAsync(id);
             if (response.Successful)
             {
                 ShowMessage("Ingredient deleted.", false);
@@ -510,7 +510,7 @@
     }
     private async Task RefreshSpecificItem(Guid id)
     {
-        var updatedItem = await IngredientService.AdminGetIngredientDetailsAsync(id);
+        var updatedItem = await IngredientApiClient.AdminGetIngredientDetailsAsync(id);
         if (updatedItem != null && ingredients != null)
         {
             var itemInList = ingredients.FirstOrDefault(i => i.Id == id);

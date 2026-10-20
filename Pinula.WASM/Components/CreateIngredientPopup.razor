@@ -1,8 +1,8 @@
 @using Microsoft.Extensions.Localization
 @using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IIngredientService IngredientService
-@inject IUnitService UnitService
+@inject IIngredientApiClient IngredientApiClient
+@inject IUnitApiClient UnitApiClient
 @inject ILocalStorage LocalStorage
 @inject IStringLocalizer<App> Localizer
 
@@ -242,9 +242,9 @@
     protected override async Task OnInitializedAsync()
     {
         cultureCode = await LocalStorage.GetStringAsync("culture") ?? string.Empty;
-        allUnits = await UnitService.GetAllUnitsAsync();
+        allUnits = await UnitApiClient.GetAllUnitsAsync();
         availableUnits = allUnits;
-        shoppingCategories = await IngredientService.GetAllShoppingCategories();
+        shoppingCategories = await IngredientApiClient.GetAllShoppingCategories();
     }
     
     
@@ -362,7 +362,7 @@
 
         if (_selectedPhoto is null)
         {
-            var result = await IngredientService.CreateIngredientAsync(newIngDto, null, null, null, null);
+            var result = await IngredientApiClient.CreateIngredientAsync(newIngDto, null, null, null, null);
             if (result.Successful)
             {
                 newIngDto = new();
@@ -377,7 +377,7 @@
         }
         else
         {
-            var result = await IngredientService.CreateIngredientAsync(newIngDto, null, _selectedPhoto.OpenReadStream(), _selectedPhoto.Name, _selectedPhoto.ContentType);
+            var result = await IngredientApiClient.CreateIngredientAsync(newIngDto, null, _selectedPhoto.OpenReadStream(), _selectedPhoto.Name, _selectedPhoto.ContentType);
             if (result.Successful)
             {
                 newIngDto = new();

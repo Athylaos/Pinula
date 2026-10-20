@@ -4,8 +4,8 @@
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
 @inject NavigationManager NavManager
-@inject IRecipeService RecipeService
-@inject IUserService UserService
+@inject IRecipeApiClient RecipeApiClient
+@inject IUserApiClient UserApiClient
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
 
@@ -324,7 +324,7 @@
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
-        userDto = await UserService.GetCurrentUserAsync();
+        userDto = await UserApiClient.GetCurrentUserAsync();
         if(userDto is null)
         {
             isUserLogged = false;
@@ -334,7 +334,7 @@
         {
             isUserLogged = true;           
         }
-        recipe = await RecipeService.GetRecipeDetailsAsync(Id); 
+        recipe = await RecipeApiClient.GetRecipeDetailsAsync(Id); 
         if(recipe is not null)
         {
             isLoading = false;
@@ -353,7 +353,7 @@
         {
             NavManager.NavigateTo("/login");
         }
-        await RecipeService.ChangeFavoriteAsync(recipe.Id);
+        await RecipeApiClient.ChangeFavoriteAsync(recipe.Id);
     }
 
 
@@ -381,7 +381,7 @@
         newComment.RecipeId = recipe.Id;
         newComment.ParentCommentId = null;
 
-        var response = await RecipeService.PostCommentAsync(newComment);
+        var response = await RecipeApiClient.PostCommentAsync(newComment);
 
         if (response != null)
         {
@@ -433,7 +433,7 @@
             Rating = null,
         };
 
-        var response = await RecipeService.PostCommentAsync(replyComment);
+        var response = await RecipeApiClient.PostCommentAsync(replyComment);
         if (response != null)
         {
             var parentComment = FindCommentRecursive(recipe.Comments, parentId);
@@ -489,7 +489,7 @@
 
     private async Task HandleUpdateReview(Guid commentId)
     {
-        var response = await RecipeService.UpdateCommentAsync(editCommentModel);
+        var response = await RecipeApiClient.UpdateCommentAsync(editCommentModel);
         if (response != null)
         {
             var targetComment = FindCommentRecursive(recipe!.Comments, commentId);
@@ -513,7 +513,7 @@
 
     private async Task HandleDeleteComment(Guid commentId)
     {
-        var response = await RecipeService.DeleteCommentAsync(commentId);
+        var response = await RecipeApiClient.DeleteCommentAsync(commentId);
         if (response != null)
         {
             var target = FindCommentRecursive(recipe!.Comments, commentId);

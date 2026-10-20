@@ -2,7 +2,7 @@ using Pinula.Shared.DTOs;
 
 namespace Pinula.Shared.Interface;
 
-public interface IInventoryService
+public interface IInventoryApiClient
 {
     public Task<List<InventoryItemDisplayDto>> GetAllInventoryItemsAsync();
     public Task<bool> CreateInventoryItemAsync(InventoryItemCreateDto dto);

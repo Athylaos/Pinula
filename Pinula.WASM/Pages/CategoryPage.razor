@@ -3,8 +3,8 @@
 @using Pinula.Shared.DTOs
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
-@inject IRecipeService recipeService
-@inject ICategoryService categoryService
+@inject IRecipeApiClient RecipeApiClient
+@inject ICategoryApiClient CategoryApiClient
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IStringLocalizer<App> Localizer
@@ -162,7 +162,7 @@
         filter.Skip = currentList.Count;
 
         filter.CategoryId = CategoryId;
-        var results = await recipeService.GetFilteredRecipePreviewsAsync(filter, null);
+        var results = await RecipeApiClient.GetFilteredRecipePreviewsAsync(filter, null);
         var newList = results?.ToList() ?? new List<RecipePreviewDto>();
 
         if (!newList.Any() || newList.Count < filter.Amount)
@@ -204,11 +204,11 @@
             _fastFilter.CategoryId = CategoryId;
             _allFilter.CategoryId = CategoryId;
 
-            var categoryDetailTask = categoryService.GetCategoryByIdAsync(CategoryId);
+            var categoryDetailTask = CategoryApiClient.GetCategoryByIdAsync(CategoryId);
 
-            var bestTask = recipeService.GetFilteredRecipePreviewsAsync(_bestFilter, null);
-            var fastTask = recipeService.GetFilteredRecipePreviewsAsync(_fastFilter, null);
-            var allTask = recipeService.GetFilteredRecipePreviewsAsync(_allFilter, null);
+            var bestTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_bestFilter, null);
+            var fastTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_fastFilter, null);
+            var allTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_allFilter, null);
 
             await Task.WhenAll(categoryDetailTask, bestTask, fastTask, allTask);
 
@@ -246,7 +246,7 @@
         isActuallySearching = true;
 
         activeParams.CategoryId = CategoryId;
-        var recipes = await recipeService.GetFilteredRecipePreviewsAsync(activeParams, null);
+        var recipes = await RecipeApiClient.GetFilteredRecipePreviewsAsync(activeParams, null);
         searchedRecipes = recipes?.ToList() ?? new();
     }
 

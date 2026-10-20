@@ -1,7 +1,7 @@
 @using Microsoft.Extensions.Localization
 @using Pinula.Shared.Interface
 @using Pinula.Shared.DTOs
-@inject IInventoryService InventoryService
+@inject IInventoryApiClient InventoryApiClient
 @inject IStringLocalizer<App> Localizer
 
 <div class="pin-inventory-card" @onclick="OnClick">

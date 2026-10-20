@@ -4,8 +4,8 @@
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
 @using System.Globalization
-@inject IUserService userService
-@inject IRecipeService recipeService
+@inject IUserApiClient UserApiClient
+@inject IRecipeApiClient RecipeApiClient
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
@@ -287,7 +287,7 @@
         isLoading = true;
         try
         {
-            userProfile = await userService.GetCurrentUserAsync();
+            userProfile = await UserApiClient.GetCurrentUserAsync();
 
             if (userProfile == null)
             {
@@ -297,7 +297,7 @@
             updateModel.Name = userProfile.Name;
             updateModel.Surname = userProfile.Surname;
 
-            var recipesResult = await recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
+            var recipesResult = await RecipeApiClient.GetFilteredRecipePreviewsAsync(_mineFilter, null);
             myRecipes = recipesResult?.ToList() ?? new();
 
             if (myRecipes.Count < _mineFilter.Amount)
@@ -305,7 +305,7 @@
                 moreRecipesToLoad = false;
             }
 
-            var fvRecipesResult = await recipeService.GetFilteredRecipePreviewsAsync(_fvFilter, null);
+            var fvRecipesResult = await RecipeApiClient.GetFilteredRecipePreviewsAsync(_fvFilter, null);
             fvRecipes = fvRecipesResult?.ToList() ?? new();
 
             if (fvRecipes.Count < _mineFilter.Amount)
@@ -328,7 +328,7 @@
         isRecipesLoading = true;
         _mineFilter.Skip = myRecipes.Count;
 
-        var results = await recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
+        var results = await RecipeApiClient.GetFilteredRecipePreviewsAsync(_mineFilter, null);
         var newList = results?.ToList() ?? new List<RecipePreviewDto>();
 
         if (!newList.Any() || newList.Count < _mineFilter.Amount)
@@ -345,7 +345,7 @@
         isFvRecipesLoading = true;
         _fvFilter.Skip = fvRecipes.Count;
 
-        var results = await recipeService.GetFilteredRecipePreviewsAsync(_fvFilter, null);
+        var results = await RecipeApiClient.GetFilteredRecipePreviewsAsync(_fvFilter, null);
         var newList = results?.ToList() ?? new List<RecipePreviewDto>();
 
         if (!newList.Any() || newList.Count < _fvFilter.Amount)
@@ -391,7 +391,7 @@
                 stream = selectedFile.OpenReadStream(maxFileSize);
             }
 
-            var success = await userService.UpdateUserAsync(
+            var success = await UserApiClient.UpdateUserAsync(
                 updateModel, 
                 stream, 
                 selectedFile?.Name ?? string.Empty, 
@@ -427,7 +427,7 @@
 
     private void HandleLogout()
     {
-        userService.Logout();
+        UserApiClient.Logout();
         NavManager.NavigateTo("/recipes", forceLoad: true);
     }
 

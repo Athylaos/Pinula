@@ -9,21 +9,21 @@ using System.Text.Json;
 
 namespace Pinula.Shared.Services
 {
-    public class IngredientService : IIngredientService
+    public class IngredientApiClient : IIngredientApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly OFFService _offService;
-        private readonly ILogger<IngredientService> _logger;
-        private readonly IUnitService _unitService;
+        private readonly ILogger<IngredientApiClient> _logger;
+        private readonly IUnitApiClient _unitApiClient;
         private readonly ILocalStorage _localStorage;
         private const string BaseUrl = "ingredients";
 
-        public IngredientService(HttpClient httpClient, ILogger<IngredientService> logger, OFFService offservice, IUnitService unitService, ILocalStorage localStorage)
+        public IngredientApiClient(HttpClient httpClient, ILogger<IngredientApiClient> logger, OFFService offservice, IUnitApiClient unitApiClient, ILocalStorage localStorage)
         {
             _httpClient = httpClient;
             _logger = logger;
             _offService = offservice;
-            _unitService = unitService;
+            _unitApiClient = unitApiClient;
             _localStorage = localStorage;
         }
 
@@ -33,7 +33,7 @@ namespace Pinula.Shared.Services
             {
                 if (!string.IsNullOrWhiteSpace(barcode) && ingredientDto == null)
                 {
-                    var allLocalUnits = await _unitService.GetAllUnitsAsync();
+                    var allLocalUnits = await _unitApiClient.GetAllUnitsAsync();
                     var defaultUnit = allLocalUnits.FirstOrDefault(u => u.Code.ToLower() == "g") ?? allLocalUnits.FirstOrDefault();
 
                     if (defaultUnit == null)

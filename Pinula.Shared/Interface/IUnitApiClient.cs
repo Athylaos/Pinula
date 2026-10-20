@@ -2,7 +2,7 @@
 
 namespace Pinula.Shared.Interface
 {
-    public interface IUnitService
+    public interface IUnitApiClient
     {
         public Task<List<UnitPreviewDto>> GetAllUnitsAsync();
         public Task<List<UnitPreviewDto>> GetAllServingUnitsAsync();

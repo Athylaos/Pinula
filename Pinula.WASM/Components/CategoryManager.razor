@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject ICategoryService CategoryService
+@inject ICategoryApiClient CategoryApiClient
 
 <h3>Manage Categories</h3>
 
@@ -123,7 +123,7 @@ else
 
     private async Task LoadCategories()
     {
-        displayCategories = await CategoryService.GetAllCategoriesAdminAsync();
+        displayCategories = await CategoryApiClient.GetAllCategoriesAdminAsync();
         StateHasChanged();
     }
 
@@ -139,14 +139,14 @@ else
         var dto = new CategoryCreateDto { Names = newNames, ParentCategory = selectedParentId, SortOrder = newSortOrder };
         Stream? stream = null;
         if (selectedFile != null) stream = selectedFile.OpenReadStream(5 * 1024 * 1024);
-        var resultId = await CategoryService.SaveCategoryAsync(dto, stream, selectedFile?.Name, selectedFile?.ContentType);
+        var resultId = await CategoryApiClient.SaveCategoryAsync(dto, stream, selectedFile?.Name, selectedFile?.ContentType);
         if (resultId != null) { newCategoryNameEn = ""; newCategoryNameCs = ""; selectedParentId = null; newSortOrder = 0; selectedFile = null; selectedFileName = ""; await LoadCategories(); }
         else { statusMessage = "Failed to create category."; }
     }
 
     private async Task HandleDelete(Guid id)
     {
-        if (await CategoryService.DeleteCategoryAsync(id)) await LoadCategories();
+        if (await CategoryApiClient.DeleteCategoryAsync(id)) await LoadCategories();
         else statusMessage = "Cannot delete: Category has children or is used.";
     }
 }

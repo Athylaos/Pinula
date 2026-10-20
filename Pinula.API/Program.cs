@@ -125,6 +125,14 @@ builder.Services.AddLocalization();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddHttpClient<IEmailService, EmailService>();
 
+builder.Services.AddScoped<ICategoryBackendService, CategoryBackendService>();
+builder.Services.AddScoped<IIngredientBackendService, IngredientBackendService>();
+builder.Services.AddScoped<IInventoryBackendService, InventoryBackendService>();
+builder.Services.AddScoped<IMealPlanBackendService, MealPlanBackendService>();
+builder.Services.AddScoped<IRecipeBackendService, RecipeBackendService>();
+builder.Services.AddScoped<IUnitBackendService, UnitBackendService>();
+builder.Services.AddScoped<IUserBackendService, UserBackendService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

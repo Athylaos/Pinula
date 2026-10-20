@@ -2,7 +2,7 @@
 
 namespace Pinula.Shared.Interface
 {
-    public interface ICategoryService
+    public interface ICategoryApiClient
     {
         public Task<List<CategoryDisplayDto>> GetAllCategoriesAsync();
 

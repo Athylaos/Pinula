@@ -3,7 +3,7 @@
 @using Pinula.Shared.DTOs
 @using Pinula.WASM.Components
 @page "/inventory/shoppingList"
-@inject IInventoryService InventoryService
+@inject IInventoryApiClient InventoryApiClient
 @inject IStringLocalizer<App> Localizer
 @inject NavigationManager NavManager
 
@@ -134,7 +134,7 @@
     private async Task LoadShoppingList()
     {
         isLoading = true;
-        ShoppingItems = await InventoryService.GetAllShoppingItemsAsync();
+        ShoppingItems = await InventoryApiClient.GetAllShoppingItemsAsync();
         isLoading = false;
     }
 
@@ -142,7 +142,7 @@
     private void HandleItemDeleted(Guid id)
     {
         ShoppingItems.Remove(ShoppingItems.First(i => i.Id == id));
-        InventoryService.DeleteShoppingItemAsync(id);
+        InventoryApiClient.DeleteShoppingItemAsync(id);
     }
     
     private void ToggleAddInventoryModal()
@@ -152,14 +152,14 @@
 
     private async Task AddShoppingItem(ShoppingItemCreateDto itemDto)
     {
-        await InventoryService.CreateShoppingItemAsync(itemDto);
+        await InventoryApiClient.CreateShoppingItemAsync(itemDto);
         await LoadShoppingList();
     }
 
     private async Task RemoveItem(ShoppingItemDisplayDto item)
     {
         ShoppingItems.Remove(item);
-        await InventoryService.DeleteShoppingItemAsync(item.Id);
+        await InventoryApiClient.DeleteShoppingItemAsync(item.Id);
     }
 
     private async Task ChangePurchasedStatus(ShoppingItemDisplayDto item)
@@ -168,7 +168,7 @@
 
         try
         {
-            var success = await InventoryService.ChangeShoppingItemPurchasedAsync(item.Id);
+            var success = await InventoryApiClient.ChangeShoppingItemPurchasedAsync(item.Id);
         
             if (!success)
             {
@@ -196,7 +196,7 @@
 
     private async Task AddShoppingListItemsToPantry(List<InventoryItemCreateDto> dtos)
     {
-        var success = await InventoryService.AddShoppingListItemToPantry(dtos);
+        var success = await InventoryApiClient.AddShoppingListItemToPantry(dtos);
         if (success)
         {
             ShoppingItems.RemoveAll(si => si.IsPurchased);

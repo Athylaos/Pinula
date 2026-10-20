@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IUnitService UnitService
+@inject IUnitApiClient UnitApiClient
 
 <h3>Manage Units</h3>
 
@@ -71,7 +71,7 @@ else
 
     private async Task LoadUnits()
     {
-        var result = await UnitService.GetAllUnitsAdminAsync();
+        var result = await UnitApiClient.GetAllUnitsAdminAsync();
         units = result.ToList();
     }
 
@@ -79,7 +79,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(newUnitNameCs) || string.IsNullOrWhiteSpace(newUnitNameEn) || string.IsNullOrWhiteSpace(newUnitCode)) return;
 
-        var success = await UnitService.CreateUnitAsync(new UnitDto { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
+        var success = await UnitApiClient.CreateUnitAsync(new UnitDto { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
         if (success)
         {
             newUnitCode = "";
@@ -97,7 +97,7 @@ else
 
     private async Task HandleDelete(Guid id)
     {
-        var success = await UnitService.DeleteUnitAsync(id);
+        var success = await UnitApiClient.DeleteUnitAsync(id);
         if (success)
         {
             statusMessage = "";

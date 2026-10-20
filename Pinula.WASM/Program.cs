@@ -42,13 +42,13 @@ builder.Services.AddHttpClient("CookApi", client =>
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-builder.Services.AddHttpClient<IIngredientService, IngredientService>("CookApi");
-builder.Services.AddHttpClient<IRecipeService, RecipeService>("CookApi");
-builder.Services.AddHttpClient<ICategoryService, CategoryService>("CookApi");
-builder.Services.AddHttpClient<IUserService, UserService>("CookApi");
-builder.Services.AddHttpClient<IUnitService, UnitService>("CookApi");
-builder.Services.AddHttpClient<IMealPlanService, MealPlanService>("CookApi");
-builder.Services.AddHttpClient<IInventoryService, InventoryService>("CookApi");
+builder.Services.AddHttpClient<IIngredientApiClient, IngredientApiClient>("CookApi");
+builder.Services.AddHttpClient<IRecipeApiClient, RecipeApiClient>("CookApi");
+builder.Services.AddHttpClient<ICategoryApiClient, CategoryApiClient>("CookApi");
+builder.Services.AddHttpClient<IUserApiClient, UserApiClient>("CookApi");
+builder.Services.AddHttpClient<IUnitApiClient, UnitApiClient>("CookApi");
+builder.Services.AddHttpClient<IMealPlanApiClient, MealPlanApiClient>("CookApi");
+builder.Services.AddHttpClient<IInventoryApiClient, InventoryApiClient>("CookApi");
 builder.Services.AddHttpClient<OFFService>(client =>
 {
     client.DefaultRequestHeaders.Clear();

@@ -4,7 +4,7 @@
 @using Pinula.WASM.Services
 @using Microsoft.Extensions.Localization
 @using System.Globalization
-@inject IUserService UserService
+@inject IUserApiClient UserApiClient
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
 @inject ApiAuthenticationStateProvider AuthStateProvider
@@ -84,7 +84,7 @@
         try
         {
             var loginDto = new UserLoginDto { Email = email, Password = password };
-            var result = await UserService.LoginAsync(loginDto);
+            var result = await UserApiClient.LoginAsync(loginDto);
 
             if (!result)
             {

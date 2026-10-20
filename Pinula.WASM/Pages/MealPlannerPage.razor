@@ -5,11 +5,11 @@
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
 @using System.Globalization
-@inject IMealPlanService MealPlanService
+@inject IMealPlanApiClient MealPlanApiClient
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
-@inject IRecipeService RecipeService
-@inject IUserService UserService
+@inject IRecipeApiClient RecipeApiClient
+@inject IUserApiClient UserApiClient
 @inject IStringLocalizer<App> Localizer
 @inject ILocalStorage LocalStorage
 
@@ -198,7 +198,7 @@
     private async Task LoadData()
     {
         IsLoading = true;
-        groupDetail = await MealPlanService.GetMyGroupAsync();
+        groupDetail = await MealPlanApiClient.GetMyGroupAsync();
         if (groupDetail is null)
         {
             isNotInGroup = true;
@@ -214,9 +214,9 @@
         _loadedFromDate = from;
         _loadedToDate = to;
 
-        WeeklyPlans = await MealPlanService.GetMyGroupMealPlansAsync(from, to) ?? new();
-        Members = await MealPlanService.GetMembersAsync();
-        fvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
+        WeeklyPlans = await MealPlanApiClient.GetMyGroupMealPlansAsync(from, to) ?? new();
+        Members = await MealPlanApiClient.GetMembersAsync();
+        fvRecipes = await RecipeApiClient.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
         IsLoading = false;
     }
 
@@ -255,13 +255,13 @@
 
         if (direction && SelectedWeekStartDate > _loadedToDate)
         {
-            var wp = await MealPlanService.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
+            var wp = await MealPlanApiClient.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
             WeeklyPlans.AddRange(wp);
             _loadedToDate = targetWeekEnd;
         }
         else if (!direction && targetWeekEnd < _loadedFromDate)
         {
-            var wp = await MealPlanService.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
+            var wp = await MealPlanApiClient.GetMyGroupMealPlansAsync(SelectedWeekStartDate, targetWeekEnd) ?? new();
             WeeklyPlans.AddRange(wp);
             _loadedFromDate = SelectedWeekStartDate;
         }
@@ -285,7 +285,7 @@
     private async Task HandleCreateGroup(string name)
     {
         IsLoading = true;
-        var result = await MealPlanService.CreateGroupAsync(new GroupCreateDto { Name = name });
+        var result = await MealPlanApiClient.CreateGroupAsync(new GroupCreateDto { Name = name });
         if (result != null)
         {
             showGroupModal = false;
@@ -297,7 +297,7 @@
     private async Task HandleJoinGroup(string code)
     {
         IsLoading = true;
-        var success = await MealPlanService.JoinGroupAsync(code);
+        var success = await MealPlanApiClient.JoinGroupAsync(code);
         if (success)
         {
             showGroupModal = false;
@@ -313,7 +313,7 @@
     private async Task HandleLeaveGroup()
     {
         IsLoading = true;
-        var success = await MealPlanService.LeaveGroupAsync();
+        var success = await MealPlanApiClient.LeaveGroupAsync();
         if (success)
         {
             showGroupModal = false;
@@ -324,7 +324,7 @@
 
     private async Task HandleUpdateGroupName(string newName)
     {
-        await MealPlanService.RenameGroupAsync(newName);
+        await MealPlanApiClient.RenameGroupAsync(newName);
         await LoadData();
         showGroupModal = false;
         StateHasChanged();
@@ -363,7 +363,7 @@
 
     private async Task SaveUpdatedPlanToDb(MealPlanUpdateDto updatedDto)
     {
-        var suc = await MealPlanService.UpdateMealPlanAsync(updatedDto);
+        var suc = await MealPlanApiClient.UpdateMealPlanAsync(updatedDto);
 
         if (suc)
         {
@@ -373,7 +373,7 @@
 
     private async Task DeletePlanFromDb(Guid id)
     {
-        var suc = await MealPlanService.RemoveRecipeFromPlanAsync(id);
+        var suc = await MealPlanApiClient.RemoveRecipeFromPlanAsync(id);
 
         if (suc)
         {
@@ -404,7 +404,7 @@
         IsLoading = true;
         showPlanMealModal = false;
 
-        await MealPlanService.AddRecipeToPlanAsync(newPlan);
+        await MealPlanApiClient.AddRecipeToPlanAsync(newPlan);
         await LoadData();
     }
 

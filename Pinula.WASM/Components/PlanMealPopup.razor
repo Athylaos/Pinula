@@ -3,7 +3,7 @@
 @using Pinula.Shared.Interface
 @using Microsoft.Extensions.Localization
 @using Pinula.WASM.Services
-@inject IRecipeService RecipeService
+@inject IRecipeApiClient RecipeApiClient
 @inject IStringLocalizer<App> Localizer
 
 <div class="modal-overlay" @onclick="Cancel">
@@ -163,7 +163,7 @@
 
     private async Task LoadRecipeIngredients()
     {
-        RecipeDetailsDto = await RecipeService.GetRecipeDetailsAsync(SelectedRecipeId.Value);
+        RecipeDetailsDto = await RecipeApiClient.GetRecipeDetailsAsync(SelectedRecipeId.Value);
         MealPlanIngredients.Clear();
         foreach (var ing in RecipeDetailsDto.RecipeIngredients)
         {
@@ -208,7 +208,7 @@
 
     private async Task LoadData()
     {
-        FvRecipes = await RecipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
+        FvRecipes = await RecipeApiClient.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { OnlyFavorites = true, Amount = 50 }, null);
     
         if (PreselectedRecipeId.HasValue)
         {

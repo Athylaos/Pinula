@@ -5,9 +5,9 @@
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<App> Localizer
-@inject IRecipeService recipeService
-@inject ICategoryService categoryService
-@inject IUserService userService
+@inject IRecipeApiClient RecipeApiClient
+@inject ICategoryApiClient CategoryApiClient
+@inject IUserApiClient UserApiClient
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 
@@ -170,7 +170,7 @@
     {
         startLoading();
         filter.Skip = currentList.Count;
-        var results = await recipeService.GetFilteredRecipePreviewsAsync(filter, default);
+        var results = await RecipeApiClient.GetFilteredRecipePreviewsAsync(filter, default);
         var newList = results?.ToList() ?? new List<RecipePreviewDto>();
 
         if (!newList.Any() || newList.Count < filter.Amount)
@@ -203,15 +203,15 @@
         isLoading = true;
         try
         {
-            var categoriesTask = categoryService.GetMainCategoriesAsync();
-            var userTask = userService.GetCurrentUserAsync();
-            var recipeTask = recipeService.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { Amount = 1, MinRating = 3, Sort = SortBy.Newest }, null);
+            var categoriesTask = CategoryApiClient.GetMainCategoriesAsync();
+            var userTask = UserApiClient.GetCurrentUserAsync();
+            var recipeTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { Amount = 1, MinRating = 3, Sort = SortBy.Newest }, null);
 
-            var favouriteTask = recipeService.GetFilteredRecipePreviewsAsync(_favouriteFilter, null);
-            var latestTask = recipeService.GetFilteredRecipePreviewsAsync(_latestFilter, null);
-            var fastTask = recipeService.GetFilteredRecipePreviewsAsync(_fastFilter, null);
-            var bestTask = recipeService.GetFilteredRecipePreviewsAsync(_bestFilter, null);
-            var mineTask = recipeService.GetFilteredRecipePreviewsAsync(_mineFilter, null);
+            var favouriteTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_favouriteFilter, null);
+            var latestTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_latestFilter, null);
+            var fastTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_fastFilter, null);
+            var bestTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_bestFilter, null);
+            var mineTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(_mineFilter, null);
 
             await Task.WhenAll(categoriesTask, userTask, recipeTask, favouriteTask, latestTask, fastTask, bestTask, mineTask);
 
@@ -249,7 +249,7 @@
 
         isActuallySearching = true;
 
-        var recipes = await recipeService.GetFilteredRecipePreviewsAsync(activeParams, null);
+        var recipes = await RecipeApiClient.GetFilteredRecipePreviewsAsync(activeParams, null);
         searchedRecipes = recipes?.ToList() ?? new();
     }
 

@@ -8,13 +8,13 @@ using System.Text;
 
 namespace Pinula.Shared.Services
 {
-    public class MealPlanService : IMealPlanService
+    public class MealPlanApiClient : IMealPlanApiClient
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<MealPlanService> _logger;
+        private readonly ILogger<MealPlanApiClient> _logger;
         private const string BaseUrl = "mealplan";
 
-        public MealPlanService(HttpClient httpClient, ILogger<MealPlanService> logger)
+        public MealPlanApiClient(HttpClient httpClient, ILogger<MealPlanApiClient> logger)
         {
             _logger = logger;
             _httpClient = httpClient;

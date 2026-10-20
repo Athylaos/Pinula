@@ -6,11 +6,11 @@
 @using Pinula.Shared.Interface
 @using Pinula.WASM.Components
 @using Microsoft.Extensions.Localization
-@inject IUserService UserService
-@inject IRecipeService RecipeService
-@inject ICategoryService CategoryService
-@inject IUnitService UnitService
-@inject IIngredientService IngredientService
+@inject IUserApiClient UserApiClient
+@inject IRecipeApiClient RecipeApiClient
+@inject ICategoryApiClient CategoryApiClient
+@inject IUnitApiClient UnitApiClient
+@inject IIngredientApiClient IngredientApiClient
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IStringLocalizer<App> Localizer
@@ -237,7 +237,7 @@
     {
         isLoading = true;
 
-        userDto = await UserService.GetCurrentUserAsync();
+        userDto = await UserApiClient.GetCurrentUserAsync();
 
         if (userDto is null)
         {
@@ -245,14 +245,14 @@
             return;
         }
 
-        ServingUnits = await UnitService.GetAllServingUnitsAsync();
+        ServingUnits = await UnitApiClient.GetAllServingUnitsAsync();
 
-        var cats = await CategoryService.GetAllCategoriesAsync();
+        var cats = await CategoryApiClient.GetAllCategoriesAsync();
         RootCategories = MapDtoToSelectableTree(cats);
 
         if (IsEditMode)
         {
-            var existingRecipe = await RecipeService.GetRecipeDetailsAsync(RecipeId.Value);
+            var existingRecipe = await RecipeApiClient.GetRecipeDetailsAsync(RecipeId.Value);
 
             if (existingRecipe != null)
             {
@@ -422,11 +422,11 @@
         {
             if (IsEditMode)
             {
-                await RecipeService.UpdateRecipeAsync(dto, RecipeId.Value, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
+                await RecipeApiClient.UpdateRecipeAsync(dto, RecipeId.Value, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
             }
             else
             {
-                await RecipeService.SaveRecipeAsync(dto, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
+                await RecipeApiClient.SaveRecipeAsync(dto, photoStream, _selectedPhoto?.Name, _selectedPhoto?.ContentType);
             }
 
             await JSRuntime.InvokeVoidAsync("history.back");
@@ -517,7 +517,7 @@
 
     private async Task HandleDelete()
     {
-        var resp = await RecipeService.DeleteRecipeAsync(RecipeId ?? Guid.NewGuid());
+        var resp = await RecipeApiClient.DeleteRecipeAsync(RecipeId ?? Guid.NewGuid());
         if (resp)
         {
             GoBack();

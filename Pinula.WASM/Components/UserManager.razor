@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IUserService UserService
+@inject IUserApiClient UserApiClient
 @inject IJSRuntime JSRuntime
 
 <h3>Manage Users</h3>
@@ -101,7 +101,7 @@ else
 
     private async Task LoadUsers()
     {
-        var result = await UserService.AdminGetAllUsersAsync();
+        var result = await UserApiClient.AdminGetAllUsersAsync();
         users = result.ToList();
     }
 
@@ -139,7 +139,7 @@ else
             return;
         }
 
-        var success = await UserService.AdminChangePasswordAsync(selectedUser.Id, newPassword);
+        var success = await UserApiClient.AdminChangePasswordAsync(selectedUser.Id, newPassword);
 
         if (success)
         {
@@ -179,7 +179,7 @@ else
 
     private async Task ToggleComment(AdminUserDisplayDto user)
     {
-        var success = await UserService.AdminToggleCommentPermissionAsync(user.Id);
+        var success = await UserApiClient.AdminToggleCommentPermissionAsync(user.Id);
         if (success)
         {
             user.CanComment = !user.CanComment;
@@ -188,7 +188,7 @@ else
 
     private async Task ToggleRecipes(AdminUserDisplayDto user)
     {
-        var success = await UserService.AdminToggleRecipePermissionAsync(user.Id);
+        var success = await UserApiClient.AdminToggleRecipePermissionAsync(user.Id);
         if (success)
         {
             user.CanCreateRecipes = !user.CanCreateRecipes;

@@ -9,14 +9,14 @@ using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.Services
 {
-    public class UserService : IUserService
+    public class UserApiClient : IUserApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly ILocalStorage _tokenStorage;
-        private readonly ILogger<UserService> _logger;
+        private readonly ILogger<UserApiClient> _logger;
         private const string BaseUrl = "users";
 
-        public UserService(HttpClient httpClient, ILocalStorage tokenStorage, ILogger<UserService> logger)
+        public UserApiClient(HttpClient httpClient, ILocalStorage tokenStorage, ILogger<UserApiClient> logger)
         {
             _httpClient = httpClient;
             _tokenStorage = tokenStorage;

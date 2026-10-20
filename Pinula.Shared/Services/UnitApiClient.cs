@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Pinula.Shared.Services
 {
-    public class UnitService : IUnitService
+    public class UnitApiClient : IUnitApiClient
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<UnitService> _logger;
+        private readonly ILogger<UnitApiClient> _logger;
         private const string BaseUrl = "units";
 
-        public UnitService(HttpClient httpClient, ILogger<UnitService> logger)
+        public UnitApiClient(HttpClient httpClient, ILogger<UnitApiClient> logger)
         {
             _httpClient = httpClient;
             _logger = logger;

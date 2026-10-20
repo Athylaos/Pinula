@@ -2,7 +2,7 @@
 
 namespace Pinula.Shared.Interface
 {
-    public interface IIngredientService
+    public interface IIngredientApiClient
     {
         public Task<GeneralResponse> CreateIngredientAsync(IngredientCreateDto? ingredientDto, string? barcode, Stream? photoStream, string? photoName, string? contentType);
         public Task<List<IngredientPreviewDto>> GetFilteredIngredientPreviewsAsync(IngredientFilterParameters filter);

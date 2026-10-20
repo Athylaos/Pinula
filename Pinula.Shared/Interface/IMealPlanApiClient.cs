@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Pinula.Shared.Interface
 {
-    public interface IMealPlanService
+    public interface IMealPlanApiClient
     {
         Task<List<MealPlanPreviewDto>?> GetMyGroupMealPlansAsync(DateTime fromDate, DateTime toDate);
         Task<MealPlanPreviewDto?> GetMealPlanAsync(Guid id);

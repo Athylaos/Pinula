@@ -3,8 +3,8 @@
 @inject IStringLocalizer<App> Localizer
 @inject NavigationManager NavManager
 @inject IJSRuntime JsRuntime
-@inject IUserService UserService
-@inject IMealPlanService MealPlanService
+@inject IUserApiClient UserApiClient
+@inject IMealPlanApiClient MealPlanApiClient
 
 @if (IsVisible)
 {
@@ -37,7 +37,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        if (await UserService.IsUserLoggedInAsync() && await MealPlanService.GetMyGroupAsync() is null)
+        if (await UserApiClient.IsUserLoggedInAsync() && await MealPlanApiClient.GetMyGroupAsync() is null)
         {
             IsVisible = true;
         }

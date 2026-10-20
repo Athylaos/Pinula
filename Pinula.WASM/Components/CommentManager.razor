@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IRecipeService RecipeService
+@inject IRecipeApiClient RecipeApiClient
 @inject NavigationManager Navigation
 
 <h3>Manage Comments</h3>
@@ -67,12 +67,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        comments = await RecipeService.GetAdminCommentsAsync();
+        comments = await RecipeApiClient.GetAdminCommentsAsync();
     }
 
     private async Task HandleToggleComment(AdminCommentDto comment)
     {
-        var success = await RecipeService.AdminToggleCommentApprovalAsync(comment.Id);
+        var success = await RecipeApiClient.AdminToggleCommentApprovalAsync(comment.Id);
         if (success)
         {
             comment.IsApproved = !comment.IsApproved;

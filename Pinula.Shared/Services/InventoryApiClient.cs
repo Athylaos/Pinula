@@ -6,13 +6,13 @@ using Pinula.Shared.DTOs;
 namespace Pinula.Shared.Services;
 
 
-public class InventoryService : IInventoryService
+public class InventoryApiClient : IInventoryApiClient
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<InventoryService> _logger;
+    private readonly ILogger<InventoryApiClient> _logger;
     private const string BaseUrl = "inventory";
 
-    public InventoryService(HttpClient httpClient, ILogger<InventoryService> logger)
+    public InventoryApiClient(HttpClient httpClient, ILogger<InventoryApiClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;

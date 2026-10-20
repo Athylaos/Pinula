@@ -1,6 +1,6 @@
 ﻿@using Pinula.Shared.DTOs
 @using Pinula.Shared.Interface
-@inject IRecipeService RecipeService
+@inject IRecipeApiClient RecipeApiClient
 @inject NavigationManager Navigation
 
 <h3>Manage Recipes</h3>
@@ -91,19 +91,19 @@ else
             Amount = 100
         };
 
-        recipes = await RecipeService.GetFilteredRecipePreviewsAsync(adminParams, null);
+        recipes = await RecipeApiClient.GetFilteredRecipePreviewsAsync(adminParams, null);
     }
 
     private async Task SwitchApproval(RecipePreviewDto dto)
     {
         dto.IsApproved = !dto.IsApproved;
 
-        await RecipeService.AdminToggleRecipeApprovalAsync(dto.Id);
+        await RecipeApiClient.AdminToggleRecipeApprovalAsync(dto.Id);
     }
     private async Task SwitchChecked(RecipePreviewDto dto)
     {
         dto.Checked = !dto.Checked;
 
-        await RecipeService.AdminToggleRecipeCheckedAsync(dto.Id);
+        await RecipeApiClient.AdminToggleRecipeCheckedAsync(dto.Id);
     }
 }

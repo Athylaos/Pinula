@@ -4,7 +4,7 @@
 @using System.Net.Mail
 @using Microsoft.Extensions.Localization
 @using Pinula.Shared.Enums
-@inject IUserService UserService
+@inject IUserApiClient UserApiClient
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
@@ -169,7 +169,7 @@
 
         try
         {
-            var isEmailAvailable = await UserService.IsEmailAvailable(emailEntry);
+            var isEmailAvailable = await UserApiClient.IsEmailAvailable(emailEntry);
 
             if (!isEmailAvailable)
             {
@@ -177,7 +177,7 @@
                 return;
             }
 
-            var success = await UserService.SendCodeRequest(new VerificationCodeRequestDto 
+            var success = await UserApiClient.SendCodeRequest(new VerificationCodeRequestDto 
             { 
                 Email = emailEntry, 
                 CodeType = VerificationCodeType.Registration 
@@ -212,7 +212,7 @@
 
         try
         {
-            var result = await UserService.VerifyCodeRequest(new VerificationCodeVerifyDto
+            var result = await UserApiClient.VerifyCodeRequest(new VerificationCodeVerifyDto
             {
                 Email = emailEntry,
                 CodeType = VerificationCodeType.Registration,
@@ -287,13 +287,13 @@
                 VerificationToken = authenticationToken.Value
             };
 
-            var success = await UserService.RegisterAsync(registrationDto);
+            var success = await UserApiClient.RegisterAsync(registrationDto);
             if (!success)
             {
                 ShowError(Localizer["RegistrationError"]);
                 return;
             }
-            var loginResult = await UserService.LoginAsync(new UserLoginDto { Email = emailEntry, Password = password1 });
+            var loginResult = await UserApiClient.LoginAsync(new UserLoginDto { Email = emailEntry, Password = password1 });
             if (loginResult)
             {
                 try

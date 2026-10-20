@@ -4,8 +4,8 @@
 @using Pinula.Shared.Interface
 @using Pinula.WASM.Components
 @inject NavigationManager NavManager
-@inject IMealPlanService MealPlanService
-@inject IRecipeService RecipeService
+@inject IMealPlanApiClient MealPlanApiClient
+@inject IRecipeApiClient RecipeApiClient
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
 
@@ -116,11 +116,11 @@
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
-        mealPlan = await MealPlanService.GetMealPlanAsync(Id);
+        mealPlan = await MealPlanApiClient.GetMealPlanAsync(Id);
         
         if (mealPlan != null)
         {
-            recipe = await RecipeService.GetRecipeDetailsAsync(mealPlan.RecipeId);
+            recipe = await RecipeApiClient.GetRecipeDetailsAsync(mealPlan.RecipeId);
         }
 
         if (mealPlan is not null && recipe is not null) 
@@ -148,20 +148,20 @@
     
     private async Task OpenEditPopup()
     {
-        Members = await MealPlanService.GetMembersAsync();
+        Members = await MealPlanApiClient.GetMembersAsync();
         isVisibleEditPopup = true;
         editMealPopup.Open(mealPlan);
     }
 
     public async Task CookMealPlan()
     {
-        await MealPlanService.MarkAsCookedAsync(Id);
+        await MealPlanApiClient.MarkAsCookedAsync(Id);
         NavManager.NavigateTo("/planner");
     }
     
     public async Task DeleteMealPlan()
     {
-        await MealPlanService.RemoveRecipeFromPlanAsync(Id);
+        await MealPlanApiClient.RemoveRecipeFromPlanAsync(Id);
         NavManager.NavigateTo("/planner");
     }
     
@@ -169,9 +169,9 @@
     {
         isVisibleEditPopup = false;
         isLoading = true;
-        await MealPlanService.UpdateMealPlanAsync(dto);
+        await MealPlanApiClient.UpdateMealPlanAsync(dto);
         
-        mealPlan = await MealPlanService.GetMealPlanAsync(Id);
+        mealPlan = await MealPlanApiClient.GetMealPlanAsync(Id);
         if (mealPlan is not null) isLoading = false;
     }
     

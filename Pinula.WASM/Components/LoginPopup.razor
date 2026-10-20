@@ -3,7 +3,7 @@
 @inject IStringLocalizer<App> Localizer
 @inject NavigationManager NavManager
 @inject IJSRuntime JsRuntime
-@inject IUserService UserService
+@inject IUserApiClient UserApiClient
 
 @if (IsVisible)
 {
@@ -36,7 +36,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        if (!await UserService.IsUserLoggedInAsync())
+        if (!await UserApiClient.IsUserLoggedInAsync())
         {
             IsVisible = true;
         }

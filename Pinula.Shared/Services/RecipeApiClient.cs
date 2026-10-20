@@ -8,13 +8,13 @@ using System.Runtime.InteropServices;
 
 namespace Pinula.Shared.Services
 {
-    public class RecipeService : IRecipeService
+    public class RecipeApiClient : IRecipeApiClient
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<RecipeService> _logger;
+        private readonly ILogger<RecipeApiClient> _logger;
         private const string BaseUrl = "recipes";
 
-        public RecipeService(HttpClient httpClient, ILogger<RecipeService> logger)
+        public RecipeApiClient(HttpClient httpClient, ILogger<RecipeApiClient> logger)
         {
             _httpClient = httpClient;
             _logger = logger;
