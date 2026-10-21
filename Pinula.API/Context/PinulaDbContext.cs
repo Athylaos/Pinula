@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Pinula.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Pinula.API.Context;
 
@@ -266,6 +268,26 @@ public partial class PinulaDbContext : DbContext
             entity.HasOne(e => e.User).WithMany(u => u.VerificationCodes).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasIndex(e => new { e.Email, e.Code, e.Type, e.IsUsed });
         });
+        
+        var dictionaryJsonConverter = new ValueConverter<Dictionary<string, string>, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, string>()
+        );
+        
+        if (Database.ProviderName != "Npgsql.EntityFrameworkCore.PostgreSQL")
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(Dictionary<string, string>))
+                    {
+                        property.SetValueConverter(dictionaryJsonConverter);
+                        property.SetColumnType("TEXT");
+                    }
+                }
+            }
+        }
         
 
         OnModelCreatingPartial(modelBuilder);

@@ -9,6 +9,7 @@ using SixLabors.ImageSharp.Processing;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
+using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints
 {
@@ -17,50 +18,15 @@ namespace Pinula.API.Endpoints
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/categories").RequireRateLimiting("GeneralApiPolicy");
-            group.MapGet("/getAll", async (HttpRequest request, PinulaDbContext db) =>
+            
+            group.MapGet("/getAll", async (HttpRequest request, ICategoryBackendService categoryService) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
-                var defaultImage = "default_category.png";
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
-                var allCategories = await db.Categories.AsNoTracking().ToListAsync();
-
-                var categoriesByParent = allCategories.Where(c => c.ParentCategoryId != null).ToLookup(c => c.ParentCategoryId!.Value);
-                var rootCategories = allCategories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.SortOrder).ToList();
-
-                List<CategoryDisplayDto> GetChildren(Guid? parentId)
-                {
-                    if (parentId.HasValue && !categoriesByParent.Contains(parentId.Value))
-                    {
-                        return new List<CategoryDisplayDto>();
-                    }
-
-                    IEnumerable<Category> currentLevelItems = parentId.HasValue
-                        ? categoriesByParent[parentId.Value].OrderBy(c => c.SortOrder)
-                        : rootCategories.AsEnumerable();
-
-                    var resultList = new List<CategoryDisplayDto>();
-
-                    foreach (var cat in currentLevelItems)
-                    {
-                        var dto = new CategoryDisplayDto()
-                        {
-                            Id = cat.Id,
-                            ParentCategoryId = cat.ParentCategoryId,
-                            Name = cat.Names.GetValueOrDefault(languageCode) ?? cat.Names.GetValueOrDefault("en") ?? "Category",
-                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? defaultImage : cat.PictureUrl)}",
-                            SortOrder = cat.SortOrder,
-                            ChildCategories = GetChildren(cat.Id)
-                        };
-
-                        resultList.Add(dto);
-                    }
-
-                    return resultList;
-                }
-
-                var finalTree = GetChildren(null);
-                return Results.Ok(finalTree);
+                var categoriesTree = await categoryService.GetCategoriesTree(imageBaseUrl, languageCode);
+                
+                return Results.Ok(categoriesTree);
             });
 
 
