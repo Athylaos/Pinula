@@ -1,1 +1,1 @@
-![Build & Test Status](https://github.com/Athylaos/Pinula/actions/workflows/tests.yml/badge.svg)
+![Build & Test Status](https://github.com/Athylaos/Pinula/actions/workflows/test.yml/badge.svg)
