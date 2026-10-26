@@ -53,25 +53,7 @@ namespace Pinula.Shared.Services
             }
             return null;
         }
-
-        public async Task<List<CategoryDisplayDto>> GetMainCategoriesAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"{BaseUrl}/getMain");
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<List<CategoryDisplayDto>>() ?? new();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"error while loading categories: {ex.Message}");
-            }
-            return new List<CategoryDisplayDto>();
-        }
-
-
+        
         public async Task<Guid?> SaveCategoryAsync(CategoryCreateDto dto, Stream? photoStream, string? photoName, string? contentType)
         {
             try
@@ -92,11 +74,21 @@ namespace Pinula.Shared.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<Guid>();
+                    var result = await response.Content.ReadFromJsonAsync<CreateCategoryResponse>();
+                    return result?.CreatedCategoryId;
+                }
+                
+                try
+                {
+                    var errorResponse = await response.Content.ReadFromJsonAsync<CreateCategoryResponse>();
+                    _logger.LogWarning($"Category creation failed ({response.StatusCode}): {errorResponse?.Message}");
+                }
+                catch
+                {
+                    var rawError = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning($"Category creation failed ({response.StatusCode}): {rawError}");
                 }
 
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning($"Category creation failed: {error}");
                 return null;
             }
             catch (Exception ex)
@@ -116,9 +108,18 @@ namespace Pinula.Shared.Services
                 {
                     return true;
                 }
+                
+                try
+                {
+                    var errorResponse = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                    _logger.LogWarning($"Category delete failed ({response.StatusCode}): {errorResponse?.Message}");
+                }
+                catch
+                {
+                    var rawError = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning($"Category delete failed ({response.StatusCode}): {rawError}");
+                }
 
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning($"Category delete failed: {error}");
                 return false;
             }
             catch (Exception ex)

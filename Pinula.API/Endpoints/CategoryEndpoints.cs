@@ -9,6 +9,7 @@ using SixLabors.ImageSharp.Processing;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints
@@ -29,73 +30,20 @@ namespace Pinula.API.Endpoints
                 return Results.Ok(categoriesTree);
             });
 
-
-            //---------------------------------------------------------------Get main categories
-            group.MapGet("/getMain", async (HttpRequest request, PinulaDbContext db) =>
-            {
-                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
-                var defaultImage = "default_category.png";
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-
-                return await db.Categories.AsNoTracking().Where(c => c.ParentCategoryId == null).Include(c => c.ChildCategories).OrderBy(c => c.SortOrder).Select(category => new CategoryDisplayDto()
-                {
-                    Id = category.Id,
-                    ParentCategoryId = category.ParentCategoryId,
-                    Name = category.Names.GetValueOrDefault(languageCode) ?? category.Names.GetValueOrDefault("en") ?? "Category",
-                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(category.PictureUrl) ? defaultImage : category.PictureUrl)}",
-                    SortOrder = category.SortOrder,
-                    ChildCategories = category.ChildCategories
-                        .OrderBy(sub => sub.SortOrder)
-                        .Select(sub => new CategoryDisplayDto()
-                        {
-                            Id = sub.Id,
-                            ParentCategoryId = sub.ParentCategoryId,
-                            Name = sub.Names.GetValueOrDefault(languageCode) ?? sub.Names.GetValueOrDefault("en") ?? "Subcategory",
-                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? defaultImage : sub.PictureUrl)}",
-                            SortOrder = sub.SortOrder,
-                            ChildCategories = new List<CategoryDisplayDto>()
-                        }).ToList()
-                }).ToListAsync();
-            });
-
             //---------------------------------------------------------------Get category
-            group.MapGet("/get/{categoryId:guid}", async (HttpRequest request, Guid categoryId, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapGet("/get/{categoryId:guid}", async (HttpRequest request, Guid categoryId, ICategoryBackendService categoryService) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
-                var defaultImage = "default_category.png";
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
-                var category = await db.Categories.AsNoTracking().Include(c => c.ChildCategories).FirstOrDefaultAsync(c => c.Id == categoryId);
+                var categoryDto = await categoryService.GetCategoryWithChildren(imageBaseUrl, languageCode, categoryId);
 
-                if (category is null) return Results.NotFound("Category not found");
-
-                var categoryDto = new CategoryDisplayDto()
-                {
-                    Id = category.Id,
-                    ParentCategoryId = category.ParentCategoryId,
-                    Name = category.Names.GetValueOrDefault(languageCode) ?? category.Names.GetValueOrDefault("en") ?? "Category",
-                    PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(category.PictureUrl) ? defaultImage : category.PictureUrl)}",
-                    SortOrder = category.SortOrder,
-                    ChildCategories = category.ChildCategories
-                        .OrderBy(sub => sub.SortOrder)
-                        .Select(sub => new CategoryDisplayDto()
-                        {
-                            Id = sub.Id,
-                            ParentCategoryId = sub.ParentCategoryId,
-                            Name = sub.Names.GetValueOrDefault(languageCode) ?? sub.Names.GetValueOrDefault("en") ?? "Subcategory",
-                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? defaultImage : sub.PictureUrl)}",
-                            SortOrder = sub.SortOrder,
-                            ChildCategories = new List<CategoryDisplayDto>()
-                        }).ToList()
-                };
-
-                return Results.Ok(categoryDto);
+                return categoryDto is null ? Results.NotFound("Category not found") : Results.Ok(categoryDto);
             });
 
             //---------------------------------------------------------------Create category
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapPost("/create", async (HttpRequest request, ICategoryBackendService categoryService, IWebHostEnvironment env) =>
             {
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var form = await request.ReadFormAsync();
                 var dtoStr = form["categoryData"];
 
@@ -103,128 +51,42 @@ namespace Pinula.API.Endpoints
 
                 var dto = JsonSerializer.Deserialize<CategoryCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (dto == null) return Results.BadRequest("Unvalid category data.");
-
-                string finalPhotoUrl = "default_category_picture.png";
+                
                 var file = form.Files.GetFile("image");
 
-                if (file is { Length: > 0 })
+                var response = await categoryService.CreateCategory(dto, file, env);
+
+                return response.StatusCode switch
                 {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-                    if (!allowedExtensions.Contains(extension))
-                        return Results.BadRequest("Unsupported file image.");
-
-                    var uploadFolder = Path.Combine(env.WebRootPath, "images", "categories");
-                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-                    var fileName = $"{Guid.NewGuid()}.jpg";
-                    var filePath = Path.Combine(uploadFolder, fileName);
-
-                    try
-                    {
-                        using (var image = await Image.LoadAsync(file.OpenReadStream()))
-                        {
-                            image.Mutate(x => x.Resize(new ResizeOptions
-                            {
-                                Mode = ResizeMode.Max,
-                                Size = new Size(800, 0)
-                            }));
-
-                            await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
-                            {
-                                Quality = 100
-                            });
-                        }
-                        finalPhotoUrl = fileName;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error while processing image: {ex.Message}");
-                    }
-                }
-
-                var newCategory = new Category
-                {
-                    Id = Guid.NewGuid(),
-                    Names = dto.Names,
-                    SortOrder = dto.SortOrder,
-                    ParentCategoryId = dto.ParentCategory,
-                    PictureUrl = finalPhotoUrl
+                    201 => Results.Created($"/categories/get/{response.CreatedCategoryId}", response),
+                    400 => Results.BadRequest(response),
+                    500 => Results.InternalServerError(response),
+                    _   => Results.Json(response, statusCode: response.StatusCode)
                 };
-
-                db.Categories.Add(newCategory);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(newCategory.Id);
+                
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete category
-            group.MapDelete("/delete/{id:guid}", async (Guid id, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapDelete("/delete/{id:guid}", async (Guid id, ICategoryBackendService categoryService, IWebHostEnvironment env) =>
             {
-                var category = await db.Categories
-                    .Include(c => c.ChildCategories)
-                    .Include(c => c.Recipes)
-                    .FirstOrDefaultAsync(c => c.Id == id);
+                var response = await categoryService.DeleteCategory(id, env);
 
-                if (category == null) return Results.NotFound("Category not found.");
-
-                if (category.ChildCategories.Any())
-                    return Results.BadRequest("Category has subcategories");
-
-                if (category.Recipes.Any())
-                    return Results.BadRequest("Category is linked to recipes");
-
-                if (category.PictureUrl != "default_category_picture.png")
+                return response.StatusCode switch
                 {
-                    var filePath = Path.Combine(env.WebRootPath, "images", "categories", category.PictureUrl);
-                    if (File.Exists(filePath)) File.Delete(filePath);
-                }
-
-                db.Categories.Remove(category);
-                await db.SaveChangesAsync();
-
-                return Results.NoContent();
+                    204 => Results.NoContent(),
+                    400 => Results.BadRequest(response),
+                    404 => Results.NotFound(response),
+                    _   => Results.Json(response, statusCode: response.StatusCode)
+                };
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get all categories admin (Flattened with Level)
-            group.MapGet("/getAllAdmin", async (HttpRequest request, PinulaDbContext db) =>
+            group.MapGet("/getAllAdmin", async (HttpRequest request, ICategoryBackendService categoryService) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
-                var defaultImage = "default_category.png";
 
-                var allCategories = await db.Categories.AsNoTracking().ToListAsync();
-
-                var rootCategories = allCategories.Where(c => c.ParentCategoryId == null || c.ParentCategoryId == Guid.Empty).OrderBy(c => c.SortOrder).ToList();
-
-                var rootList = new List<AdminCategoryDisplayDto>();
-
-                void RootCategoryTree(List<Category> currentLevelItems, int level)
-                {
-                    foreach (var cat in currentLevelItems)
-                    {
-                        var dto = new AdminCategoryDisplayDto()
-                        {
-                            Id = cat.Id,
-                            ParentCategoryId = cat.ParentCategoryId,
-                            Names = cat.Names, // Posíláme celý Dictionary se všemi překlady
-                            PictureUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? defaultImage : cat.PictureUrl)}",
-                            SortOrder = cat.SortOrder,
-                            Level = level
-                        };
-                        rootList.Add(dto);
-
-                        var children = allCategories.Where(sub => sub.ParentCategoryId == cat.Id).OrderBy(sub => sub.SortOrder).ToList();
-
-                        if (children.Any())
-                        {
-                            RootCategoryTree(children, level + 1);
-                        }
-                    }
-                }
-
-                RootCategoryTree(rootCategories, 0);
-                return Results.Ok(rootList);
+                var categories = await categoryService.GetAllAdminCategoriesFlattened(imageBaseUrl);
+                return Results.Ok(categories);
             }).RequireAuthorization("AdminOnly");
 
 

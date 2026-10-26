@@ -8,8 +8,6 @@ namespace Pinula.Shared.Interface
 
         public Task<CategoryDisplayDto?> GetCategoryByIdAsync(Guid id);
 
-        public Task<List<CategoryDisplayDto>> GetMainCategoriesAsync();
-
         public Task<Guid?> SaveCategoryAsync(CategoryCreateDto dto, Stream? photoStream, string? photoName, string? contentType);
 
         public Task<bool> DeleteCategoryAsync(Guid categoryId);

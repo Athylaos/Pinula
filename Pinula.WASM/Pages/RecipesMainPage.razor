@@ -203,7 +203,7 @@
         isLoading = true;
         try
         {
-            var categoriesTask = CategoryApiClient.GetMainCategoriesAsync();
+            var categoriesTask = CategoryApiClient.GetAllCategoriesAsync();
             var userTask = UserApiClient.GetCurrentUserAsync();
             var recipeTask = RecipeApiClient.GetFilteredRecipePreviewsAsync(new RecipeFilterParameters { Amount = 1, MinRating = 3, Sort = SortBy.Newest }, null);
 
