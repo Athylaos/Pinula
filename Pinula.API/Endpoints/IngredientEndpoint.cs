@@ -43,541 +43,131 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/ingredients").RequireRateLimiting("GeneralApiPolicy");
 
             //---------------------------------------------------------------Get filtered previews
-            group.MapGet("/getFilteredPreviews", async ([AsParameters] IngredientFilterParameters filter, PinulaDbContext db, HttpRequest request) =>
+            group.MapGet("/getFilteredPreviews", async ([AsParameters] IngredientFilterParameters filter, IIngredientBackendService ingredientService, HttpRequest request) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 filter.Amount = (filter.Amount > 0) ? filter.Amount : 20;
-
-                var query = db.Ingredients
-                    .AsNoTracking()
-                    .Include(i => i.DefaultUnit)
-                    .Include(i => i.IngredientUnits)
-                    .ThenInclude(iu => iu.Unit)
-                    .AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(filter.Barcode))
-                {
-                    query = query.Where(i => i.Barcode == filter.Barcode);
-                }
-                else if (string.IsNullOrWhiteSpace(filter.SearchTerm))
-                {
-                    return Results.Ok(new List<IngredientPreviewDto>());
-                }
-
-                var rawIngredients = await query.ToListAsync();
-
-                if (string.IsNullOrWhiteSpace(filter.Barcode) && !string.IsNullOrWhiteSpace(filter.SearchTerm))
-                {
-                    var searchTokens = filter.SearchTerm
-                        .RemoveDiacritics()
-                        .ToLowerInvariant()
-                        .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                    rawIngredients = rawIngredients
-                        .Select(i => new
-                        {
-                            Ingredient = i,
-                            NormalizedNames = new[]
-                                {
-                                    i.Names.GetValueOrDefault(languageCode),
-                                    i.Names.GetValueOrDefault("en")
-                                }
-                                .Where(name => !string.IsNullOrEmpty(name))
-                                .Select(name => name!.RemoveDiacritics().ToLowerInvariant())
-                                .ToList()
-                        })
-                        .Where(x =>
-                        {
-                            return searchTokens.All(token =>
-                                x.NormalizedNames.Any(name => name.Contains(token))
-                            );
-                        })
-                        .OrderByDescending(x => x.NormalizedNames.Any(name => name.StartsWith(searchTokens[0])))
-                        .Select(x => x.Ingredient)
-                        .ToList();
-                }
-                
+                filter.Amount = (filter.Amount < 25) ? filter.Amount : 25;
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
-                var defaultImage = "default_ingredient.png";
 
-                var results = rawIngredients
-                    .Take(filter.Amount)
-                    .Select(i => new IngredientPreviewDto
-                    {
-                        Id = i.Id,
-                        Name = i.Names.GetValueOrDefault(languageCode) ?? i.Names.GetValueOrDefault("en") ?? "Ingredient",
-                        ImageUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(i.ImageUrl) ? defaultImage : i.ImageUrl)}",
-                        DefaultUnit = new UnitPreviewDto
-                        {
-                            Id = i.DefaultUnit.Id,
-                            Name = i.DefaultUnit.Names.GetValueOrDefault(languageCode) ?? i.DefaultUnit.Names.GetValueOrDefault("en") ?? "Unit",
-                            Code = i.DefaultUnit.Code,
-                            ConversionFactor = 1
-                        },
-                        IngredientUnits = i.IngredientUnits.Select(iu => new UnitPreviewDto
-                        {
-                            Id = iu.UnitId,
-                            Name = iu.Unit.Names.GetValueOrDefault(languageCode) ?? iu.Unit.Names.GetValueOrDefault("en") ?? "Unit",
-                            Code = iu.Unit.Code,
-                            ConversionFactor = iu.AmountInGrams
-                        }).ToList()
-                    }).ToList();
-
-                return Results.Ok(results);
+                var result = await ingredientService.GetFilteredPreviews(filter, imageBaseUrl, languageCode);
+                    
+                return Results.Ok(result);
             });
-
-
+            
             //---------------------------------------------------------------Create ingredient
-            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService) =>
+            group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, IIngredientBackendService ingredientService, IWebHostEnvironment env) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var userId = user.GetUserId();
-                
-                var form = await request.ReadFormAsync();
 
+                var form = await request.ReadFormAsync();
                 var dtoStr = form["ingredientData"];
-                if (string.IsNullOrEmpty(dtoStr)) return Results.BadRequest("Missing ingredient data.");
+    
+                if (string.IsNullOrEmpty(dtoStr)) 
+                    return Results.BadRequest(new CreateIngredientResponse { StatusCode = 400, Message = "Missing ingredient data." });
 
                 var dto = JsonSerializer.Deserialize<IngredientCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (dto == null) return Results.BadRequest("Invalid recipe data.");
+                if (dto == null) 
+                    return Results.BadRequest(new CreateIngredientResponse { StatusCode = 400, Message = "Invalid ingredient data payload." });
 
-                if (string.IsNullOrWhiteSpace(dto.Names[languageCode])) Results.BadRequest("Missing ingredient data.");
-                if (languageCode == "en")
-                {
-                    if(string.IsNullOrWhiteSpace(dto.Names["cs"]))
-                    {
-                        var translatedName = await translationService.TranslateTextAsync(dto.Names["en"], "cs");
-                        dto.Names["cs"] = translatedName??dto.Names["en"];
-                    }
-                    else if (string.IsNullOrWhiteSpace(dto.Names["en"]))
-                    {
-                        var translatedName = await translationService.TranslateTextAsync(dto.Names["cs"], "en");
-                        dto.Names["en"] = translatedName??dto.Names["cs"];
-                    }
-                }
-
-                var newId = Guid.NewGuid();
-                string finalPhotoUrl = "default_ingredient.png";
                 var file = form.Files.GetFile("image");
 
-                if (file is { Length: > 0 })
-                {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var result = await ingredientService.Create(dto, file, env, languageCode, userId);
 
-                    if (!allowedExtensions.Contains(extension))
-                        return Results.BadRequest("Unsupported image format.");
-
-                    var uploadFolder = Path.Combine(env.WebRootPath, "images", "ingredients");
-                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-                    var fileName = $"{newId}.webp";
-                    var filePath = Path.Combine(uploadFolder, fileName);
-
-                    try
-                    {
-                        using (var image = await Image.LoadAsync(file.OpenReadStream()))
-                        {
-                            image.Mutate(x => x.Resize(new ResizeOptions
-                            {
-                                Mode = ResizeMode.Max,
-                                Size = new Size(1200, 0)
-                            }));
-
-                            await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder()
-                            {
-                                Quality = 80
-                            });
-                        }
-
-                        finalPhotoUrl = fileName;
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Image Processing Error: {ex.Message}");
-                    }
-                }
-
-                try
-                {
-                    ShoppingCategory? ct = null;
-                    if (dto.ShoppingCategoryId is null)
-                    {
-                        if(dto.CategoryTagId is not null)
-                        {
-                            ct = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(ct => ct.Id == dto.CategoryTagId);
-                        }
-                        else
-                        {
-                            foreach(var cs in dto.CategoryTags)
-                            {
-                                var cts = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(sc => sc.Code == cs);
-                                if(cts is not null)
-                                {
-                                    ct = cts;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (ct is null)
-                        {
-                            ct = await db.ShoppingCategories
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(t => t.Code == "other");
-                        }  
-                    }
-                    else
-                    {
-                        ct = new() { Id = dto.ShoppingCategoryId.Value };
-                    }
-
-                    
-
-
-                    var ingredient = new Ingredient
-                    {
-                        Id = newId,
-                        UserId = userId,
-                        Names = dto.Names,
-                        Barcode = dto.Barcode,
-                        ImageUrl = finalPhotoUrl,
-                        ShoppingCategoryId = ct.Id,
-                        DefaultUnitId = dto.DefaultUnitId,
-                        IngredientCreated = DateTime.UtcNow,
-                        BaseIngredientId = dto.BaseIngredientId,
-                        OffCategoryTag = dto.OffCategoryTag,
-                        EdibleRatio = dto.EdibleRatio,
-                        
-                        Calories = dto.Calories,
-                        Proteins = dto.Proteins,
-                        Fats = dto.Fats,
-                        SaturatedFats = dto.SaturatedFats,
-                        Carbohydrates = dto.Carbohydrates,
-                        Sugars = dto.Sugars,
-                        Fiber = dto.Fiber,
-                        Salt = dto.Salt,
-
-                        NutriScore = dto.NutriScore,
-                        NovaClassification = dto.NovaClassification,
-                        IsVegan = dto.IsVegan,
-                        IsVegetarian = dto.IsVegetarian,
-                        IsGlutenFree = dto.IsGlutenFree,
-                        IsLactoseFree = dto.IsLactoseFree
-                    };
-
-                    if (dto.AdditionalUnits != null)
-                    {
-                        foreach (var iu in dto.AdditionalUnits)
-                        {
-                            ingredient.IngredientUnits.Add(new IngredientUnit
-                            {
-                                IngredientId = ingredient.Id,
-                                UnitId = iu.UnitId,
-                                AmountInGrams = iu.ToDefaultUnit
-                            });
-                        }
-                    }
-
-                    var allUnits = await db.Units.Select(u => new Unit(){Id = u.Id, Code = u.Code}).ToListAsync();
-                    var g = allUnits.FirstOrDefault(u => u.Code == "g");
-                    var kg = allUnits.FirstOrDefault(u => u.Code == "kg");
-                    var ml = allUnits.FirstOrDefault(u => u.Code == "ml");
-                    var l = allUnits.FirstOrDefault(u => u.Code == "l");
-                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == g.Id) is null)
-                    {
-                        ingredient.IngredientUnits.Add(new IngredientUnit
-                        {
-                            IngredientId = ingredient.Id,
-                            UnitId = g.Id,
-                            AmountInGrams = 1
-                        });
-                    }
-
-                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == kg.Id) is null)
-                    {
-                        ingredient.IngredientUnits.Add(new IngredientUnit
-                        {
-                            IngredientId = ingredient.Id,
-                            UnitId = kg.Id,
-                            AmountInGrams = 1000
-                        });
-                    }
-                    
-                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id) is not null && ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id) is null)
-                    {
-                        ingredient.IngredientUnits.Add(new IngredientUnit
-                        {
-                            IngredientId = ingredient.Id,
-                            UnitId = l.Id,
-                            AmountInGrams = ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id).AmountInGrams*1000
-                        });
-                    }
-                    
-                    if (ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id) is not null && ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == ml.Id) is null)
-                    {
-                        ingredient.IngredientUnits.Add(new IngredientUnit
-                        {
-                            IngredientId = ingredient.Id,
-                            UnitId = ml.Id,
-                            AmountInGrams = ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == l.Id).AmountInGrams/1000
-                        });
-                    }
-                    
-
-                    db.Ingredients.Add(ingredient);
-                    await db.SaveChangesAsync();
-
-                    return Results.Ok("Ingredient added successfully");
-                }
-                catch (Exception ex)
-                {
-                    return Results.Problem($"An error occurred while saving the ingredient. Ex: {ex.Message}");
-                }
-
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
 
             //---------------------------------------------------------------Get filtered previews
-            group.MapGet("/getAdminPreviews", async (int amount, int skip, HttpRequest request, PinulaDbContext db) =>
+            group.MapGet("/getAdminPreviews", async (int amount, int skip, HttpRequest request, IIngredientBackendService ingredientService) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
-                var defaultImage = "default_ingredient.png";
 
-
-                var list = await db.Ingredients.AsNoTracking().Select(i => new AdminIngredientPreviewDto
-                {
-                    Id = i.Id,
-                    IsDeleted = i.IsDeleted,
-                    IsApproved = i.IsApproved,
-                    IngredientCreated = i.IngredientCreated,
-                    Checked = i.Checked,
-                    Names = i.Names,
-                    ImageUrl = $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(i.ImageUrl) ? defaultImage : i.ImageUrl)}",
-                }).ToListAsync();
-
-
+                var list = await ingredientService.AdminGetPreviews(amount, skip, imageBaseUrl);
+                
                 return Results.Ok(list);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get ingredient detail admin
-            group.MapGet("/getAdmin/{ingredientId:guid}", async (Guid ingredientId, HttpRequest request, PinulaDbContext db) =>
+            group.MapGet("/getAdmin/{ingredientId:guid}", async (Guid ingredientId, HttpRequest request, IIngredientBackendService ingredientService) =>
             {
-                var ingredientDb = await db.Ingredients
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(i => i.DefaultUnit)
-                    .Include(i => i.ShoppingCategory)
-                    .Include(i => i.BaseIngredient)
-                    .Include(i => i.Creator)
-                    .Include(i => i.IngredientUnits)
-                        .ThenInclude(iu => iu.Unit)
-                    .FirstOrDefaultAsync(i => i.Id == ingredientId);
-                if (ingredientDb is null) return Results.NotFound();
-
-                var ingredientDto = ingredientDb.AdaptWithRequest<AdminIngredientDisplayDto>(request);
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
                 
-                return Results.Ok(ingredientDto);
+                var dto = await ingredientService.AdminGetDetails(ingredientId, imageBaseUrl, languageCode);
+                if (dto is null) return Results.NotFound("Ingredient not found");
+                
+                return Results.Ok(dto);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete ingredient admin
-            group.MapDelete("/deleteAdmin/{ingredientId:guid}", async (Guid ingredientId, PinulaDbContext db) =>
+            group.MapDelete("/deleteAdmin/{ingredientId:guid}", async (Guid ingredientId, IIngredientBackendService ingredientService) =>
             {
-
-                var ingredient = await db.Ingredients.FirstOrDefaultAsync(i => i.Id == ingredientId);
-                if (ingredient is null) return Results.NotFound(new GeneralResponse() { Successful = false, StatusCode = (int)HttpStatusCode.NotFound, Message = $"Ingredient with id:{ingredientId} does not exist." });
-
-                if(await db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == ingredientId)){
-                    ingredient.IsDeleted = true;
-                    await db.SaveChangesAsync();
-                    return Results.Ok(new GeneralResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} is used in recipes, successfuly SOFT deleted." });
-                }
-                else
-                {
-                    db.Remove(ingredient);
-                    await db.SaveChangesAsync();
-                    return Results.Ok(new GeneralResponse() { Successful = true, StatusCode = (int)HttpStatusCode.OK, Message = $"Ingredient with id:{ingredientId} successfuly permanently deleted." });
-                }          
+                var result = await ingredientService.AdminDelete(ingredientId);
+                
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Update ingredient admin
-            group.MapPut("/updateAdmin", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db, IWebHostEnvironment env) =>
+            group.MapPut("/updateAdmin", async (HttpRequest request, ClaimsPrincipal user, IIngredientBackendService ingredientService, IWebHostEnvironment env) =>
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var userId = user.GetUserId();
 
                 var form = await request.ReadFormAsync();
-
                 var dtoStr = form["ingredientData"];
-                if (string.IsNullOrEmpty(dtoStr)) return Results.BadRequest("Missing ingredient data.");
+
+                if (string.IsNullOrEmpty(dtoStr)) 
+                {
+                    return Results.BadRequest(new GeneralResponse 
+                    { 
+                        Successful = false, 
+                        StatusCode = 400, 
+                        Message = "Missing ingredient data." 
+                    });
+                }
 
                 var dto = JsonSerializer.Deserialize<IngredientCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (dto == null) return Results.BadRequest("Invalid ingredient data.");
-
-                var ingredient = await db.Ingredients.Include(i => i.IngredientUnits).FirstOrDefaultAsync(i => i.Id == dto.Id);
-                if (ingredient == null) return Results.NotFound($"Ingredient with id:{dto.Id} does not exist.");
-
-                string finalPhotoUrl = ingredient.ImageUrl;
-                if(finalPhotoUrl is not null)
+    
+                if (dto == null) 
                 {
-                    if (finalPhotoUrl.Contains("/ingredients/"))
-                    {
-                        const string target = "/ingredients/";
-                        int index = finalPhotoUrl.IndexOf(target);
-
-                        if (index == -1)
-                        {
-
-                        }
-                        else
-                        {
-                            int startIndex = index + target.Length;
-                            finalPhotoUrl = finalPhotoUrl[startIndex..];
-                        }
-                    }
+                    return Results.BadRequest(new GeneralResponse 
+                    { 
+                        Successful = false, 
+                        StatusCode = 400, 
+                        Message = "Invalid ingredient data payload." 
+                    });
                 }
 
                 var file = form.Files.GetFile("image");
 
-                if (file is { Length: > 0 })
-                {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var result = await ingredientService.AdminUpdate(dto, file, env, languageCode, userId);
 
-                    if (!allowedExtensions.Contains(extension))
-                        return Results.BadRequest("Unsupported image format.");
-
-                    var uploadFolder = Path.Combine(env.WebRootPath, "images", "ingredients");
-                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-                    var fileName = $"{Guid.NewGuid()}.jpg";
-                    var filePath = Path.Combine(uploadFolder, fileName);
-
-                    try
-                    {
-                        using (var image = await Image.LoadAsync(file.OpenReadStream()))
-                        {
-                            image.Mutate(x => x.Resize(new ResizeOptions
-                            {
-                                Mode = ResizeMode.Max,
-                                Size = new Size(1200, 0)
-                            }));
-
-                            await image.SaveAsJpegAsync(filePath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
-                            {
-                                Quality = 80
-                            });
-                        }
-
-                        if (!string.IsNullOrEmpty(ingredient.ImageUrl) && ingredient.ImageUrl != "default_ingredient.png")
-                        {
-                            var oldFilePath = Path.Combine(uploadFolder, ingredient.ImageUrl);
-                            if (File.Exists(oldFilePath))
-                            {
-                                File.Delete(oldFilePath);
-                            }
-                        }
-
-                        finalPhotoUrl = fileName;
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Image Processing Error: {ex.Message}");
-                    }
-                }
-
-                try
-                {
-                    var ct = await db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(ct => ct.Id == dto.ShoppingCategoryId);
-
-                    if (ct == null)
-                    {
-                        ct = await db.ShoppingCategories
-                             .AsNoTracking()
-                             .FirstOrDefaultAsync(t => t.Code == "UNCATEGORIZED");
-                    }
-
-                    ingredient.Names = dto.Names;
-                    ingredient.Barcode = dto.Barcode;
-                    ingredient.ImageUrl = finalPhotoUrl;
-                    ingredient.ShoppingCategoryId = ct.Id;
-                    ingredient.DefaultUnitId = dto.DefaultUnitId;
-                    ingredient.OffCategoryTag = dto.OffCategoryTag;
-                    ingredient.Barcode = dto.Barcode;
-                    ingredient.BaseIngredientId = dto.BaseIngredientId;
-
-                    ingredient.Calories = dto.Calories;
-                    ingredient.Proteins = dto.Proteins;
-                    ingredient.Fats = dto.Fats;
-                    ingredient.SaturatedFats = dto.SaturatedFats;
-                    ingredient.Carbohydrates = dto.Carbohydrates;
-                    ingredient.Sugars = dto.Sugars;
-                    ingredient.Fiber = dto.Fiber;
-                    ingredient.Salt = dto.Salt;
-
-                    ingredient.NutriScore = dto.NutriScore;
-                    ingredient.NovaClassification = dto.NovaClassification;
-                    ingredient.IsVegan = dto.IsVegan;
-                    ingredient.IsVegetarian = dto.IsVegetarian;
-                    ingredient.IsGlutenFree = dto.IsGlutenFree;
-                    ingredient.IsLactoseFree = dto.IsLactoseFree;
-
-
-                    db.IngredientUnits.RemoveRange(ingredient.IngredientUnits);
-
-                    if (dto.AdditionalUnits != null)
-                    {
-                        foreach (var iu in dto.AdditionalUnits)
-                        {
-                            ingredient.IngredientUnits.Add(new IngredientUnit
-                            {
-                                IngredientId = ingredient.Id,
-                                UnitId = iu.UnitId,
-                                AmountInGrams = iu.ToDefaultUnit
-                            });
-                        }
-                    }
-
-                    await db.SaveChangesAsync();
-
-                    return Results.Ok("Ingredient updated successfully");
-                }
-                catch (Exception ex)
-                {
-                    return Results.Problem($"An error occurred while updating the ingredient. Ex: {ex.Message}");
-                }
+                return Results.Json(result, statusCode: result.StatusCode);
 
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Toggle ingredient approval
-            group.MapPost("/admin/toggleApproval/{ingredientId:guid}", async (Guid ingredientId, PinulaDbContext db) =>
+            group.MapPost("/admin/toggleApproval/{ingredientId:guid}", async (Guid ingredientId, IIngredientBackendService ingredientService) =>
             {
-                var ingredient = await db.Ingredients.FirstOrDefaultAsync(r => r.Id == ingredientId);
-                if (ingredient is null) return Results.NotFound("Ingredient not found");
-
-                ingredient.IsApproved = !ingredient.IsApproved;
-
-                await db.SaveChangesAsync();
-                return Results.Ok(new { isApproved = ingredient.IsApproved });
-
+                var result = await ingredientService.AdminToggleApproval(ingredientId);
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Toggle ingredient checked
-            group.MapPost("/admin/toggleChecked/{ingredientId:guid}", async (Guid ingredientId, PinulaDbContext db) =>
+            group.MapPost("/admin/toggleChecked/{ingredientId:guid}", async (Guid ingredientId, IIngredientBackendService ingredientService) =>
             {
-                var ingredient = await db.Ingredients.FirstOrDefaultAsync(r => r.Id == ingredientId);
-                if (ingredient is null) return Results.NotFound("Ingredient not found");
-
-                ingredient.Checked = !ingredient.Checked;
-
-                await db.SaveChangesAsync();
-                return Results.Ok(new { Checked = ingredient.Checked });
-
+                var result = await ingredientService.AdminToggleChecked(ingredientId);
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
             
             //---------------------------------------------------------------Get shopping categories
-            group.MapGet("/shoppingCategories/getAll", async (PinulaDbContext db, HttpRequest request) =>
+            group.MapGet("/shoppingCategories/getAll", async (HttpRequest request, IIngredientBackendService ingredientService) =>
             {
-                var categoriesRaw = await db.ShoppingCategories.ToListAsync();
-                var categories = categoriesRaw.AdaptWithRequest<List<ShoppingCategoryDisplayDto>>(request);
+                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                string baseUrl = $"{request.Scheme}://{request.Host}";
+
+                var categories = await ingredientService.GetShoppingCategories(baseUrl, languageCode);
 
                 return Results.Ok(categories);
             });

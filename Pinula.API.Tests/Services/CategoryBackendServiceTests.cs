@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Pinula.API.Context;
 using Pinula.API.Models;
 using Pinula.API.Services;
@@ -26,7 +27,7 @@ public class CategoryBackendServiceTests : IDisposable
     public CategoryBackendServiceTests()
     {
         (_db, _connection) = TestDbContextFactory.CreateInMemoryDbContext();
-        _service = new CategoryBackendService(_db);
+        _service = new CategoryBackendService(_db, new Mock<ILogger<CategoryBackendService>>().Object);
         
         _tempFolderPath = Path.Combine(Path.GetTempPath(), "PinulaTestUploads_" + Guid.NewGuid());
         Directory.CreateDirectory(_tempFolderPath);

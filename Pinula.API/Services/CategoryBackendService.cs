@@ -6,6 +6,7 @@ using Pinula.API.Interface;
 using Pinula.API.Models;
 using Pinula.API.Projections;
 using Pinula.Shared.DTOs;
+using Pinula.Shared.Constants;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
@@ -14,10 +15,12 @@ namespace Pinula.API.Services;
 public class CategoryBackendService : ICategoryBackendService
 {
     private readonly PinulaDbContext _db;
-    private const string DefaultCategoryPicture = "default_category.png";
-    public CategoryBackendService(PinulaDbContext db)
+    private readonly ILogger<CategoryBackendService> _logger;
+    
+    public CategoryBackendService(PinulaDbContext db, ILogger<CategoryBackendService> logger)
     {
         _db = db;
+        _logger = logger;
     }
     
     public async Task<List<CategoryDisplayDto>> GetCategoriesTree(string baseUrl, string lang)
@@ -68,7 +71,7 @@ public class CategoryBackendService : ICategoryBackendService
             Id = categoryDb.Id,
             ParentCategoryId = categoryDb.ParentCategoryId,
             Name = categoryDb.Names.GetValueOrDefault(lang) ?? categoryDb.Names.GetValueOrDefault("en") ?? "Category",
-            PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(categoryDb.PictureUrl) ? DefaultCategoryPicture : categoryDb.PictureUrl)}",
+            PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(categoryDb.PictureUrl) ? ImageConstants.DefaultCategory : categoryDb.PictureUrl)}",
             SortOrder = categoryDb.SortOrder,
             ChildCategories = categoryDb.ChildCategories
                 .OrderBy(sub => sub.SortOrder)
@@ -77,7 +80,7 @@ public class CategoryBackendService : ICategoryBackendService
                     Id = sub.Id,
                     ParentCategoryId = sub.ParentCategoryId,
                     Name = sub.Names.GetValueOrDefault(lang) ?? sub.Names.GetValueOrDefault("en") ?? "Subcategory",
-                    PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? DefaultCategoryPicture : sub.PictureUrl)}",
+                    PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(sub.PictureUrl) ? ImageConstants.DefaultCategory : sub.PictureUrl)}",
                     SortOrder = sub.SortOrder,
                     ChildCategories = new List<CategoryDisplayDto>()
                 }).ToList()
@@ -88,7 +91,7 @@ public class CategoryBackendService : ICategoryBackendService
 
     public async Task<CreateCategoryResponse> CreateCategory(CategoryCreateDto createDto, IFormFile? imageFile, IWebHostEnvironment webHostEnvironment)
     {
-        var finalPhotoUrl = DefaultCategoryPicture;
+        var finalPhotoUrl = ImageConstants.DefaultCategory;
         
         if (imageFile is { Length: > 0 })
         {
@@ -124,7 +127,7 @@ public class CategoryBackendService : ICategoryBackendService
             }
             catch (Exception ex)
             {
-                Console.WriteLine($@"Error while processing image: {ex.Message}");
+                _logger.LogError(ex, "Error while processing image for category creation");
                 return new CreateCategoryResponse()
                     { StatusCode = 500, Message = "Error while processing image"};
             }
@@ -157,7 +160,7 @@ public class CategoryBackendService : ICategoryBackendService
         if (category.ChildCategories.Any()) return new() { StatusCode = 400, Message = "Category has subcategories", Successful = false };
         if (category.Recipes.Any()) return new() { StatusCode = 400, Message = "Category is linked to recipes", Successful = false };
         
-        if (category.PictureUrl != DefaultCategoryPicture)
+        if (category.PictureUrl != ImageConstants.DefaultCategory)
         {
             var filePath = Path.Combine(webHostEnvironment.WebRootPath, "images", "categories", category.PictureUrl);
             if (File.Exists(filePath)) File.Delete(filePath);
@@ -194,7 +197,7 @@ public class CategoryBackendService : ICategoryBackendService
                     Id = cat.Id,
                     ParentCategoryId = cat.ParentCategoryId,
                     Names = cat.Names,
-                    PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? DefaultCategoryPicture : cat.PictureUrl)}",
+                    PictureUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(cat.PictureUrl) ? ImageConstants.DefaultCategory : cat.PictureUrl)}",
                     SortOrder = cat.SortOrder,
                     Level = level
                 });

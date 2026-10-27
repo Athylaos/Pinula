@@ -211,7 +211,7 @@ namespace Pinula.Shared.Services
                 Barcode = prod.Code,
                 ImageUrl = prod.ImageUrl,
                 DefaultUnitId = defaultUnitId,
-                CategoryTags = prod.CategoriesTags?.Select(tag => tag.Replace("en:", "").Trim()).ToList() ?? new List<string>(),
+                //CategoryTags = prod.CategoriesTags?.Select(tag => tag.Replace("en:", "").Trim()).ToList() ?? new List<string>(),
 
                 NutriScore = prod.NutriScore?.ToLower(),
                 NovaClassification = prod.NovaGroup,

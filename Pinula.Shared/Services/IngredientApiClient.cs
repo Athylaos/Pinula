@@ -54,35 +54,59 @@ namespace Pinula.Shared.Services
                 {
                     return new GeneralResponse { Successful = false, Message = "No ingredient data provided." };
                 }
-
-
+                
                 using var content = new MultipartFormDataContent();
-                var recipeJson = JsonSerializer.Serialize(ingredientDto);
+                
+                var dtoOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var recipeJson = JsonSerializer.Serialize(ingredientDto, dtoOptions);
                 content.Add(new StringContent(recipeJson, Encoding.UTF8, "application/json"), "ingredientData");
 
-                if (photoStream is not null && photoName is not null && contentType is not null)
+                if (photoStream is not null && !string.IsNullOrEmpty(photoName) && !string.IsNullOrEmpty(contentType))
                 {
                     var fileContent = new StreamContent(photoStream);
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
                     content.Add(fileContent, "image", photoName);
                 }
-
+                
                 var response = await _httpClient.PostAsync($"{BaseUrl}/create", content);
-
-                if (response.IsSuccessStatusCode)
+                
+                try
                 {
-                    var msg = await response.Content.ReadAsStringAsync();
-                    return new GeneralResponse { Successful = true, Message = msg };
-                }
-                else
-                {
-                    return new GeneralResponse { Successful = false, StatusCode = (int)response.StatusCode };
-                }
+                    var apiResponse = await response.Content.ReadFromJsonAsync<CreateIngredientResponse>(dtoOptions);
 
+                    if (response.IsSuccessStatusCode && apiResponse != null)
+                    {
+                        return new GeneralResponse 
+                        { 
+                            Successful = true, 
+                            Message = apiResponse.Message,
+                            StatusCode = apiResponse.StatusCode
+                        };
+                    }
+
+                    return new GeneralResponse 
+                    { 
+                        Successful = false, 
+                        Message = apiResponse?.Message ?? "Ingredient creation failed.", 
+                        StatusCode = apiResponse?.StatusCode ?? (int)response.StatusCode 
+                    };
+                }
+                catch
+                {
+                    var rawError = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning($"Ingredient creation failed ({response.StatusCode}): {rawError}");
+
+                    return new GeneralResponse 
+                    { 
+                        Successful = false, 
+                        Message = $"Server error ({response.StatusCode})", 
+                        StatusCode = (int)response.StatusCode 
+                    };
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while creating ingredient: {ex.Message}");
+                _logger.LogError(ex, "Error while creating ingredient");
                 return new GeneralResponse { Successful = false, Message = "Connection to server failed." };
             }
         }

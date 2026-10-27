@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Pinula.API.Models;
 using Pinula.API.Context;
+using Pinula.Shared.Constants;
 
 namespace Pinula.API.Services;
 
@@ -20,37 +21,45 @@ public static class HelperFunctions
         Users = 4
     }
 
-    public static string GetImageUrl(HttpRequest request, ImageCategory imageCategory, string? imageUrl)
+    public static string GetImageUrl(string? baseUrl, ImageCategory imageCategory, string? imageUrl)
     {
-        string imageDirectory;
-        string defaultImage;
-        switch (imageCategory)
+        string imageDirectory = imageCategory switch
         {
-            case ImageCategory.Ingredients:
-                imageDirectory = "ingredients";
-                defaultImage = "default_ingredient.png";
-                break;
-            case ImageCategory.Categories:
-                imageDirectory = "categories";
-                defaultImage = "default_category.png";
-                break;
-            case ImageCategory.Recipes:
-                imageDirectory = "recipes";
-                defaultImage = "default_recipe.png";
-                break;
-            case ImageCategory.Users:
-                imageDirectory = "avatars";
-                defaultImage = "default_avatar.png";
-                break;
-            default:
-                imageDirectory = "error";
-                defaultImage = "error";
-                break;
-                
+            ImageCategory.Ingredients => "ingredients",
+            ImageCategory.Categories  => "categories",
+            ImageCategory.Recipes     => "recipes",
+            ImageCategory.Users       => "avatars",
+            _                         => "error"
+        };
+
+        string defaultImage = imageCategory switch
+        {
+            ImageCategory.Ingredients => ImageConstants.DefaultIngredient,
+            ImageCategory.Categories  => ImageConstants.DefaultCategory,
+            ImageCategory.Recipes     => ImageConstants.DefaultRecipe,
+            ImageCategory.Users       => "default_avatar.png",
+            _                         => "error.png"
+        };
+
+        var filename = string.IsNullOrWhiteSpace(imageUrl) ? defaultImage : imageUrl;
+
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return $"/images/{imageDirectory}/{filename}";
         }
+
+        var cleanBaseUrl = baseUrl.TrimEnd('/');
+        return $"{cleanBaseUrl}/images/{imageDirectory}/{filename}";
+    }
+
+    public static string GetLocalizedName(Dictionary<string, string>? names, string lang)
+    {
+        if (names == null || names.Count == 0) return string.Empty;
         
-        var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/{imageDirectory}/";
-        return $"{imageBaseUrl}{(string.IsNullOrWhiteSpace(imageUrl) ? defaultImage : imageUrl)}";
+        return names.GetValueOrDefault(lang) 
+               ?? names.GetValueOrDefault("en") 
+               ?? names.Values.FirstOrDefault() 
+               ?? string.Empty;
     }
     
     public static async Task<(IResult, User?, Group?)> AuthUserInGroup(ClaimsPrincipal user, PinulaDbContext db)

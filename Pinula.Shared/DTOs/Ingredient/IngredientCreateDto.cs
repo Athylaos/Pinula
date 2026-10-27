@@ -32,8 +32,6 @@
         public int? NovaClassification { get; set; }
 
         public List<CreateIngredientUnitDto> AdditionalUnits { get; set; } = new();
-        public Guid? CategoryTagId;
-        public List<string> CategoryTags { get; set; } = new();
 
     }
 

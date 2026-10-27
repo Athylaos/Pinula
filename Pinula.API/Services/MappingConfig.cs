@@ -7,32 +7,25 @@ namespace Pinula.API.Services;
 
 public class MappingConfig : IRegister
 {
-    private static HttpRequest? GetHttpRequest()
+    public static string GetBaseUrl()
     {
         if (MapContext.Current != null &&
-            MapContext.Current.Parameters.TryGetValue("httpRequest", out var reqObj) &&
-            reqObj is HttpRequest request)
+            MapContext.Current.Parameters.TryGetValue("baseUrl", out var urlObj) &&
+            urlObj is string baseUrl && !string.IsNullOrWhiteSpace(baseUrl))
         {
-            return request;
+            return baseUrl;
         }
 
-        return null;
+        return string.Empty;
     }
     
-    private static string GetLanguageCode()
+    public static string GetLanguageCode()
     {
-        var request = GetHttpRequest();
-        if (request != null)
+        if (MapContext.Current != null &&
+            MapContext.Current.Parameters.TryGetValue("lang", out var langObj) &&
+            langObj is string lang && !string.IsNullOrWhiteSpace(lang))
         {
-            var acceptLanguage = request.Headers.AcceptLanguage.ToString();
-            if (!string.IsNullOrWhiteSpace(acceptLanguage))
-            {
-                var firstLang = acceptLanguage.Split(',')[0].Split(';')[0].Split('-')[0];
-                if (!string.IsNullOrWhiteSpace(firstLang))
-                {
-                    return firstLang;
-                }
-            }
+            return lang;
         }
 
         return "en";
@@ -59,7 +52,7 @@ public class MappingConfig : IRegister
             .Map(d => d.Name,
                 src => HelperFunctions.GetLocalizedName(src.Names, GetLanguageCode()))
             .Map(d => d.PictureUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Categories,
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Categories,
                     src.PictureUrl))
             .PreserveReference(true)
             .MaxDepth(20);
@@ -86,7 +79,7 @@ public class MappingConfig : IRegister
             .Map(d => d.UserEmail,
                 src => src.Creator.Email)
             .Map(d => d.ImageUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl))
             .Map(d => d.AdditionalUnits,
                 src => src.IngredientUnits)
@@ -94,7 +87,7 @@ public class MappingConfig : IRegister
 
         config.NewConfig<Ingredient, AdminIngredientPreviewDto>()
             .Map(d => d.ImageUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl));
 
 
@@ -102,7 +95,7 @@ public class MappingConfig : IRegister
             .Map(d => d.Name,
                 src => HelperFunctions.GetLocalizedName(src.Names, GetLanguageCode()))
             .Map(d => d.ImageUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Ingredients,
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Ingredients,
                     src.ImageUrl))
             .Map(d => d.SelectedUnit,
                 src => src.DefaultUnit)
@@ -152,7 +145,7 @@ public class MappingConfig : IRegister
             .Map(d => d.RecipeName,
                 src => HelperFunctions.GetLocalizedName(src.Recipe.Titles, GetLanguageCode()))
             .Map(d => d.RecipePhotoUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Recipes,src.Recipe.PhotoUrl))
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Recipes,src.Recipe.PhotoUrl))
             .Map(d => d.Ingredients,
                 src => src.MealPlanIngredients)
             .Map(d => d.UsersPreviews,
@@ -176,7 +169,7 @@ public class MappingConfig : IRegister
             .Map(d => d.Title,
                 src => HelperFunctions.GetLocalizedName(src.Titles, GetLanguageCode()))
             .Map(d => d.PhotoUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Recipes,
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Recipes,
                     src.PhotoUrl))
             .Map(d => d.Difficulty,
                 src => (DifficultyLevel)src.Difficulty)
@@ -199,7 +192,7 @@ public class MappingConfig : IRegister
             .Map(d => d.Title,
                 src => HelperFunctions.GetLocalizedName(src.Titles, GetLanguageCode()))
             .Map(d => d.PhotoUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Recipes, src.PhotoUrl));
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Recipes, src.PhotoUrl));
 
         config.NewConfig<RecipeStep, RecipeStepDisplayDto>()
             .Map(d => d.Description,
@@ -229,11 +222,11 @@ public class MappingConfig : IRegister
 
         config.NewConfig<User, AdminUserDisplayDto>()
             .Map(d => d.AvatarUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
         
         config.NewConfig<User, UserDisplayDto>()
             .Map(d => d.AvatarUrl,
-                src => HelperFunctions.GetImageUrl(GetHttpRequest(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
 
         #endregion
         
