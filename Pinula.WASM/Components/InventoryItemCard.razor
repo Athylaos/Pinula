@@ -27,7 +27,7 @@
 
             <div class="flex-column">
                 <div class="pin-quantity-tag">
-                    <span class="pin-qty-val">@((Item.Quantity*Item.Unit.ConversionFactor-Item.AllocatedQuantityInGrams).ToString("0.##"))</span>
+                    <span class="pin-qty-val">@((Item.Quantity-(Item.AllocatedQuantityInGrams/(Item.Quantity/Item.QuantityInGrams))).ToString("0.##"))</span>
                     <span class="pin-qty-unit">@Item.Unit?.Name</span>
                 </div>
                 @if (Item.Unit.Code != "g")

@@ -1,11 +1,8 @@
 
+using System.Globalization;
 using System.Security.Claims;
-using Mapster;
-using Microsoft.EntityFrameworkCore;
-using Pinula.API.Models;
-using Pinula.API.Context;
+using Pinula.API.Interface;
 using Pinula.Shared.DTOs;
-using Pinula.API.Services;
 
 namespace Pinula.API.Endpoints;
 
@@ -17,306 +14,109 @@ public static class InventoryEndpoint
         
         
         //---------------------------------------------------------------Get all inventory items
-        group.MapGet("/getAll", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapGet("/getAll", async (HttpRequest request, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            var ii = await db.InventoryItems
-                .Where(i => i.GroupId == groupDb.Id)
-                .Include(i => i.Ingredient)
-                    .ThenInclude(i => i.ShoppingCategory)
-                .Include(i => i.Ingredient)
-                    .ThenInclude(i => i.BaseIngredient)
-                .Include(i => i.Ingredient)
-                    .ThenInclude(i => i.IngredientUnits)
-                        .ThenInclude(i => i.Unit)
-                .Include(i => i.Unit)
-                .Include(i => i.Allocations)
-                .AsNoTracking()
-                .ToListAsync();
-                
-                
-            var result = ii.AdaptWithRequest<List<InventoryItemDisplayDto>>(request);
+            string lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            string baseUrl = $"{request.Scheme}://{request.Host}";
 
+            var result = await inventoryService.GetAllInventoryItemsAsync(groupId, baseUrl, lang);
             return Results.Ok(result);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Create inventory item
-        group.MapPost("/create", async (InventoryItemCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapPost("/create", async (InventoryItemCreateDto dto, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            if (!await db.Ingredients.AnyAsync(i => i.Id == dto.IngredientId))
-            {
-                return Results.NotFound("Ingredient not found");
-            }
-            if (!await db.Units.AnyAsync(i => i.Id == dto.UnitId))
-            {
-                return Results.NotFound("Unit not found");
-            }
-
-            if (dto.QuantityInGrams <= 0 || dto.Quantity <= 0)
-            {
-                return Results.BadRequest("Quantity can't be 0");
-            }
-
-            InventoryItem nII = new InventoryItem()
-            {
-                Id = Guid.NewGuid(),
-                GroupId = groupDb.Id,
-                IngredientId = dto.IngredientId,
-                UnitId = dto.UnitId,
-                Quantity = dto.Quantity,
-                QuantityInGrams = dto.QuantityInGrams,
-                ExpirationDate = dto.ExpirationDate.HasValue ? DateTime.SpecifyKind(dto.ExpirationDate.Value, DateTimeKind.Utc) : null,
-                //AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams
-            };
-
-            db.InventoryItems.Add(nII);
-            await db.SaveChangesAsync();
-            
-            return Results.Created($"/inventory/getAll", new { id = nII.Id });
+            var result = await inventoryService.CreateInventoryItemAsync(groupId, dto);
+    
+            return result.StatusCode == 201 
+                ? Results.Created("/inventory/getAll", result) 
+                : Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Update inventory item
-        group.MapPut("/update", async (InventoryItemUpdateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapPut("/update", async (InventoryItemUpdateDto dto, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            var item = await db.InventoryItems.FirstOrDefaultAsync(i => i.Id == dto.Id);
-            if (item is null)
-            {
-                return Results.NotFound("Inventory item not found");
-            }
-            
-            if (dto.Quantity <= 0)
-            {
-                return Results.BadRequest("Quantity can't be 0");
-            }
-
-            if(dto.Quantity.HasValue)
-            {
-                var conversionFactor = item.QuantityInGrams / item.Quantity;
-                item.Quantity = dto.Quantity.Value;
-                item.QuantityInGrams = dto.Quantity.Value * conversionFactor;
-            }
-            if(dto.ExpirationDate.HasValue) item.ExpirationDate = dto.ExpirationDate.Value;
-            //if (dto.AllocatedQuantityInGrams.HasValue) item.AllocatedQuantityInGrams = dto.AllocatedQuantityInGrams.Value;
-
-            await db.SaveChangesAsync();
-            return Results.NoContent();
-            
+            var result = await inventoryService.UpdateInventoryItemAsync(groupId, dto);
+            return Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Delete inventory item
-        group.MapDelete("/delete/{id:guid}", async (Guid id, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapDelete("/delete/{id:guid}", async (Guid id, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
-            var item = await db.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
-            if (item is null)
-            {
-                return Results.NotFound("Inventory item not found");
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            db.InventoryItems.Remove(item);
-            db.InventoryMealPlanAllocations.RemoveRange(await db.InventoryMealPlanAllocations.Where(a => a.InventoryItemId == item.Id).ToListAsync()); 
-            await db.SaveChangesAsync();
-            
-            //TODO mby automatically make shopping list items?
-
-            return Results.NoContent();
+            var result = await inventoryService.DeleteInventoryItemAsync(groupId, id);
+            return Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
         
-        
-        
-        
         //---------------------------------------------------------------Get all shopping items
-        group.MapGet("/shoppingListItems/getAll", async (HttpRequest request, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapGet("/shoppingListItems/getAll", async (HttpRequest request, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            var si = await db.ShoppingListItems
-                .Where(i => i.GroupId == groupDb.Id)
-                .Include(i => i.Ingredient)
-                    .ThenInclude(i => i.ShoppingCategory)
-                .Include(i => i.Ingredient)
-                    .ThenInclude(i => i.BaseIngredient)
-                .Include(i => i.Unit)
-                .Include(i => i.ShoppingCategory)
-                .Include(i => i.MealPlanIngredient)
-                    .ThenInclude(mpi => mpi.MealPlan)
-                        .ThenInclude(mp => mp.Recipe)
-                .AsNoTracking()
-                .ToListAsync();
-            
-           var result = si.AdaptWithRequest<List<ShoppingItemDisplayDto>>(request);
-           
+            string lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            string baseUrl = $"{request.Scheme}://{request.Host}";
+
+            var result = await inventoryService.GetAllShoppingListItemsAsync(groupId, baseUrl, lang);
             return Results.Ok(result);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Create shopping item
-        group.MapPost("/shoppingListItems/create", async (ShoppingItemCreateDto dto, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapPost("/shoppingListItems/create", async (ShoppingItemCreateDto dto, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            if (!await db.Ingredients.AnyAsync(i => i.Id == dto.IngredientId))
-            {
-                return Results.NotFound("Ingredient not found");
-            }
-            if (!await db.Units.AnyAsync(i => i.Id == dto.UnitId))
-            {
-                return Results.NotFound("Unit not found");
-            }
-
-            if (dto.QuantityInGrams <= 0 || dto.Quantity <= 0)
-            {
-                return Results.BadRequest("Quantity can't be 0");
-            }
-            
-            
-            var ingredient = await db.Ingredients.AsNoTracking().FirstOrDefaultAsync(i => i.Id == dto.IngredientId);
-            Guid shoppingCategoryId = dto.ShoppingCategoryId ?? ingredient.ShoppingCategoryId;
-
-            ShoppingListItem nSI = new ()
-            {
-                Id = Guid.NewGuid(),
-                GroupId = groupDb.Id,
-                IngredientId = dto.IngredientId,
-                UnitId = dto.UnitId,
-                Quantity = dto.Quantity,
-                QuantityInGrams = dto.QuantityInGrams,
-                ShoppingCategoryId = shoppingCategoryId,
-                IsPurchased = false
-            };
-
-            db.ShoppingListItems.Add(nSI);
-            await db.SaveChangesAsync();
-            
-            return Results.Created($"/inventory/shoppingListItems/getAll", new { id = nSI.Id });
+            var result = await inventoryService.CreateShoppingListItemAsync(groupId, dto);
+    
+            return result.StatusCode == 201 
+                ? Results.Created("/inventory/shoppingListItems/getAll", result) 
+                : Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Delete shopping item
-        group.MapDelete("/shoppingListItems/delete/{id:guid}", async (Guid id, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapDelete("/shoppingListItems/delete/{id:guid}", async (Guid id, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
-            var item = await db.ShoppingListItems.FirstOrDefaultAsync(i => i.Id == id);
-            if (item is null)
-            {
-                return Results.NotFound("Shopping list item not found");
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            db.ShoppingListItems.Remove(item);
-            await db.SaveChangesAsync();
-
-            return Results.NoContent();
+            var result = await inventoryService.DeleteShoppingListItemAsync(groupId, id);
+            return Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
-        //---------------------------------------------------------------Delete shopping item
-        group.MapPut("/shoppingListItems/changePurchased/{id:guid}", async (Guid id, ClaimsPrincipal user, PinulaDbContext db) =>
+        //---------------------------------------------------------------Change purchased
+        group.MapPut("/shoppingListItems/changePurchased/{id:guid}", async (Guid id, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
-            var item = await db.ShoppingListItems.FirstOrDefaultAsync(i => i.Id == id);
-            if (item is null)
-            {
-                return Results.NotFound("Shopping list item not found");
-            }
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            item.IsPurchased = !item.IsPurchased;
-            await db.SaveChangesAsync();
-
-            return Results.NoContent();
+            var result = await inventoryService.ToggleShoppingListItemPurchasedAsync(groupId, id);
+            return Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
         //---------------------------------------------------------------Make inventory items from shopping items
-        group.MapPost("/shoppingListItemsToPantry", async (List<InventoryItemCreateDto> inventoryItems, ClaimsPrincipal user, PinulaDbContext db) =>
+        group.MapPost("/shoppingListItemsToPantry", async (List<InventoryItemCreateDto> inventoryItems, ClaimsPrincipal user, IInventoryBackendService inventoryService) =>
         {
-            var (authResult, userDb, groupDb) = await HelperFunctions.AuthUserInGroup(user, db);
-            if (authResult != Results.Ok())
-            {
-                return authResult;
-            }
-            
-            var shoppingItemIds = inventoryItems
-                .Where(i => i.ShoppingListItemId.HasValue)
-                .Select(i => i.ShoppingListItemId!.Value)
-                .ToList();
+            var (authResult, groupId) = await inventoryService.ValidateAuthUserInGroup(user);
+            if (authResult != Results.Ok()) return authResult;
 
-            var shoppingItemsDb = await db.ShoppingListItems
-                .Where(i => i.GroupId == groupDb.Id && shoppingItemIds.Contains(i.Id))
-                .ToDictionaryAsync(i => i.Id);
-
-            foreach (var item in inventoryItems)
-            {
-                if (!item.ShoppingListItemId.HasValue || !shoppingItemsDb.TryGetValue(item.ShoppingListItemId.Value, out var itemDb))
-                {
-                    continue;
-                }
-
-                var itemId = Guid.NewGuid();
-                
-                var newInventoryItem = new InventoryItem
-                {
-                    Id = itemId,
-                    GroupId = groupDb.Id,
-                    IngredientId = item.IngredientId,
-                    UnitId = item.UnitId,
-                    ExpirationDate = item.ExpirationDate.HasValue ? DateTime.SpecifyKind(item.ExpirationDate.Value, DateTimeKind.Utc) : null,
-                    Quantity = item.Quantity,
-                    QuantityInGrams = item.QuantityInGrams,
-                };
-
-                db.InventoryItems.Add(newInventoryItem);
-                
-                if (itemDb.MealPlanIngredientId.HasValue)
-                {
-                    db.InventoryMealPlanAllocations.Add(new InventoryMealPlanAllocation
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryItemId = itemId,
-                        MealPlanIngredientId = itemDb.MealPlanIngredientId.Value,
-                        AllocatedQuantityInGrams = item.QuantityInGrams
-                    });
-                }
-                
-                db.ShoppingListItems.Remove(itemDb);
-            }
-
-            await db.SaveChangesAsync();
-
-            return Results.Created("/inventory/getAll", null);
+            var result = await inventoryService.ConvertShoppingItemsToPantryAsync(groupId, inventoryItems);
+    
+            return result.StatusCode == 201 
+                ? Results.Created("/inventory/getAll", result) 
+                : Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();
         
     }

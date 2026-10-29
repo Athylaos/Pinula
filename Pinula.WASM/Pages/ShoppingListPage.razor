@@ -138,13 +138,6 @@
         isLoading = false;
     }
 
-
-    private void HandleItemDeleted(Guid id)
-    {
-        ShoppingItems.Remove(ShoppingItems.First(i => i.Id == id));
-        InventoryApiClient.DeleteShoppingItemAsync(id);
-    }
-    
     private void ToggleAddInventoryModal()
     {
         addToShoppingListVisible = !addToShoppingListVisible;
