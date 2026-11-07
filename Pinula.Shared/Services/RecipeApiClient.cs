@@ -4,7 +4,6 @@ using Pinula.Shared.DTOs;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using System.Runtime.InteropServices;
 
 namespace Pinula.Shared.Services
 {
@@ -20,41 +19,39 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-
-        public async Task<bool?> ChangeFavoriteAsync(Guid recipeId)
+        public async Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filter, CancellationToken? ct = null)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"{BaseUrl}/toggleFavorite/{recipeId}", null);
+                var url = $"{BaseUrl}/getPreviews/filtered?" +
+                          $"amount={filter.Amount}" +
+                          $"&skip={filter.Skip}" +
+                          $"&onlyFavorites={filter.OnlyFavorites.ToString().ToLower()}" +
+                          $"&onlyMine={filter.OnlyMine.ToString().ToLower()}" +
+                          $"&sort={(int)filter.Sort}" +
+                          $"&sortDescending={filter.SortDescending.ToString().ToLower()}" +
+                          $"&includeUnapproved={filter.IncludeUnapproved.ToString().ToLower()}" +
+                          $"&includeAdminData={filter.IncludeAdminData.ToString().ToLower()}";
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<FavoriteResponse>();
-                    return result?.IsFavorite;
-                }
+                if (!string.IsNullOrEmpty(filter.SearchTerm)) url += $"&searchTerm={Uri.EscapeDataString(filter.SearchTerm)}";
+                if (filter.CategoryId.HasValue) url += $"&categoryId={filter.CategoryId}";
+                if (filter.MinRating.HasValue) url += $"&minRating={filter.MinRating}";
+                if (filter.MaxCookingTime.HasValue) url += $"&maxCookingTime={filter.MaxCookingTime}";
+                if (filter.MaxDifficulty.HasValue) url += $"&maxDifficulty={filter.MaxDifficulty}";
+                if (filter.MaxCalories.HasValue) url += $"&maxCalories={filter.MaxCalories}";
 
-                return null;
+                var response = await _httpClient.GetFromJsonAsync<List<RecipePreviewDto>>(url, ct ?? CancellationToken.None);
+                return response ?? new List<RecipePreviewDto>();
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("GetFilteredRecipePreviewsAsync was cancelled by user.");
+                return new List<RecipePreviewDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Toggle favorite error: {ex.Message}");
-                return null;
-            }
-        }
-
-
-        public async Task<bool> DeleteRecipeAsync(Guid id)
-        {
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"{BaseUrl}/delete/{id}");
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Delete recipe error: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "Error while fetching filtered recipe previews.");
+                return new List<RecipePreviewDto>();
             }
         }
 
@@ -66,12 +63,12 @@ namespace Pinula.Shared.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while loading recipe details: {ex.Message}");
+                _logger.LogError(ex, "Error while loading recipe details for {RecipeId}", recipeId);
                 return null;
             }
         }
 
-        public async Task<Guid?> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType)
+        public async Task<GeneralResponse> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -87,152 +84,17 @@ namespace Pinula.Shared.Services
                 }
 
                 var response = await _httpClient.PostAsync($"{BaseUrl}/create", content);
-                if (response.IsSuccessStatusCode)
-                {
-                    var guid = await response.Content.ReadFromJsonAsync<Guid>();
-                    return guid;
-                }
-
-                return null;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while creating recipe: {ex.Message}");
-                return null;
+                _logger.LogError(ex, "Error while creating recipe.");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
-        public async Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filter, CancellationToken? ct)
-        {
-            try
-            {
-                var url = $"{BaseUrl}/getPreviews/filtered?" +
-                          $"amount={filter.Amount}" +
-                          $"&skip={filter.Skip}" +
-                          $"&onlyFavorites={filter.OnlyFavorites.ToString().ToLower()}" +
-                          $"&onlyMine={filter.OnlyMine.ToString().ToLower()}" +
-                          $"&sort={(int)filter.Sort}" +
-                          $"&sortDescending={filter.SortDescending.ToString().ToLower()}" +
-                          $"&includeUnapproved={filter.IncludeUnapproved.ToString().ToLower()}" +
-                          $"&includeAdminData={filter.IncludeAdminData.ToString().ToLower()}";
-
-                if (!string.IsNullOrEmpty(filter.SearchTerm))
-                    url += $"&searchTerm={Uri.EscapeDataString(filter.SearchTerm)}";
-
-                if (filter.CategoryId.HasValue)
-                    url += $"&categoryId={filter.CategoryId}";
-
-                if (filter.MinRating.HasValue)
-                    url += $"&minRating={filter.MinRating}";
-
-                if (filter.MaxCookingTime.HasValue)
-                    url += $"&maxCookingTime={filter.MaxCookingTime}";
-
-                if (filter.MaxDifficulty.HasValue)
-                    url += $"&maxDifficulty={filter.MaxDifficulty}";
-
-                if (filter.MaxCalories.HasValue)
-                    url += $"&maxCalories={filter.MaxCalories}";
-
-                var response = await _httpClient.GetFromJsonAsync<List<RecipePreviewDto>>(url, ct ?? CancellationToken.None);
-                return response ?? new();
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogError("Request was cancelled by user.");
-                return new();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Filter Error: {ex.Message}");
-                return new();
-            }
-        }
-
-        public async Task<CommentPostResponse?> PostCommentAsync(CommentCreateDto comment)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/postComment", comment);
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<CommentPostResponse>();
-                }
-                _logger.LogError($"Error while posting comment: {response.StatusCode}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while posting comment: {ex.Message}");
-                return null;
-            }
-        }
-
-        public async Task<CommentDeleteResponse?> DeleteCommentAsync(Guid commentId)
-        {
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"{BaseUrl}/deleteComment/{commentId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
-                }
-                _logger.LogError($"Error while removing comment: {response.StatusCode}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while removing comment: {ex.Message}");
-                return null;
-            }
-        }
-
-        public async Task<CommentDeleteResponse?> UpdateCommentAsync(CommentCreateDto comment)
-        {
-            try
-            {
-                var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/updateComment/{comment.Id}", comment);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
-                }
-                _logger.LogError($"Error while updating comment: {response.StatusCode}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while updating comment: {ex.Message}");
-                return null;
-            }
-        }
-
-        public async Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId)
-        {
-            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleApproval/{recipeId}", null);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<bool> AdminToggleRecipeCheckedAsync(Guid recipeId)
-        {
-            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleChecked/{recipeId}", null);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<List<AdminCommentDto>> GetAdminCommentsAsync()
-        {
-            var comments =  await _httpClient.GetFromJsonAsync<List<AdminCommentDto>>($"{BaseUrl}/admin/allComments");
-            return comments ?? new();
-        }
-
-        public async Task<bool> AdminToggleCommentApprovalAsync(Guid commentId)
-        {
-            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentApproval/{commentId}", null);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<Guid?> UpdateRecipeAsync(RecipeCreateDto createDto, Guid recipeId, Stream? photoStream, string? photoName, string? contentType)
+        public async Task<GeneralResponse> UpdateRecipeAsync(RecipeCreateDto createDto, Guid recipeId, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -248,27 +110,148 @@ namespace Pinula.Shared.Services
                 }
 
                 var response = await _httpClient.PutAsync($"{BaseUrl}/update/{recipeId}", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var guid = await response.Content.ReadFromJsonAsync<Guid>();
-                    return guid;
-                }
-
-                return null;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while updating recipe: {ex.Message}");
-                return null;
+                _logger.LogError(ex, "Error while updating recipe {RecipeId}", recipeId);
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
-
-
-        public class FavoriteResponse
+        public async Task<GeneralResponse> DeleteRecipeAsync(Guid id)
         {
-            public bool IsFavorite { get; set; }
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}/delete/{id}");
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting recipe {RecipeId}", id);
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<ToggleFavoriteResponse> ChangeFavoriteAsync(Guid recipeId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/toggleFavorite/{recipeId}", null);
+                var result = await response.Content.ReadFromJsonAsync<ToggleFavoriteResponse>();
+                return result ?? new ToggleFavoriteResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling favorite for recipe {RecipeId}", recipeId);
+                return new ToggleFavoriteResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<CommentPostResponse> PostCommentAsync(CommentCreateDto comment)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/postComment", comment);
+                var result = await response.Content.ReadFromJsonAsync<CommentPostResponse>();
+                return result ?? new CommentPostResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while posting comment for recipe {RecipeId}", comment.RecipeId);
+                return new CommentPostResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<CommentDeleteResponse> UpdateCommentAsync(CommentCreateDto comment)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/updateComment/{comment.Id}", comment);
+                var result = await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
+                return result ?? new CommentDeleteResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating comment {CommentId}", comment.Id);
+                return new CommentDeleteResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<CommentDeleteResponse> DeleteCommentAsync(Guid commentId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}/deleteComment/{commentId}");
+                var result = await response.Content.ReadFromJsonAsync<CommentDeleteResponse>();
+                return result ?? new CommentDeleteResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while removing comment {CommentId}", commentId);
+                return new CommentDeleteResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<List<AdminCommentDto>> GetAdminCommentsAsync()
+        {
+            try
+            {
+                var comments = await _httpClient.GetFromJsonAsync<List<AdminCommentDto>>($"{BaseUrl}/admin/allComments");
+                return comments ?? new List<AdminCommentDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching admin comments");
+                return new List<AdminCommentDto>();
+            }
+        }
+
+        public async Task<ToggleBoolResponse> AdminToggleRecipeApprovalAsync(Guid recipeId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleApproval/{recipeId}", null);
+                var result = await response.Content.ReadFromJsonAsync<ToggleBoolResponse>();
+                return result ?? new ToggleBoolResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling approval for recipe {RecipeId}", recipeId);
+                return new ToggleBoolResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<ToggleBoolResponse> AdminToggleRecipeCheckedAsync(Guid recipeId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleChecked/{recipeId}", null);
+                var result = await response.Content.ReadFromJsonAsync<ToggleBoolResponse>();
+                return result ?? new ToggleBoolResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling checked status for recipe {RecipeId}", recipeId);
+                return new ToggleBoolResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<GeneralResponse> AdminToggleCommentApprovalAsync(Guid commentId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentApproval/{commentId}", null);
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling approval for comment {CommentId}", commentId);
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
         }
     }
 }

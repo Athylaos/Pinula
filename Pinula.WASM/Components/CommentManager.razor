@@ -72,8 +72,8 @@ else
 
     private async Task HandleToggleComment(AdminCommentDto comment)
     {
-        var success = await RecipeApiClient.AdminToggleCommentApprovalAsync(comment.Id);
-        if (success)
+        var response = await RecipeApiClient.AdminToggleCommentApprovalAsync(comment.Id);
+        if (response.Successful)
         {
             comment.IsApproved = !comment.IsApproved;
             StateHasChanged();

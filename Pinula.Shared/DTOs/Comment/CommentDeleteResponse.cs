@@ -1,6 +1,6 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
-    public class CommentDeleteResponse
+    public class CommentDeleteResponse : GeneralResponse
     {
         public decimal NewAverageRating { get; set; }
         public int NewUsersRatedCount { get; set; }

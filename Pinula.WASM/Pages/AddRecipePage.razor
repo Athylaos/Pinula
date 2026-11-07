@@ -517,8 +517,8 @@
 
     private async Task HandleDelete()
     {
-        var resp = await RecipeApiClient.DeleteRecipeAsync(RecipeId ?? Guid.NewGuid());
-        if (resp)
+        var response = await RecipeApiClient.DeleteRecipeAsync(RecipeId ?? Guid.NewGuid());
+        if (response.Successful)
         {
             GoBack();
         }

@@ -4,22 +4,22 @@ namespace Pinula.Shared.Interface
 {
     public interface IRecipeApiClient
     {
-        public Task<Guid?> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType);
-        public Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid id);
-        public Task<Guid?> UpdateRecipeAsync(RecipeCreateDto createDto,Guid recipeId, Stream? photoStream, string? photoName, string? contentType);
-        public Task<bool> DeleteRecipeAsync(Guid id);
-        public Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filterParametrs, CancellationToken? ct);
+        Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filter, CancellationToken? ct = null);
+        Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid recipeId);
+        
+        Task<GeneralResponse> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType);
+        Task<GeneralResponse> UpdateRecipeAsync(RecipeCreateDto createDto, Guid recipeId, Stream? photoStream, string? photoName, string? contentType);
+        Task<GeneralResponse> DeleteRecipeAsync(Guid id);
 
-        public Task<bool?> ChangeFavoriteAsync(Guid recipeId);
+        Task<ToggleFavoriteResponse> ChangeFavoriteAsync(Guid recipeId);
 
-        public Task<CommentPostResponse?> PostCommentAsync(CommentCreateDto comment);
-        public Task<CommentDeleteResponse?> DeleteCommentAsync(Guid commentId);
-        public Task<CommentDeleteResponse?> UpdateCommentAsync(CommentCreateDto comment);
+        Task<CommentPostResponse> PostCommentAsync(CommentCreateDto comment);
+        Task<CommentDeleteResponse> UpdateCommentAsync(CommentCreateDto comment);
+        Task<CommentDeleteResponse> DeleteCommentAsync(Guid commentId);
 
-        Task<bool> AdminToggleRecipeApprovalAsync(Guid recipeId);
-        Task<bool> AdminToggleRecipeCheckedAsync(Guid recipeId);
         Task<List<AdminCommentDto>> GetAdminCommentsAsync();
-        Task<bool> AdminToggleCommentApprovalAsync(Guid commentId);
-
+        Task<ToggleBoolResponse> AdminToggleRecipeApprovalAsync(Guid recipeId);
+        Task<ToggleBoolResponse> AdminToggleRecipeCheckedAsync(Guid recipeId);
+        Task<GeneralResponse> AdminToggleCommentApprovalAsync(Guid commentId);
     }
 }
