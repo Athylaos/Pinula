@@ -79,8 +79,8 @@ else
     {
         if (string.IsNullOrWhiteSpace(newUnitNameCs) || string.IsNullOrWhiteSpace(newUnitNameEn) || string.IsNullOrWhiteSpace(newUnitCode)) return;
 
-        var success = await UnitApiClient.CreateUnitAsync(new UnitDto { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
-        if (success)
+        var result = await UnitApiClient.CreateUnitAsync(new UnitDto { Names = new Dictionary<string, string>{{"en", newUnitNameEn}, {"cs", newUnitNameCs}}, IsServingUnit = newUnitServing, Code = newUnitCode });
+        if (result.Successful)
         {
             newUnitCode = "";
             newUnitNameCs = "";
@@ -91,21 +91,21 @@ else
         }
         else
         {
-            statusMessage = "Failed to create unit.";
+            statusMessage = result.Message;
         }
     }
 
     private async Task HandleDelete(Guid id)
     {
-        var success = await UnitApiClient.DeleteUnitAsync(id);
-        if (success)
+        var result = await UnitApiClient.DeleteUnitAsync(id);
+        if (result.Successful)
         {
             statusMessage = "";
             await LoadUnits();
         }
         else
         {
-            statusMessage = "Cannot delete unit (it might be in use).";
+            statusMessage = result.Message;
         }
     }
 }

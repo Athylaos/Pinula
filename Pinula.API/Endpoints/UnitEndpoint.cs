@@ -1,11 +1,6 @@
-﻿using DeepL;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.API.Models;
+﻿using Pinula.Shared.DTOs;
 using System.Globalization;
-using System.Security.Claims;
+using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints
 {
@@ -16,75 +11,39 @@ namespace Pinula.API.Endpoints
             var group = app.MapGroup("/units").RequireRateLimiting("GeneralApiPolicy");
 
             //---------------------------------------------------------------Get servingUnits
-            group.MapGet("/getServing", async (PinulaDbContext db) =>
+            group.MapGet("/getServing", async (IUnitBackendService service) =>
             {
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                var units = await db.Units.AsNoTracking().Where(u => u.IsServingUnit).Select(u => new UnitPreviewDto { Id = u.Id, Code = u.Code, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
-
-                return Results.Ok(units) ;
+                string lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                var units = await service.GetServingUnitsAsync(lang);
+                return Results.Ok(units);
             });
 
             //---------------------------------------------------------------Get units
-            group.MapGet("/get", async (PinulaDbContext db) =>
+            group.MapGet("/get", async (IUnitBackendService service) =>
             {
-                string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                var units = await db.Units.AsNoTracking().Select(u => new UnitPreviewDto { Id = u.Id, Code = u.Code, Name = u.Names.GetValueOrDefault(languageCode) ?? u.Names.GetValueOrDefault("en") ?? "UnitName" }).ToListAsync();
-
+                string lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                var units = await service.GetUnitsAsync(lang);
                 return Results.Ok(units);
             });
 
             //---------------------------------------------------------------Create unit
-            group.MapPost("/create", async (UnitDto unit, ClaimsPrincipal user, PinulaDbContext db) =>
+            group.MapPost("/create", async (UnitDto unit, IUnitBackendService service) =>
             {
-                if (string.IsNullOrWhiteSpace(unit.Names["en"]) || string.IsNullOrWhiteSpace(unit.Names["cs"]))
-                    return Results.BadRequest("Unit names is mandatory");
-
-                if (string.IsNullOrWhiteSpace(unit.Code))
-                    return Results.BadRequest("Code is mandatory");
-
-                var newUnit = new Unit
-                {
-                    Id = Guid.NewGuid(),
-                    Code = unit.Code,
-                    Names = unit.Names,
-                    IsServingUnit = unit.IsServingUnit
-                };
-
-                db.Units.Add(newUnit);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(newUnit.Id);
+                var result = await service.CreateUnitAsync(unit);
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete unit
-            group.MapDelete("/{id:guid}", async (Guid id, PinulaDbContext db) =>
+            group.MapDelete("/{id:guid}", async (Guid id, IUnitBackendService service) =>
             {
-                var unit = await db.Units.Include(u => u.IngredientUnits).FirstOrDefaultAsync(u => u.Id == id);
-
-                if (unit == null) return Results.NotFound();
-
-                if (unit.IngredientUnits.Any())
-                {
-                    return Results.BadRequest("The unit is used in ingredients, cant be deleted.");
-                }
-
-                db.Units.Remove(unit);
-                await db.SaveChangesAsync();
-
-                return Results.NoContent();
+                var result = await service.DeleteUnitAsync(id);
+                return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Get units admin
-            group.MapGet("/getAdmin", async (PinulaDbContext db) =>
+            group.MapGet("/getAdmin", async (IUnitBackendService service) =>
             {
-                var units = await db.Units.AsNoTracking().Select(u => new UnitDto
-                {
-                    IsServingUnit = u.IsServingUnit,
-                    Code = u.Code,
-                    Names= u.Names,
-                    Id = u.Id,
-                }).ToListAsync();
-
+                var units = await service.GetAdminUnitsAsync();
                 return Results.Ok(units);
             }).RequireAuthorization("AdminOnly");
 

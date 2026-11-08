@@ -1,7 +1,7 @@
-﻿using Pinula.Shared.Interface;
-using Pinula.Shared.DTOs;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using Pinula.Shared.DTOs;
+using Pinula.Shared.Interface;
 
 namespace Pinula.Shared.Services
 {
@@ -16,15 +16,23 @@ namespace Pinula.Shared.Services
             _httpClient = httpClient;
             _logger = logger;
         }
+
         public async Task<List<UnitPreviewDto>> GetAllServingUnitsAsync()
         {
-            var response = await _httpClient.GetFromJsonAsync<List<UnitPreviewDto>>($"{BaseUrl}/getServing");
-            return response ?? new List<UnitPreviewDto>();
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<List<UnitPreviewDto>>($"{BaseUrl}/getServing");
+                return response ?? new List<UnitPreviewDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting serving units.");
+                return new List<UnitPreviewDto>();
+            }
         }
 
         public async Task<List<UnitPreviewDto>> GetAllUnitsAsync()
         {
-
             try
             {
                 var response = await _httpClient.GetFromJsonAsync<List<UnitPreviewDto>>($"{BaseUrl}/get");
@@ -32,59 +40,52 @@ namespace Pinula.Shared.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while getting all units: {ex.Message}");
+                _logger.LogError(ex, "Error while getting all units.");
                 return new List<UnitPreviewDto>();
-            }
-        }
-
-        public async Task<bool> CreateUnitAsync(UnitDto unit)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", unit);
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while creating unit: {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<bool> DeleteUnitAsync(Guid unitId)
-        {
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"{BaseUrl}/{unitId}");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning($"Error while deleting unit: {error}");
-                }
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error while deleting unit {unitId}: {ex.Message}");
-                return false;
             }
         }
 
         public async Task<List<UnitDto>> GetAllUnitsAdminAsync()
         {
-
             try
             {
                 var response = await _httpClient.GetFromJsonAsync<List<UnitDto>>($"{BaseUrl}/getAdmin");
-                return response ?? new();
+                return response ?? new List<UnitDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while getting all units: {ex.Message}");
-                return new();
+                _logger.LogError(ex, "Error while getting admin units.");
+                return new List<UnitDto>();
+            }
+        }
+
+        public async Task<GeneralResponse> CreateUnitAsync(UnitDto unit)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", unit);
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating unit with code {Code}", unit.Code);
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
+        }
+
+        public async Task<GeneralResponse> DeleteUnitAsync(Guid unitId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}/{unitId}");
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while deleting unit {UnitId}", unitId);
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
     }
