@@ -86,7 +86,7 @@
             var loginDto = new UserLoginDto { Email = email, Password = password };
             var result = await UserApiClient.LoginAsync(loginDto);
 
-            if (!result)
+            if (!result.Successful)
             {
                 indicatorText = Localizer["WrongLogin"];
                 indicatorVisibility = true;

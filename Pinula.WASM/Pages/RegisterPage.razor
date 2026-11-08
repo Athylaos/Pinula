@@ -177,13 +177,13 @@
                 return;
             }
 
-            var success = await UserApiClient.SendCodeRequest(new VerificationCodeRequestDto 
+            var response = await UserApiClient.SendCodeRequest(new VerificationCodeRequestDto 
             { 
                 Email = emailEntry, 
                 CodeType = VerificationCodeType.Registration 
             });
 
-            if (success)
+            if (response.Successful)
             {
                 emailEntered = true;
                 indicatorVisibility = false;
@@ -287,14 +287,14 @@
                 VerificationToken = authenticationToken.Value
             };
 
-            var success = await UserApiClient.RegisterAsync(registrationDto);
-            if (!success)
+            var response = await UserApiClient.RegisterAsync(registrationDto);
+            if (!response.Successful)
             {
                 ShowError(Localizer["RegistrationError"]);
                 return;
             }
             var loginResult = await UserApiClient.LoginAsync(new UserLoginDto { Email = emailEntry, Password = password1 });
-            if (loginResult)
+            if (loginResult.Successful)
             {
                 try
                 {

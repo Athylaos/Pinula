@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.Services
 {
@@ -23,17 +22,18 @@ namespace Pinula.Shared.Services
             _logger = logger;
         }
 
-        public async Task<bool> ChangePasswordAsync(PasswordChangeDto passwordDto)
+        public async Task<GeneralResponse> ChangePasswordAsync(PasswordChangeDto passwordDto)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/changePassword", passwordDto);
-                return response.IsSuccessStatusCode;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while changing passwd: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "Error while changing password");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
@@ -42,23 +42,13 @@ namespace Pinula.Shared.Services
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/getMe");
-
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    _logger.LogError("User not logged in");
-                    return null;
-                }
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<UserDisplayDto>();
-                }
-
+                if (response.StatusCode == HttpStatusCode.Unauthorized) return null;
+                if (response.IsSuccessStatusCode) return await response.Content.ReadFromJsonAsync<UserDisplayDto>();
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Getting current user error: {ex.Message}");
+                _logger.LogError(ex, "Error getting current user");
                 return null;
             }
         }
@@ -68,58 +58,51 @@ namespace Pinula.Shared.Services
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/getUserDisplay/{userId}");
-
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    return null;
-
+                if (response.StatusCode == HttpStatusCode.NotFound) return null;
                 response.EnsureSuccessStatusCode();
-
                 return await response.Content.ReadFromJsonAsync<UserDisplayDto>();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Getting user error: {ex.Message}");
+                _logger.LogError(ex, "Error getting user by id");
                 return null;
             }
         }
 
         public async Task<bool> IsUserLoggedInAsync()
         {
-            if (string.IsNullOrEmpty(await _tokenStorage.GetTokenAsync()))
+            if (string.IsNullOrEmpty(await _tokenStorage.GetTokenAsync())) return false;
+            try
             {
+                var result = await _httpClient.GetAsync($"{BaseUrl}/verifyToken");
+                return result.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying auth token");
                 return false;
             }
-            var result = await _httpClient.GetAsync($"{BaseUrl}/verifyToken");
-            if (!result.IsSuccessStatusCode)
-            {
-                return false;
-            }
-            return true;
         }
 
-        public async Task<bool> LoginAsync(UserLoginDto loginDto)
+        public async Task<LoginResponse> LoginAsync(UserLoginDto loginDto)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/login", loginDto);
+                var authResult = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
-                if (response.IsSuccessStatusCode)
+                if (authResult != null && authResult.Successful)
                 {
-                    var authResult = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-                    if (authResult != null)
-                    {
-                        await _tokenStorage.SaveTokenAsync(authResult.Token);
-
-                        return true;
-                    }
+                    await _tokenStorage.SaveTokenAsync(authResult.Token);
+                    return authResult;
                 }
-                return false;
+                
+                return authResult ?? new LoginResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Login Error: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "Login error");
+                return new LoginResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
@@ -128,27 +111,23 @@ namespace Pinula.Shared.Services
             await _tokenStorage.RemoveTokenAsync();
         }
 
-        public async Task<bool> RegisterAsync(UserRegistrationDto userDto)
+        public async Task<GeneralResponse> RegisterAsync(UserRegistrationDto userDto)
         {
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/register", userDto);
-                return response.IsSuccessStatusCode;
-            }
-            catch (OperationCanceledException)
-            {
-                return false;
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/register", userDto, cts.Token);
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
-                return false;
+                _logger.LogError(ex, "Registration error");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
-            return false;
         }
 
-        public async Task<bool> UpdateUserAsync(UserUpdateDto? userUpdateDto, Stream? photoStream, string photoName, string contentType)
+        public async Task<GeneralResponse> UpdateUserAsync(UserUpdateDto? userUpdateDto, Stream? photoStream, string? photoName, string? contentType)
         {
             try
             {
@@ -163,15 +142,14 @@ namespace Pinula.Shared.Services
                     content.Add(fileContent, "image", photoName);
                 }
 
-
                 var response = await _httpClient.PutAsync($"{BaseUrl}/update", content);
-
-                return response.IsSuccessStatusCode;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while updating user: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "Error while updating user");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
@@ -180,53 +158,73 @@ namespace Pinula.Shared.Services
             try
             {
                 var response = await _httpClient.GetFromJsonAsync<List<AdminUserDisplayDto>>($"{BaseUrl}/admin/all");
-                return response ?? new();
+                return response ?? new List<AdminUserDisplayDto>();
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Error while getting users: {ex.Message}");
+                _logger.LogError(ex, "Error while getting users");
                 return new List<AdminUserDisplayDto>();
             }
         }
 
-        public async Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword)
+        public async Task<GeneralResponse> AdminChangePasswordAsync(Guid userId, string newPassword)
         {
             try
             {
                 var dto = new AdminPasswordChangeDto { UserId = userId, NewPassword = newPassword };
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/admin/changePassword", dto);
-                return response.IsSuccessStatusCode;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while changing user psswd: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "Error while changing user password as admin");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
-        public async Task<bool> AdminToggleCommentPermissionAsync(Guid userId)
+        public async Task<ToggleBoolResponse> AdminToggleCommentPermissionAsync(Guid userId)
         {
-            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentPermission/{userId}", null);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleCommentPermission/{userId}", null);
+                var result = await response.Content.ReadFromJsonAsync<ToggleBoolResponse>();
+                return result ?? new ToggleBoolResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling comment permission for {UserId}", userId);
+                return new ToggleBoolResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
         }
 
-        public async Task<bool> AdminToggleRecipePermissionAsync(Guid userId)
+        public async Task<ToggleBoolResponse> AdminToggleRecipePermissionAsync(Guid userId)
         {
-            var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleRecipePermission/{userId}", null);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var response = await _httpClient.PostAsync($"{BaseUrl}/admin/toggleRecipePermission/{userId}", null);
+                var result = await response.Content.ReadFromJsonAsync<ToggleBoolResponse>();
+                return result ?? new ToggleBoolResponse { Successful = false, Message = "Empty response from server" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling recipe permission for {UserId}", userId);
+                return new ToggleBoolResponse { Successful = false, Message = $"Client error: {ex.Message}" };
+            }
         }
         
-        public async Task<bool> SendCodeRequest(VerificationCodeRequestDto requestDto)
+        public async Task<GeneralResponse> SendCodeRequest(VerificationCodeRequestDto requestDto)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/sendVerificationCode", requestDto);
-                return response.IsSuccessStatusCode;
+                var result = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+                return result ?? new GeneralResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"SendCodeRequest Error: {ex.Message}");
-                return false;
+                _logger.LogError(ex, "SendCodeRequest Error");
+                return new GeneralResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
 
@@ -235,49 +233,30 @@ namespace Pinula.Shared.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/verifyCode", verifyDto);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<VerificationCodeResponseDto>();
-                    if (result != null)
-                    {
-                        return result;
-                    }
-                }
-                
-                return new VerificationCodeResponseDto(){Success = false, VerificationToken = null};
+                var result = await response.Content.ReadFromJsonAsync<VerificationCodeResponseDto>();
+                return result ?? new VerificationCodeResponseDto { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"VerifyCodeRequest Error: {ex.Message}");
-                return new VerificationCodeResponseDto(){Success = false, VerificationToken = null};
+                _logger.LogError(ex, "VerifyCodeRequest Error");
+                return new VerificationCodeResponseDto { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
         
         public async Task<bool> IsEmailAvailable(string email)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
-
+            if (string.IsNullOrWhiteSpace(email)) return false;
             try
             {
                 var encodedEmail = Uri.EscapeDataString(email.Trim().ToLower());
                 var response = await _httpClient.GetAsync($"{BaseUrl}/checkEmail?email={encodedEmail}");
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    return true;
-                }
-                
-                return false;
+                return response.StatusCode == HttpStatusCode.OK;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"IsEmailRegistered Error: {ex.Message}");
+                _logger.LogError(ex, "IsEmailRegistered Error");
                 return false; 
             }
         }
-        
-
     }
 }

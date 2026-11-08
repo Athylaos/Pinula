@@ -7,7 +7,6 @@
 @inject IUserApiClient UserApiClient
 @inject IRecipeApiClient RecipeApiClient
 @inject NavigationManager NavManager
-@inject IJSRuntime JSRuntime
 @inject IStringLocalizer<App> Localizer
 @inject ILocalStorage LocalStorage
 
@@ -391,14 +390,14 @@
                 stream = selectedFile.OpenReadStream(maxFileSize);
             }
 
-            var success = await UserApiClient.UpdateUserAsync(
+            var response = await UserApiClient.UpdateUserAsync(
                 updateModel, 
                 stream, 
                 selectedFile?.Name ?? string.Empty, 
                 selectedFile?.ContentType ?? string.Empty
             );
 
-            if (success)
+            if (response.Successful)
             {
                 statusPositive = true;
                 statusMessage = Localizer["ProfileUpdatedSuccess"];

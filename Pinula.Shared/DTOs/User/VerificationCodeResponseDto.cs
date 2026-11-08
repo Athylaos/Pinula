@@ -1,6 +1,6 @@
 namespace Pinula.Shared.DTOs;
 
-public class VerificationCodeResponseDto
+public class VerificationCodeResponseDto : GeneralResponse
 {
     public bool Success { get; set; }
     public Guid? VerificationToken { get; set; }

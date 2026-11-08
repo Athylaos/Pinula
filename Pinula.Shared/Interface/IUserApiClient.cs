@@ -1,28 +1,23 @@
 ﻿using Pinula.Shared.DTOs;
-using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.Interface
 {
     public interface IUserApiClient
     {
-        Task<bool> RegisterAsync(UserRegistrationDto user);
-        Task<bool> LoginAsync(UserLoginDto loginDto);
+        Task<GeneralResponse> ChangePasswordAsync(PasswordChangeDto passwordDto);
+        Task<UserDisplayDto?> GetCurrentUserAsync();
+        Task<UserDisplayDto?> GetUserByIdAsync(Guid userId);
+        Task<bool> IsUserLoggedInAsync();
+        Task<LoginResponse> LoginAsync(UserLoginDto loginDto);
         void Logout();
-        
-        Task<bool> SendCodeRequest(VerificationCodeRequestDto requestDto);
+        Task<GeneralResponse> RegisterAsync(UserRegistrationDto userDto);
+        Task<GeneralResponse> UpdateUserAsync(UserUpdateDto? userUpdateDto, Stream? photoStream, string? photoName, string? contentType);
+        Task<List<AdminUserDisplayDto>> AdminGetAllUsersAsync();
+        Task<GeneralResponse> AdminChangePasswordAsync(Guid userId, string newPassword);
+        Task<ToggleBoolResponse> AdminToggleCommentPermissionAsync(Guid userId);
+        Task<ToggleBoolResponse> AdminToggleRecipePermissionAsync(Guid userId);
+        Task<GeneralResponse> SendCodeRequest(VerificationCodeRequestDto requestDto);
         Task<VerificationCodeResponseDto> VerifyCodeRequest(VerificationCodeVerifyDto verifyDto);
         Task<bool> IsEmailAvailable(string email);
-
-        Task<UserDisplayDto?> GetCurrentUserAsync();
-        Task<bool> IsUserLoggedInAsync();
-
-        Task<UserDisplayDto?> GetUserByIdAsync(Guid userId);
-        Task<bool> UpdateUserAsync(UserUpdateDto userUpdateDto, Stream? photoStream, string photoName, string contentType);
-        Task<bool> ChangePasswordAsync(PasswordChangeDto passwordDto);
-
-        Task<List<AdminUserDisplayDto>> AdminGetAllUsersAsync();
-        Task<bool> AdminChangePasswordAsync(Guid userId, string newPassword);
-        Task<bool> AdminToggleCommentPermissionAsync(Guid userId);
-        Task<bool> AdminToggleRecipePermissionAsync(Guid userId);
     }
 }
