@@ -1,18 +1,6 @@
-﻿using DeepL;
-using DeepL.Model;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
-using Microsoft.EntityFrameworkCore;
-using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.Shared.Enums;
+﻿using Pinula.Shared.DTOs;
 using Pinula.API.Interface;
-using Pinula.API.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using System.Buffers.Text;
-using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text.Json;
 

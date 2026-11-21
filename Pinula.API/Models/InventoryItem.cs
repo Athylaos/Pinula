@@ -13,8 +13,8 @@ public class InventoryItem
     
     public virtual ICollection<InventoryMealPlanAllocation> Allocations { get; set; } = new List<InventoryMealPlanAllocation>();
 
-    public virtual Group Group { get; set; }
-    public virtual Ingredient Ingredient { get; set; }
-    public virtual Unit Unit { get; set; }
+    public virtual Group Group { get; set; } = null!;
+    public virtual Ingredient Ingredient { get; set; } = null!;
+    public virtual Unit Unit { get; set; } = null!;
     
 }

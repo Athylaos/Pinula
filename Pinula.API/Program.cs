@@ -127,6 +127,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddHttpClient<IEmailService, EmailService>();
+builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 
 builder.Services.AddScoped<ICategoryBackendService, CategoryBackendService>();
 builder.Services.AddScoped<IIngredientBackendService, IngredientBackendService>();

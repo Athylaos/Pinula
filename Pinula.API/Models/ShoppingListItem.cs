@@ -13,10 +13,10 @@ public class ShoppingListItem
     public bool IsPurchased { get; set; }
     
     public Guid? MealPlanIngredientId { get; set; }
-    public MealPlanIngredient MealPlanIngredient { get; set; }
-    
-    public virtual Group Group { get; set; }
-    public virtual Ingredient Ingredient { get; set; }
-    public virtual Unit Unit { get; set; }
-    public virtual ShoppingCategory ShoppingCategory { get; set; }
+    public MealPlanIngredient MealPlanIngredient { get; set; } = new();
+
+    public virtual Group Group { get; set; } = null!;
+    public virtual Ingredient Ingredient { get; set; } = null!;
+    public virtual Unit Unit { get; set; } = null!;
+    public virtual ShoppingCategory ShoppingCategory { get; set; } = null!;
 }

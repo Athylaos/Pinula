@@ -50,6 +50,7 @@ namespace Pinula.API.Services
         public static async Task MakeDefaultUnitsAsync(PinulaDbContext db)
         {
             var gUnit =  db.Units.FirstOrDefault(u => u.Code == "g");
+            if (gUnit is null) gUnit = new();
             
             var ingredients = await db.Ingredients.Include(i => i.IngredientUnits).ThenInclude(iu => iu.Unit).ToListAsync();
             foreach (var ingredient in ingredients)
@@ -75,7 +76,7 @@ namespace Pinula.API.Services
                 }
                 
                 
-                if (ingredient.DefaultUnit is null)
+                if (ingredient.DefaultUnit.Id == Guid.Empty)
                 {
                     ingredient.DefaultUnitId = gUnit.Id;
                     Console.WriteLine($"#####################Ingredient: {ingredient.Names["en"]} === Added new default unit: {gUnit.Code}");

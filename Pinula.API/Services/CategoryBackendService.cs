@@ -5,10 +5,7 @@ using Pinula.Shared.DTOs;
 using Pinula.API.Interface;
 using Pinula.API.Models;
 using Pinula.API.Projections;
-using Pinula.Shared.DTOs;
 using Pinula.Shared.Constants;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 
 namespace Pinula.API.Services;
 
@@ -16,11 +13,13 @@ public class CategoryBackendService : ICategoryBackendService
 {
     private readonly PinulaDbContext _db;
     private readonly ILogger<CategoryBackendService> _logger;
+    private readonly IImageProcessingService _imageService;
     
-    public CategoryBackendService(PinulaDbContext db, ILogger<CategoryBackendService> logger)
+    public CategoryBackendService(PinulaDbContext db, ILogger<CategoryBackendService> logger, IImageProcessingService imageProcessingService)
     {
         _db = db;
         _logger = logger;
+        _imageService = imageProcessingService;
     }
     
     public async Task<List<CategoryDisplayDto>> GetCategoriesTree(string baseUrl, string lang)
@@ -95,42 +94,24 @@ public class CategoryBackendService : ICategoryBackendService
         
         if (imageFile is { Length: > 0 })
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            var uploadResult = await _imageService.SaveImageAsync(
+                imageFile: imageFile,
+                subfolder: "categories",
+                targetWidth: 800,
+                targetHeight: 0,
+                resizeType: ImageResizeType.Max,
+                quality: 100);
 
-            if (!allowedExtensions.Contains(extension))
-                return new CreateCategoryResponse()
-                    { StatusCode = 400, Message = "Unsupported file format"};
-
-            var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "images", "categories");
-            if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-            var fileName = $"{Guid.NewGuid()}.webp";
-            var filePath = Path.Combine(uploadFolder, fileName);
-
-            try
+            if (!uploadResult.Successful)
             {
-                using (var image = await Image.LoadAsync(imageFile.OpenReadStream()))
+                return new CreateCategoryResponse
                 {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(800, 0)
-                    }));
+                    StatusCode = uploadResult.StatusCode,
+                    Message = uploadResult.ErrorMessage!
+                };
+            }
 
-                    await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder()
-                    {
-                        Quality = 100
-                    });
-                }
-                finalPhotoUrl = fileName;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while processing image for category creation");
-                return new CreateCategoryResponse()
-                    { StatusCode = 500, Message = "Error while processing image"};
-            }
+            finalPhotoUrl = uploadResult.FileName!;
         }
         
         var newCategory = new Category

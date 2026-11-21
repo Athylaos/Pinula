@@ -1,14 +1,5 @@
-﻿using DeepL;
-using Mapster;
-using Microsoft.EntityFrameworkCore;
-using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.API.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using System.Diagnostics;
+﻿using Pinula.Shared.DTOs;
 using System.Globalization;
-using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text;

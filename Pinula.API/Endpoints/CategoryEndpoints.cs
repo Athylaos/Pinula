@@ -1,15 +1,6 @@
-﻿using DeepL;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Pinula.API.Context;
-using Pinula.Shared.DTOs;
-using Pinula.API.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+﻿using Pinula.Shared.DTOs;
 using System.Globalization;
-using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Pinula.API.Interface;
 
 namespace Pinula.API.Endpoints

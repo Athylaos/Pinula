@@ -11,8 +11,7 @@ using Pinula.API.Services;
 using Pinula.API.Tests.TestHelpers;
 using Moq;
 using Pinula.Shared.DTOs;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 
 namespace Pinula.API.Tests.Services;
 
@@ -27,13 +26,21 @@ public class CategoryBackendServiceTests : IDisposable
     public CategoryBackendServiceTests()
     {
         (_db, _connection) = TestDbContextFactory.CreateInMemoryDbContext();
-        _service = new CategoryBackendService(_db, new Mock<ILogger<CategoryBackendService>>().Object);
         
         _tempFolderPath = Path.Combine(Path.GetTempPath(), "PinulaTestUploads_" + Guid.NewGuid());
         Directory.CreateDirectory(_tempFolderPath);
 
         _envMock = new Mock<IWebHostEnvironment>();
         _envMock.Setup(e => e.WebRootPath).Returns(_tempFolderPath);
+
+        var imageService = new ImageProcessingService(
+            _envMock.Object, 
+            new Mock<ILogger<ImageProcessingService>>().Object);
+
+        _service = new CategoryBackendService(
+            _db, 
+            new Mock<ILogger<CategoryBackendService>>().Object, 
+            imageService);
     }
 
     public void Dispose()
@@ -260,7 +267,7 @@ public class CategoryBackendServiceTests : IDisposable
     [InlineData("archive.zip")]
     public async Task CreateCategory_ShouldReturn400_WhenImageExtensionIsUnsupported(string fileName)
     {
-        var createDto = new CategoryCreateDto { Names = new Dictionary<string, string> { { "en", "Test" } }, SortOrder = 1};
+        var createDto = new CategoryCreateDto { Names = new Dictionary<string, string> { { "en", "Test" } }, SortOrder = 1 };
         
         var fileMock = new Mock<IFormFile>();
         fileMock.Setup(f => f.FileName).Returns(fileName);
@@ -269,14 +276,14 @@ public class CategoryBackendServiceTests : IDisposable
         var result = await _service.CreateCategory(createDto, fileMock.Object, _envMock.Object);
         
         result.StatusCode.Should().Be(400);
-        result.Message.Should().Be("Unsupported file format");
+        result.Message.Should().Be("Unsupported image format.");
         
         var categoryCount = await _db.Categories.CountAsync();
         categoryCount.Should().Be(0, "Category shouldn't be saved when wrong image type is provided");
     }
     
     [Fact]
-    public async Task CreateCategory_ShouldReturn500_WhenImageStreamIsCorrupted()
+    public async Task CreateCategory_ShouldReturn400_WhenImageStreamIsCorrupted()
     {
         var createDto = new CategoryCreateDto { Names = new Dictionary<string, string> { { "en", "Test" } } };
         
@@ -289,8 +296,8 @@ public class CategoryBackendServiceTests : IDisposable
         
         var result = await _service.CreateCategory(createDto, fileMock.Object, _envMock.Object);
         
-        result.StatusCode.Should().Be(500);
-        result.Message.Should().Be("Error while processing image");
+        result.StatusCode.Should().Be(400);
+        result.Message.Should().Be("Invalid or corrupted image file.");
 
         var categoryCount = await _db.Categories.CountAsync();
         categoryCount.Should().Be(0, "Category shouldn't be saved when processing image fails");
@@ -306,9 +313,11 @@ public class CategoryBackendServiceTests : IDisposable
         };
         
         using var imageStream = new MemoryStream();
-        using (var image = new Image<Rgba32>(10, 10))
+        using (var bitmap = new SKBitmap(10, 10))
+        using (var skImage = SKImage.FromBitmap(bitmap))
+        using (var encoded = skImage.Encode(SKEncodedImageFormat.Png, 100))
         {
-            await image.SaveAsPngAsync(imageStream);
+            encoded.SaveTo(imageStream);
         }
         imageStream.Position = 0;
 
@@ -330,7 +339,6 @@ public class CategoryBackendServiceTests : IDisposable
         var expectedFilePath = Path.Combine(_tempFolderPath, "images", "categories", savedCategory.PictureUrl);
         File.Exists(expectedFilePath).Should().BeTrue("Image file should be on drive");
     }
-
     #endregion
     
 

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pinula.API.Context;
+using Pinula.API.Interface;
 using Pinula.API.Models;
 using Pinula.Shared.DTOs.DataGenerator;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 
 namespace Pinula.API.Endpoints;
 
@@ -28,8 +27,8 @@ public static class ScriptEndpoint
                 .Where(i => ingredientIds.Contains(i.Id))
                 .ToDictionaryAsync(i => i.Id);
 
-            var gUnit = await db.Units.FirstOrDefaultAsync(u => u.Code == "g");
-            
+            var gUnit = await db.Units.FirstOrDefaultAsync(u => u.Code == "g") ?? await db.Units.FirstOrDefaultAsync() ?? new();
+
             int updatedCount = 0;
 
             foreach (var dto in dtos)
@@ -91,7 +90,7 @@ public static class ScriptEndpoint
         }).RequireAuthorization("AdminOnly");
         
         
-        group.MapPost("/upload-ingredient-image", async ([FromForm] Guid ingredientId, IFormFile image, PinulaDbContext db, IWebHostEnvironment env) =>
+        group.MapPost("/upload-ingredient-image", async ([FromForm] Guid ingredientId, IFormFile image, PinulaDbContext db, IImageProcessingService imageService) =>
         {
             if (image == null || image.Length == 0)
                 return Results.BadRequest("No image file provided.");
@@ -100,39 +99,26 @@ public static class ScriptEndpoint
             if (ingredient == null)
                 return Results.NotFound($"Ingredient with ID {ingredientId} not found.");
 
-            var uploadFolder = Path.Combine(env.WebRootPath, "images", "ingredients");
-            if (!Directory.Exists(uploadFolder))
-                Directory.CreateDirectory(uploadFolder);
+            var uploadResult = await imageService.SaveImageAsync(
+                imageFile: image,
+                subfolder: "ingredients",
+                targetWidth: 400,
+                targetHeight: 400,
+                resizeType: ImageResizeType.Max,
+                customFileNameWithoutExt: ingredientId.ToString(),
+                quality: 80);
 
-            var fileName = $"{ingredientId}.webp";
-            var filePath = Path.Combine(uploadFolder, fileName);
-
-            try
+            if (!uploadResult.Successful)
             {
-                using (var stream = image.OpenReadStream())
-                using (var img = await Image.LoadAsync(stream))
-                {
-                    img.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(400, 400)
-                    }));
-
-                    await img.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
-                    {
-                        Quality = 80
-                    });
-                }
-
-                ingredient.ImageUrl = fileName;
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new { Message = "Image uploaded successfully", ImageUrl = fileName });
+                return uploadResult.StatusCode == 400
+                    ? Results.BadRequest(uploadResult.ErrorMessage)
+                    : Results.Problem(uploadResult.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                return Results.Problem($"Error processing image: {ex.Message}");
-            }
+
+            ingredient.ImageUrl = uploadResult.FileName!;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Image uploaded successfully", ImageUrl = uploadResult.FileName });
 
         }).RequireAuthorization("AdminOnly").DisableAntiforgery();
         

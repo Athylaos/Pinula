@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Pinula.API;
 using Pinula.API.Context;
@@ -7,21 +6,21 @@ using Pinula.API.Models;
 using Pinula.Shared.Constants;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Enums;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 
 public class RecipeBackendService : IRecipeBackendService
 {
     private readonly PinulaDbContext _db;
     private readonly IWebHostEnvironment _env;
     private readonly ITranslationService _translationService;
+    private readonly IImageProcessingService _imageService;
     private readonly ILogger<RecipeBackendService> _logger;
 
-    public RecipeBackendService(PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService, ILogger<RecipeBackendService> logger)
+    public RecipeBackendService(PinulaDbContext db, IWebHostEnvironment env, ITranslationService translationService, IImageProcessingService imageProcessingService, ILogger<RecipeBackendService> logger)
     {
         _db = db;
         _env = env;
         _translationService = translationService;
+        _imageService = imageProcessingService;
         _logger = logger;
     }
 
@@ -46,7 +45,12 @@ public class RecipeBackendService : IRecipeBackendService
         }
 
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-            query = query.Where(r => r.Titles.GetValueOrDefault(lang).ToLower().Contains(filter.SearchTerm.ToLower()));
+        {
+            var term = filter.SearchTerm.Trim().ToLower();
+            query = query.Where(r =>
+                (r.Titles[lang] != null && r.Titles[lang].ToLower().Contains(term)) ||
+                (r.Titles["en"] != null && r.Titles["en"].ToLower().Contains(term)));
+        }
 
         if (filter.CategoryId.HasValue)
             query = query.Where(r => r.Categories.Any(c => c.Id == filter.CategoryId));
@@ -667,31 +671,17 @@ public class RecipeBackendService : IRecipeBackendService
 
     private async Task<(bool IsSuccess, string FileName, string Error)> ProcessAndSaveImageAsync(IFormFile imageFile, Guid? id)
     {
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        var customName = id.HasValue ? $"{id}_{Guid.NewGuid()}" : null;
 
-        if (!allowedExtensions.Contains(extension)) return (false, "", "Unsupported image format.");
+        var result = await _imageService.SaveImageAsync(
+            imageFile: imageFile,
+            subfolder: "recipes",
+            targetWidth: 1200,
+            targetHeight: 0,
+            resizeType: ImageResizeType.Max,
+            customFileNameWithoutExt: customName);
 
-        var uploadFolder = Path.Combine(_env.WebRootPath, "images", "recipes");
-        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-        
-        var fileName = id.HasValue ? $"{id}_{Guid.NewGuid()}.webp" : $"{Guid.NewGuid()}.webp";
-        var filePath = Path.Combine(uploadFolder, fileName);
-
-        try
-        {
-            using (var image = await Image.LoadAsync(imageFile.OpenReadStream()))
-            {
-                image.Mutate(x => x.Resize(new ResizeOptions { Mode = ResizeMode.Max, Size = new Size(1200, 0) }));
-                await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder() { Quality = 80 });
-            }
-            return (true, fileName, "");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to process recipe image.");
-            return (false, "", "Image Processing Error.");
-        }
+        return (result.Successful, result.FileName ?? string.Empty, result.ErrorMessage ?? string.Empty);
     }
 
     private static string GetMacrosLabel(decimal? Calories, decimal? Proteins, decimal? Fats, decimal? Carbohydrates)

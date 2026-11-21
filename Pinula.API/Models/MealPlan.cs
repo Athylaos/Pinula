@@ -14,10 +14,10 @@ namespace Pinula.API.Models
         public MealType MealType { get; set; }
         public int Servings { get; set; } = 1;
         public bool IsCooked { get; set; } = false;
-        
 
-        public Group? Group { get; set; }
-        public Recipe? Recipe { get; set; }
+
+        public Group Group { get; set; } = null!;
+        public Recipe Recipe { get; set; } = null!;
         public ICollection<User> Users { get; set; } = new List<User>();
         public virtual ICollection<MealPlanIngredient> MealPlanIngredients { get; set; } = new List<MealPlanIngredient>();
     }

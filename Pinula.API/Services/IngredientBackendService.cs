@@ -7,8 +7,6 @@ using Pinula.API.Models;
 using Pinula.API.Projections;
 using Pinula.Shared.Constants;
 using Pinula.Shared.DTOs;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 
 namespace Pinula.API.Services;
 
@@ -16,12 +14,14 @@ public class IngredientBackendService : IIngredientBackendService
 {
     private readonly PinulaDbContext _db;
     private readonly ITranslationService _translationService;
+    private readonly IImageProcessingService _imageService;
     private readonly ILogger<IngredientBackendService> _logger;
 
-    public IngredientBackendService(PinulaDbContext db, ITranslationService translationService, ILogger<IngredientBackendService> logger)
+    public IngredientBackendService(PinulaDbContext db, ITranslationService translationService, IImageProcessingService imageProcessingService, ILogger<IngredientBackendService> logger)
     {
         _db = db;
         _translationService = translationService;
+        _imageService = imageProcessingService;
         _logger = logger;
     }
     
@@ -108,37 +108,24 @@ public class IngredientBackendService : IIngredientBackendService
 
         if (imageFile is { Length: > 0 })
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            var uploadResult = await _imageService.SaveImageAsync(
+                imageFile: imageFile,
+                subfolder: "ingredients",
+                targetWidth: 1200,
+                targetHeight: 0,
+                resizeType: ImageResizeType.Max,
+                customFileNameWithoutExt: $"{newId}_{Guid.NewGuid()}");
 
-            if (!allowedExtensions.Contains(extension))
-                return new CreateIngredientResponse { StatusCode = 400, Message = "Unsupported image file format" };
-
-            var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "images", "ingredients");
-            if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-            var fileName = $"{newId}_{Guid.NewGuid()}.webp";
-            var filePath = Path.Combine(uploadFolder, fileName);
-
-            try
+            if (!uploadResult.Successful)
             {
-                using (var image = await Image.LoadAsync(imageFile.OpenReadStream()))
+                return new CreateIngredientResponse
                 {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(1200, 0)
-                    }));
+                    StatusCode = uploadResult.StatusCode,
+                    Message = uploadResult.ErrorMessage!
+                };
+            }
 
-                    await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder { Quality = 80 });
-                }
-                finalPhotoUrl = fileName;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while processing image for ingredient creation");
-                return new CreateIngredientResponse { StatusCode = 500, Message = "Unable to process image" };
-            }
+            finalPhotoUrl = uploadResult.FileName!;
         }
 
         try
@@ -328,65 +315,27 @@ public class IngredientBackendService : IIngredientBackendService
         
         if (imageFile is { Length: > 0 })
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            var uploadResult = await _imageService.SaveImageAsync(
+                imageFile: imageFile,
+                subfolder: "ingredients",
+                targetWidth: 1200,
+                targetHeight: 0,
+                resizeType: ImageResizeType.Max,
+                customFileNameWithoutExt: $"{ingredient.Id}_{Guid.NewGuid()}",
+                oldFileName: ingredient.ImageUrl,
+                defaultFileName: ImageConstants.DefaultIngredient);
 
-            if (!allowedExtensions.Contains(extension))
+            if (!uploadResult.Successful)
             {
-                return new GeneralResponse 
-                { 
-                    Successful = false, 
-                    StatusCode = 400, 
-                    Message = "Unsupported image format." 
+                return new GeneralResponse
+                {
+                    Successful = false,
+                    StatusCode = uploadResult.StatusCode,
+                    Message = uploadResult.ErrorMessage!
                 };
             }
 
-            if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-            var newFileName = $"{ingredient.Id}_{Guid.NewGuid()}.webp";
-            var newFilePath = Path.Combine(uploadFolder, newFileName);
-
-            try
-            {
-                using (var image = await Image.LoadAsync(imageFile.OpenReadStream()))
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(1200, 0)
-                    }));
-
-                    await image.SaveAsWebpAsync(newFilePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
-                    {
-                        Quality = 80
-                    });
-                }
-                
-                if (!string.IsNullOrEmpty(ingredient.ImageUrl) && 
-                    ingredient.ImageUrl != ImageConstants.DefaultIngredient && 
-                    ingredient.ImageUrl != "default_ingredient.png")
-                {
-                    var oldFileName = Path.GetFileName(ingredient.ImageUrl);
-                    var oldFilePath = Path.Combine(uploadFolder, oldFileName);
-                    
-                    if (File.Exists(oldFilePath))
-                    {
-                        File.Delete(oldFilePath);
-                    }
-                }
-
-                finalPhotoUrl = newFileName;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while processing image update for ingredient ID {IngredientId}", ingredient.Id);
-                return new GeneralResponse 
-                { 
-                    Successful = false, 
-                    StatusCode = 500, 
-                    Message = "Unable to process uploaded image." 
-                };
-            }
+            finalPhotoUrl = uploadResult.FileName!;
         }
 
         try
@@ -402,7 +351,7 @@ public class IngredientBackendService : IIngredientBackendService
                 else
                 {
                     var category = await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(t => t.Code == "UNCATEGORIZED")
-                                   ?? await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync();
+                                   ?? await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync() ?? new();
 
                     shoppingCategoryId = category.Id;
                 }
@@ -410,7 +359,7 @@ public class IngredientBackendService : IIngredientBackendService
             else
             {
                 var category = await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync(t => t.Code == "UNCATEGORIZED")
-                               ?? await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync();
+                               ?? await _db.ShoppingCategories.AsNoTracking().FirstOrDefaultAsync() ?? new();
 
                 shoppingCategoryId = category.Id;
             }

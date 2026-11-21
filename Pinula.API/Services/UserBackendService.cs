@@ -7,8 +7,6 @@ using Pinula.API.Models;
 using Pinula.API.Services;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Enums;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -22,19 +20,22 @@ namespace Pinula.API.Services
         private readonly IConfiguration _config;
         private readonly ILogger<UserBackendService> _logger;
         private readonly IEmailService _emailService;
+        private readonly IImageProcessingService _imageService;
         private readonly IWebHostEnvironment _env;
 
         public UserBackendService(
             PinulaDbContext db, 
             IConfiguration config, 
             ILogger<UserBackendService> logger, 
-            IEmailService emailService, 
+            IEmailService emailService,
+            IImageProcessingService imageProcessingService,
             IWebHostEnvironment env)
         {
             _db = db;
             _config = config;
             _logger = logger;
             _emailService = emailService;
+            _imageService = imageProcessingService;
             _env = env;
         }
 
@@ -173,30 +174,20 @@ namespace Pinula.API.Services
 
                 if (imageFile is { Length: > 0 })
                 {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-                    var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                    var uploadResult = await _imageService.SaveImageAsync(
+                        imageFile: imageFile,
+                        subfolder: "avatars",
+                        targetWidth: 600,
+                        targetHeight: 600,
+                        resizeType: ImageResizeType.Crop,
+                        customFileNameWithoutExt: $"{dbUser.Id}_{Guid.NewGuid()}",
+                        oldFileName: dbUser.AvatarUrl,
+                        defaultFileName: ImageConstants.DefaultAvatar);
 
-                    if (!allowedExtensions.Contains(extension)) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Unsupported image format." };
+                    if (!uploadResult.Successful)
+                        return new GeneralResponse { Successful = false, StatusCode = 400, Message = uploadResult.ErrorMessage! };
 
-                    var uploadFolder = Path.Combine(_env.WebRootPath, "images", "avatars");
-                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-
-                    var fileName = $"{dbUser.Id}_{Guid.NewGuid()}.webp";
-                    var filePath = Path.Combine(uploadFolder, fileName);
-
-                    using (var image = await Image.LoadAsync(imageFile.OpenReadStream()))
-                    {
-                        image.Mutate(x => x.Resize(new ResizeOptions { Mode = ResizeMode.Crop, Size = new Size(600, 600) }));
-                        await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder() { Quality = 80 });
-                    }
-                    
-                    if (!string.IsNullOrEmpty(dbUser.AvatarUrl) && dbUser.AvatarUrl != ImageConstants.DefaultAvatar)
-                    {
-                        var oldPath = Path.Combine(uploadFolder, dbUser.AvatarUrl);
-                        if (File.Exists(oldPath)) File.Delete(oldPath);
-                    }
-
-                    dbUser.AvatarUrl = fileName;
+                    dbUser.AvatarUrl = uploadResult.FileName!;
                 }
 
                 if (!string.IsNullOrWhiteSpace(dto.Name)) dbUser.Name = dto.Name.Trim();
