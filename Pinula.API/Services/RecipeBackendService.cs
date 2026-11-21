@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Pinula.API;
 using Pinula.API.Context;
 using Pinula.API.Interface;
@@ -29,8 +30,8 @@ public class RecipeBackendService : IRecipeBackendService
         var imageBaseUrl = $"{baseUrl}/images/recipes/";
         var defaultImage = ImageConstants.DefaultRecipe;
 
-        var userDb = currentUserId.HasValue 
-            ? await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId) 
+        var userDb = currentUserId.HasValue
+            ? await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId)
             : null;
 
         var query = _db.Recipes.AsNoTracking().AsQueryable();
@@ -81,7 +82,7 @@ public class RecipeBackendService : IRecipeBackendService
             SortBy.Oldest => query.OrderBy(r => r.RecipeCreated),
             _ => query.OrderByDescending(r => r.RecipeCreated)
         };
-        
+
         return await query
             .Skip(filter.Skip)
             .Take(filter.Amount)
@@ -118,7 +119,7 @@ public class RecipeBackendService : IRecipeBackendService
         if (recipeDb == null) return null;
 
         var recipe = recipeDb.AdaptWithLangAndBaseUrl<RecipeDetailsDto>(baseUrl, lang);
-        
+
         var allComments = await _db.Comments.AsNoTracking()
             .Where(c => c.RecipeId == recipeId)
             .Select(c => new CommentDisplayDto
@@ -163,7 +164,7 @@ public class RecipeBackendService : IRecipeBackendService
         recipe.IsFavorite = await _db.RecipeUsers.AnyAsync(ru => ru.UserId == currentUserId && ru.IsFavorite);
 
         if (userDb.GroupId is null) return recipe;
-        
+
         var ingredientIds = recipe.RecipeIngredients.Select(ri => ri.IngredientId).Distinct().ToList();
         var inventoryItemsDb = await _db.InventoryItems
             .AsNoTracking()
@@ -175,7 +176,7 @@ public class RecipeBackendService : IRecipeBackendService
         foreach (var ingredient in recipe.RecipeIngredients)
         {
             var inventoryIngredients = inventoryItemsDb.Where(i => i.IngredientId == ingredient.IngredientId || i.Ingredient.BaseIngredientId == ingredient.IngredientId);
-            
+
             decimal totalFreeGrams = 0;
             foreach (var invItem in inventoryIngredients)
             {
@@ -183,7 +184,7 @@ public class RecipeBackendService : IRecipeBackendService
                 var freeGrams = invItem.QuantityInGrams - allocatedGrams;
                 if (freeGrams > 0) totalFreeGrams += freeGrams;
             }
-            
+
             ingredient.QuantityInInventory = totalFreeGrams > 0 && ingredient.ConversionFactor > 0 ? totalFreeGrams / ingredient.ConversionFactor : 0;
         }
 
@@ -198,7 +199,7 @@ public class RecipeBackendService : IRecipeBackendService
 
         string finalPhotoUrl = ImageConstants.DefaultRecipe;
         Guid newRecipeGuid = Guid.NewGuid();
-        
+
         if (imageFile is { Length: > 0 })
         {
             var processedImage = await ProcessAndSaveImageAsync(imageFile, newRecipeGuid);
@@ -234,7 +235,7 @@ public class RecipeBackendService : IRecipeBackendService
             RecipeCreated = DateTime.UtcNow,
             Rating = 0,
             UsersRated = 0,
-            
+
             Calories = 0,
             Proteins = 0,
             Fats = 0,
@@ -267,7 +268,7 @@ public class RecipeBackendService : IRecipeBackendService
                 newRecipe.Sugars += factor * dbIng.Sugars;
                 newRecipe.Fiber += factor * dbIng.Fiber;
                 newRecipe.Salt += factor * dbIng.Salt;
-                
+
                 newRecipe.RecipeIngredients.Add(new RecipeIngredient
                 {
                     RecipeId = newRecipe.Id,
@@ -334,7 +335,7 @@ public class RecipeBackendService : IRecipeBackendService
         try
         {
             await _db.RecipeIngredients.Where(ri => ri.RecipeId == id).ExecuteDeleteAsync();
-            
+
             var oldSteps = await _db.RecipeSteps.Where(rs => rs.RecipeId == id).ToListAsync();
             await _db.RecipeSteps.Where(rs => rs.RecipeId == id).ExecuteDeleteAsync();
 
@@ -435,7 +436,7 @@ public class RecipeBackendService : IRecipeBackendService
 
         recipe.IsDeleted = true;
         await _db.SaveChangesAsync();
-        
+
         return new GeneralResponse { Successful = true, StatusCode = 200, Message = "Recipe deleted" };
     }
 
@@ -452,7 +453,7 @@ public class RecipeBackendService : IRecipeBackendService
             await _db.SaveChangesAsync();
             return new ToggleFavoriteResponse { Successful = true, StatusCode = 200, IsFavorite = true };
         }
-        
+
         favorite.IsFavorite = !favorite.IsFavorite;
         await _db.SaveChangesAsync();
         return new ToggleFavoriteResponse { Successful = true, StatusCode = 200, IsFavorite = favorite.IsFavorite };
@@ -469,7 +470,7 @@ public class RecipeBackendService : IRecipeBackendService
 
         if (dto.ParentCommentId.HasValue)
         {
-            if (!await _db.Comments.AnyAsync(c => c.Id == dto.ParentCommentId)) 
+            if (!await _db.Comments.AnyAsync(c => c.Id == dto.ParentCommentId))
                 return new CommentPostResponse { Successful = false, StatusCode = 400, Message = "Parent comment not found." };
             dto.Rating = null;
         }
@@ -573,7 +574,7 @@ public class RecipeBackendService : IRecipeBackendService
         {
             return await RecalculateRecipeRating(commentDb.RecipeId, userId);
         }
-        
+
         var recipe = await _db.Recipes.FirstOrDefaultAsync(r => r.Id == commentDb.RecipeId);
         return new CommentDeleteResponse
         {

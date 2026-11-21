@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
 using System.Net.Http.Json;

@@ -7,7 +7,7 @@ public static class HelperService
         if (quantity <= 0) return 0m;
 
         var code = unitCode?.ToLowerInvariant().Trim();
-        
+
         if (code == "g" || code == "ml")
         {
             if (quantity >= 100)
@@ -19,25 +19,25 @@ public static class HelperService
             {
                 return Math.Round(quantity, MidpointRounding.AwayFromZero);
             }
-            
+
             return Math.Round(quantity, 1, MidpointRounding.AwayFromZero);
         }
-        
+
         if (code == "ks" || code == "pcs" || code == "piece" || string.IsNullOrEmpty(code))
         {
             if (quantity >= 10)
             {
                 return Math.Round(quantity, MidpointRounding.AwayFromZero);
             }
-            
+
             return Math.Round(quantity * 4m, MidpointRounding.AwayFromZero) / 4m;
         }
-        
+
         if (quantity >= 10)
         {
             return Math.Round(quantity, 1, MidpointRounding.AwayFromZero);
         }
-    
+
         return Math.Round(quantity, 2, MidpointRounding.AwayFromZero);
     }
 }

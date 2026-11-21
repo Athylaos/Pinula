@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 using Pinula.API.Interface;
 using System.Globalization;
 using System.Security.Claims;
@@ -41,7 +41,7 @@ namespace Pinula.API.Endpoints
                 var recipe = await service.GetRecipeDetailsAsync(recipeId, currentUserId, baseUrl, lang);
                 return recipe != null ? Results.Ok(recipe) : Results.NotFound();
             });
-            
+
             //---------------------------------------------------------------Create recipe
             group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, IRecipeBackendService service) =>
             {
@@ -55,11 +55,11 @@ namespace Pinula.API.Endpoints
                 if (dto == null) return Results.BadRequest("Invalid recipe data.");
 
                 var file = form.Files.GetFile("image");
-            
+
                 var result = await service.CreateRecipeAsync(user.GetUserId(), dto, file, lang);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
-            
+
             //---------------------------------------------------------------Update recipe
             group.MapPut("/update/{id:guid}", async (Guid id, HttpRequest request, ClaimsPrincipal user, IRecipeBackendService service) =>
             {
@@ -77,14 +77,14 @@ namespace Pinula.API.Endpoints
                 var result = await service.UpdateRecipeAsync(id, user.GetUserId(), dto, file, lang);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
-            
+
             //---------------------------------------------------------------Delete recipe
             group.MapDelete("/delete/{recipeId:guid}", async (Guid recipeId, ClaimsPrincipal user, IRecipeBackendService service) =>
             {
                 var result = await service.DeleteRecipeAsync(recipeId, user.GetUserId());
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
-            
+
             //---------------------------------------------------------------Post comment
             group.MapPost("/postComment", async (CommentCreateDto dto, ClaimsPrincipal user, IRecipeBackendService service) =>
             {
@@ -135,7 +135,7 @@ namespace Pinula.API.Endpoints
                 var result = await service.AdminToggleCommentApprovalAsync(commentId);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
-            
+
         }
 
         public static string GetMacrosLabel(decimal? Calories, decimal? Proteins, decimal? Fats, decimal? Carbohydrates)
@@ -173,5 +173,5 @@ namespace Pinula.API.Endpoints
 
             return "Balanced";
         }
-    } 
+    }
 }

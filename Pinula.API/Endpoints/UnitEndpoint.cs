@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 using System.Globalization;
 using Pinula.API.Interface;
 
@@ -48,6 +48,6 @@ namespace Pinula.API.Endpoints
             }).RequireAuthorization("AdminOnly");
 
         }
-    
-    } 
+
+    }
 }

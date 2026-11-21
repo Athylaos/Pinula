@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 
 namespace Pinula.Shared.Interface
 {
@@ -6,7 +6,7 @@ namespace Pinula.Shared.Interface
     {
         Task<List<RecipePreviewDto>> GetFilteredRecipePreviewsAsync(RecipeFilterParameters filter, CancellationToken? ct = null);
         Task<RecipeDetailsDto?> GetRecipeDetailsAsync(Guid recipeId);
-        
+
         Task<GeneralResponse> SaveRecipeAsync(RecipeCreateDto createDto, Stream? photoStream, string? photoName, string? contentType);
         Task<GeneralResponse> UpdateRecipeAsync(RecipeCreateDto createDto, Guid recipeId, Stream? photoStream, string? photoName, string? contentType);
         Task<GeneralResponse> DeleteRecipeAsync(Guid id);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Pinula.API.Models;
@@ -34,7 +34,7 @@ public partial class Ingredient
     public bool IsLactoseFree { get; set; }
 
     public string? Barcode { get; set; }
-    public string? ImageUrl { get; set; } 
+    public string? ImageUrl { get; set; }
 
     public string? NutriScore { get; set; }
     public int? NovaClassification { get; set; }

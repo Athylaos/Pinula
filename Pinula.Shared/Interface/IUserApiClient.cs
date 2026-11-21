@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 
 namespace Pinula.Shared.Interface
 {

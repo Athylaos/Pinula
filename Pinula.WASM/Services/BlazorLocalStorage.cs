@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
+
 using Pinula.Shared.Interface;
 
 namespace Pinula.WASM.Services

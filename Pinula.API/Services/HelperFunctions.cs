@@ -12,7 +12,7 @@ public static class HelperFunctions
     {
         return dic.GetValueOrDefault(languageCode) ?? dic.GetValueOrDefault("en") ?? "Unknow";
     }
-    
+
     public enum ImageCategory
     {
         Ingredients = 1,
@@ -26,19 +26,19 @@ public static class HelperFunctions
         string imageDirectory = imageCategory switch
         {
             ImageCategory.Ingredients => "ingredients",
-            ImageCategory.Categories  => "categories",
-            ImageCategory.Recipes     => "recipes",
-            ImageCategory.Users       => "avatars",
-            _                         => "error"
+            ImageCategory.Categories => "categories",
+            ImageCategory.Recipes => "recipes",
+            ImageCategory.Users => "avatars",
+            _ => "error"
         };
 
         string defaultImage = imageCategory switch
         {
             ImageCategory.Ingredients => ImageConstants.DefaultIngredient,
-            ImageCategory.Categories  => ImageConstants.DefaultCategory,
-            ImageCategory.Recipes     => ImageConstants.DefaultRecipe,
-            ImageCategory.Users       => "default_avatar.png",
-            _                         => "error.png"
+            ImageCategory.Categories => ImageConstants.DefaultCategory,
+            ImageCategory.Recipes => ImageConstants.DefaultRecipe,
+            ImageCategory.Users => "default_avatar.png",
+            _ => "error.png"
         };
 
         var filename = string.IsNullOrWhiteSpace(imageUrl) ? defaultImage : imageUrl;
@@ -55,13 +55,13 @@ public static class HelperFunctions
     public static string GetLocalizedName(Dictionary<string, string>? names, string lang)
     {
         if (names == null || names.Count == 0) return string.Empty;
-        
-        return names.GetValueOrDefault(lang) 
-               ?? names.GetValueOrDefault("en") 
-               ?? names.Values.FirstOrDefault() 
+
+        return names.GetValueOrDefault(lang)
+               ?? names.GetValueOrDefault("en")
+               ?? names.Values.FirstOrDefault()
                ?? string.Empty;
     }
-    
+
     public static async Task<(IResult, User?, Group?)> AuthUserInGroup(ClaimsPrincipal user, PinulaDbContext db)
     {
         var userId = user.GetUserId();
@@ -69,7 +69,7 @@ public static class HelperFunctions
         {
             return (Results.Unauthorized(), null, null);
         }
-            
+
         var userDb = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (userDb is null)
         {

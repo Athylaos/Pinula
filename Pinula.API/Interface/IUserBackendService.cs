@@ -18,5 +18,5 @@ public interface IUserBackendService
     Task<ToggleBoolResponse> AdminToggleRecipePermissionAsync(Guid userId);
     Task<GeneralResponse> SendVerificationCodeAsync(VerificationCodeRequestDto dto, string lang);
     Task<VerificationCodeResponseDto> VerifyCodeAsync(VerificationCodeVerifyDto dto);
-    
+
 }

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
 using Pinula.Shared.Interface;
 using Pinula.Shared.Services;
 using Pinula.WASM;
 using Pinula.WASM.Services;
+
 using System.Globalization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -20,7 +22,7 @@ builder.Services.AddHttpClient("CookApi", client =>
         string configUrl;
         {
             var currentHost = builder.HostEnvironment.BaseAddress;
-        
+
             if (currentHost.Contains("stage.pinula.app"))
             {
                 configUrl = "https://stage-api.pinula.app";

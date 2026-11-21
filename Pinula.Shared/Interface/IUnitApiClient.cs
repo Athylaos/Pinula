@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 
 namespace Pinula.Shared.Interface
 {
@@ -7,8 +7,8 @@ namespace Pinula.Shared.Interface
         public Task<List<UnitPreviewDto>> GetAllServingUnitsAsync();
         public Task<List<UnitPreviewDto>> GetAllUnitsAsync();
         public Task<List<UnitDto>> GetAllUnitsAdminAsync();
-        
+
         public Task<GeneralResponse> CreateUnitAsync(UnitDto unit);
-         public Task<GeneralResponse> DeleteUnitAsync(Guid unitId);
+        public Task<GeneralResponse> DeleteUnitAsync(Guid unitId);
     }
 }

@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
 using Pinula.API.Context;
 using Pinula.API.Models;
+
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -27,9 +29,9 @@ namespace Pinula.API.Services
 
 
             public Guid? ShoppingCategoryId { get; set; }
-            public string? OffCategoryTag {  get; set; }
+            public string? OffCategoryTag { get; set; }
         }
-        
+
         public static async Task ShowDefaultUnitsAsync(PinulaDbContext db)
         {
             var ingredients = await db.Ingredients.AsNoTracking().ToListAsync();
@@ -46,12 +48,12 @@ namespace Pinula.API.Services
             }
 
         }
-        
+
         public static async Task MakeDefaultUnitsAsync(PinulaDbContext db)
         {
-            var gUnit =  db.Units.FirstOrDefault(u => u.Code == "g");
+            var gUnit = db.Units.FirstOrDefault(u => u.Code == "g");
             if (gUnit is null) gUnit = new();
-            
+
             var ingredients = await db.Ingredients.Include(i => i.IngredientUnits).ThenInclude(iu => iu.Unit).ToListAsync();
             foreach (var ingredient in ingredients)
             {
@@ -74,8 +76,8 @@ namespace Pinula.API.Services
                         Console.WriteLine($"Name: {unit.Unit.Names["en"]}");
                     }
                 }
-                
-                
+
+
                 if (ingredient.DefaultUnit.Id == Guid.Empty)
                 {
                     ingredient.DefaultUnitId = gUnit.Id;
@@ -106,7 +108,7 @@ namespace Pinula.API.Services
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var seedData = JsonSerializer.Deserialize<List<NutriDbSeedDto>>(jsonString, options);
 
-             if (seedData == null) return;
+            if (seedData == null) return;
 
             decimal ParseDecimal(JsonElement element)
             {
@@ -206,7 +208,7 @@ namespace Pinula.API.Services
                 if (cleanQuery.Contains("(")) cleanQuery = cleanQuery.Split('(')[0];
                 cleanQuery = cleanQuery.Trim();
 
-                
+
                 string url = $"https://world.openfoodfacts.org/cgi/search.pl" +
                              $"?search_terms={Uri.EscapeDataString(cleanQuery)}" +
                              $"&search_simple=1" +

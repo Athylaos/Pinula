@@ -24,9 +24,9 @@ namespace Pinula.API.Services
         private readonly IWebHostEnvironment _env;
 
         public UserBackendService(
-            PinulaDbContext db, 
-            IConfiguration config, 
-            ILogger<UserBackendService> logger, 
+            PinulaDbContext db,
+            IConfiguration config,
+            ILogger<UserBackendService> logger,
             IEmailService emailService,
             IImageProcessingService imageProcessingService,
             IWebHostEnvironment env)
@@ -61,9 +61,9 @@ namespace Pinula.API.Services
                     return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Email already in use" };
                 }
 
-                var verificationCode = await _db.VerificationCodes.FirstOrDefaultAsync(c => 
+                var verificationCode = await _db.VerificationCodes.FirstOrDefaultAsync(c =>
                     c.Id == dto.VerificationToken && c.IsUsed && c.ExpiresAt > DateTime.UtcNow && c.Email == cleanEmail && c.Type == VerificationCodeType.Registration);
-                
+
                 if (verificationCode is null) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Wrong verification token" };
 
                 _db.VerificationCodes.Remove(verificationCode);
@@ -96,14 +96,14 @@ namespace Pinula.API.Services
             try
             {
                 var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.Trim().ToLower());
-                
+
                 if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 {
                     return new LoginResponse { Successful = false, StatusCode = 401, Message = "Invalid credentials." };
                 }
 
                 var token = GenerateJwtToken(user);
-                
+
                 return new LoginResponse
                 {
                     Successful = true,
@@ -123,7 +123,7 @@ namespace Pinula.API.Services
         public async Task<UserDisplayDto?> GetMeAsync(Guid userId, string baseUrl)
         {
             var imageBaseUrl = $"{baseUrl}/images/avatars/";
-            
+
             var userData = await _db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new UserDisplayDto
             {
                 Id = u.Id,
@@ -141,7 +141,7 @@ namespace Pinula.API.Services
 
             userData.PostedRecipes = await _db.Recipes.AsNoTracking().CountAsync(r => r.UserId == userId);
             userData.PostedComments = await _db.Comments.AsNoTracking().CountAsync(c => c.UserId == userId);
-            
+
             var ratingsQuery = _db.Recipes.AsNoTracking().Where(r => r.UserId == userId);
             userData.AvgRating = await ratingsQuery.AnyAsync() ? await ratingsQuery.AverageAsync(r => r.Rating) ?? 0 : 0;
 
@@ -151,7 +151,7 @@ namespace Pinula.API.Services
         public async Task<UserDisplayDto?> GetUserDisplayAsync(Guid userId, string baseUrl)
         {
             var imageBaseUrl = $"{baseUrl}/images/avatars/";
-            
+
             return await _db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new UserDisplayDto
             {
                 Id = u.Id,
@@ -212,10 +212,10 @@ namespace Pinula.API.Services
                     c.Id == dto.VerificationToken && c.Email == cleanEmail && c.Type == VerificationCodeType.PasswordReset && c.IsUsed && c.ExpiresAt > DateTime.UtcNow);
 
                 if (code is null) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Invalid or expired token." };
-                
+
                 var userDb = await _db.Users.FirstOrDefaultAsync(u => u.Email == cleanEmail);
                 if (userDb is null) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "User not found." };
-                
+
                 userDb.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
                 _db.VerificationCodes.Remove(code);
                 await _db.SaveChangesAsync();
@@ -333,24 +333,24 @@ namespace Pinula.API.Services
                     .OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
 
                 if (codeRecord is null) return new VerificationCodeResponseDto { Successful = false, StatusCode = 400, CodeExpired = true };
-                
+
                 if (codeRecord.ExpiresAt < DateTime.UtcNow || codeRecord.AttemptCount >= 5)
                 {
                     codeRecord.IsUsed = true;
                     await _db.SaveChangesAsync();
                     return new VerificationCodeResponseDto { Successful = false, StatusCode = 400, CodeExpired = codeRecord.ExpiresAt < DateTime.UtcNow, RateLimited = codeRecord.AttemptCount >= 5 };
                 }
-                
+
                 if (codeRecord.Code != dto.Code.Trim())
                 {
                     codeRecord.AttemptCount++;
                     await _db.SaveChangesAsync();
                     return new VerificationCodeResponseDto { Successful = false, StatusCode = 400, WrongCode = true };
                 }
-                
+
                 codeRecord.IsUsed = true;
                 await _db.SaveChangesAsync();
-                
+
                 return new VerificationCodeResponseDto { Successful = true, StatusCode = 200, VerificationToken = codeRecord.Id };
             }
             catch (Exception ex)

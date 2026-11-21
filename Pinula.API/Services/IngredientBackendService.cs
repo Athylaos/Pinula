@@ -1,5 +1,7 @@
 using System.Diagnostics;
+
 using Microsoft.EntityFrameworkCore;
+
 using Pinula.API.Context;
 using Pinula.API.Endpoints;
 using Pinula.API.Interface;
@@ -24,7 +26,7 @@ public class IngredientBackendService : IIngredientBackendService
         _imageService = imageProcessingService;
         _logger = logger;
     }
-    
+
     public async Task<List<IngredientPreviewDto>> GetFilteredPreviews(IngredientFilterParameters filter, string baseUrl, string lang)
     {
         var query = _db.Ingredients.AsNoTracking();
@@ -37,14 +39,14 @@ public class IngredientBackendService : IIngredientBackendService
         {
             return new List<IngredientPreviewDto>();
         }
-        
+
         var rawIngredients = await query
             .AsNoTracking()
             .Include(i => i.DefaultUnit)
             .Include(i => i.IngredientUnits)
                 .ThenInclude(iu => iu.Unit)
             .ToListAsync();
-        
+
         if (string.IsNullOrWhiteSpace(filter.Barcode) && !string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var searchTokens = filter.SearchTerm
@@ -70,7 +72,7 @@ public class IngredientBackendService : IIngredientBackendService
                 .Select(x => x.Ingredient)
                 .ToList();
         }
-        
+
         return rawIngredients
             .Take(filter.Amount)
             .Select(IngredientProjections.ToPreviewDto(baseUrl, lang).Compile())
@@ -80,9 +82,9 @@ public class IngredientBackendService : IIngredientBackendService
     public async Task<CreateIngredientResponse> Create(IngredientCreateDto createDto, IFormFile? imageFile, IWebHostEnvironment webHostEnvironment, string lang, Guid userId)
     {
         var mainName = createDto.Names.GetValueOrDefault(lang);
-        if (string.IsNullOrWhiteSpace(mainName)) 
+        if (string.IsNullOrWhiteSpace(mainName))
             return new CreateIngredientResponse { StatusCode = 400, Message = "Missing ingredient data" };
-        
+
         var csName = createDto.Names.GetValueOrDefault("cs");
         var enName = createDto.Names.GetValueOrDefault("en");
 
@@ -97,12 +99,12 @@ public class IngredientBackendService : IIngredientBackendService
             createDto.Names["en"] = translated ?? csName;
         }
 
-        if (string.IsNullOrWhiteSpace(createDto.Names.GetValueOrDefault("cs")) && 
+        if (string.IsNullOrWhiteSpace(createDto.Names.GetValueOrDefault("cs")) &&
             string.IsNullOrWhiteSpace(createDto.Names.GetValueOrDefault("en")))
         {
             return new CreateIngredientResponse { StatusCode = 500, Message = "Unable to process ingredient names data" };
         }
-        
+
         var newId = Guid.NewGuid();
         var finalPhotoUrl = ImageConstants.DefaultIngredient;
 
@@ -145,7 +147,7 @@ public class IngredientBackendService : IIngredientBackendService
             {
                 scId = createDto.ShoppingCategoryId.Value;
             }
-            
+
             var ingredient = new Ingredient
             {
                 Id = newId,
@@ -176,7 +178,7 @@ public class IngredientBackendService : IIngredientBackendService
                 IsGlutenFree = createDto.IsGlutenFree,
                 IsLactoseFree = createDto.IsLactoseFree
             };
-            
+
             foreach (var iu in createDto.AdditionalUnits)
             {
                 ingredient.IngredientUnits.Add(new IngredientUnit
@@ -186,7 +188,7 @@ public class IngredientBackendService : IIngredientBackendService
                     AmountInGrams = iu.ToDefaultUnit
                 });
             }
-            
+
             var systemUnits = await _db.Units
                 .AsNoTracking()
                 .Where(u => u.Code == "g" || u.Code == "kg" || u.Code == "ml" || u.Code == "l")
@@ -201,7 +203,7 @@ public class IngredientBackendService : IIngredientBackendService
             {
                 ingredient.IngredientUnits.Add(new IngredientUnit { IngredientId = ingredient.Id, UnitId = kgId, AmountInGrams = 1000 });
             }
-            
+
             if (systemUnits.TryGetValue("ml", out var mlId) && systemUnits.TryGetValue("l", out var lId))
             {
                 var existingMl = ingredient.IngredientUnits.FirstOrDefault(u => u.UnitId == mlId);
@@ -271,17 +273,18 @@ public class IngredientBackendService : IIngredientBackendService
             .Include(i => i.IngredientUnits)
             .ThenInclude(iu => iu.Unit)
             .FirstOrDefaultAsync(i => i.Id == id);
-        
+
         if (ingredientDb is null) return null;
         return ingredientDb.AdaptWithLangAndBaseUrl<AdminIngredientDisplayDto>(baseUrl, lang);
     }
-    
+
     public async Task<GeneralResponse> AdminDelete(Guid id)
     {
         var ingredient = await _db.Ingredients.FirstOrDefaultAsync(i => i.Id == id);
         if (ingredient is null) return new GeneralResponse() { Successful = false, StatusCode = 404, Message = $"Ingredient with id:{id} does not exist." };
 
-        if(await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id)){
+        if (await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id))
+        {
             ingredient.IsDeleted = true;
             await _db.SaveChangesAsync();
             return new GeneralResponse() { Successful = true, StatusCode = 200, Message = $"Ingredient with id:{id} is used in recipes, successfully SOFT deleted." };
@@ -302,17 +305,17 @@ public class IngredientBackendService : IIngredientBackendService
 
         if (ingredient == null)
         {
-            return new GeneralResponse 
-            { 
-                Successful = false, 
-                StatusCode = 404, 
-                Message = $"Ingredient with id:{dto.Id} does not exist." 
+            return new GeneralResponse
+            {
+                Successful = false,
+                StatusCode = 404,
+                Message = $"Ingredient with id:{dto.Id} does not exist."
             };
         }
 
         var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "images", "ingredients");
         var finalPhotoUrl = ingredient.ImageUrl;
-        
+
         if (imageFile is { Length: > 0 })
         {
             var uploadResult = await _imageService.SaveImageAsync(
@@ -363,7 +366,7 @@ public class IngredientBackendService : IIngredientBackendService
 
                 shoppingCategoryId = category.Id;
             }
-            
+
             ingredient.Names = dto.Names;
             ingredient.Barcode = dto.Barcode;
             ingredient.ImageUrl = finalPhotoUrl;
@@ -387,7 +390,7 @@ public class IngredientBackendService : IIngredientBackendService
             ingredient.IsVegetarian = dto.IsVegetarian;
             ingredient.IsGlutenFree = dto.IsGlutenFree;
             ingredient.IsLactoseFree = dto.IsLactoseFree;
-            
+
             _db.IngredientUnits.RemoveRange(ingredient.IngredientUnits);
 
             if (dto.AdditionalUnits != null && dto.AdditionalUnits.Count > 0)
@@ -405,21 +408,21 @@ public class IngredientBackendService : IIngredientBackendService
 
             await _db.SaveChangesAsync();
 
-            return new GeneralResponse 
-            { 
-                Successful = true, 
-                StatusCode = 200, 
-                Message = "Ingredient updated successfully" 
+            return new GeneralResponse
+            {
+                Successful = true,
+                StatusCode = 200,
+                Message = "Ingredient updated successfully"
             };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred while updating ingredient ID {IngredientId}", dto.Id);
-            return new GeneralResponse 
-            { 
-                Successful = false, 
-                StatusCode = 500, 
-                Message = "An error occurred while updating the ingredient." 
+            return new GeneralResponse
+            {
+                Successful = false,
+                StatusCode = 500,
+                Message = "An error occurred while updating the ingredient."
             };
         }
     }
@@ -460,6 +463,6 @@ public class IngredientBackendService : IIngredientBackendService
 
         return categoriesRaw.AdaptWithLangAndBaseUrl<List<ShoppingCategoryDisplayDto>>(baseUrl, lang);
     }
-    
-    
+
+
 }

@@ -48,17 +48,17 @@ public class MealPlanBackendService : IMealPlanBackendService
                 .AsNoTracking()
                 .Include(i => i.Ingredient)
                 .Include(i => i.Allocations)
-                .Where(i => i.GroupId == groupId && 
-                            (ingredientIds.Contains(i.IngredientId) || 
+                .Where(i => i.GroupId == groupId &&
+                            (ingredientIds.Contains(i.IngredientId) ||
                             (i.Ingredient.BaseIngredientId.HasValue && ingredientIds.Contains(i.Ingredient.BaseIngredientId.Value))))
                 .ToListAsync();
 
             foreach (var ingredient in mealplan.Ingredients)
             {
-                var inventoryIngredients = inventoryItemsDb.Where(i => 
-                    i.IngredientId == ingredient.IngredientId || 
+                var inventoryIngredients = inventoryItemsDb.Where(i =>
+                    i.IngredientId == ingredient.IngredientId ||
                     i.Ingredient.BaseIngredientId == ingredient.IngredientId);
-                
+
                 decimal totalFreeGrams = 0;
                 foreach (var invItem in inventoryIngredients)
                 {
@@ -69,9 +69,9 @@ public class MealPlanBackendService : IMealPlanBackendService
                         totalFreeGrams += freeGrams;
                     }
                 }
-                
-                ingredient.QuantityInInventory = totalFreeGrams > 0 && ingredient.ConversionFactor > 0 
-                    ? totalFreeGrams / ingredient.ConversionFactor 
+
+                ingredient.QuantityInInventory = totalFreeGrams > 0 && ingredient.ConversionFactor > 0
+                    ? totalFreeGrams / ingredient.ConversionFactor
                     : 0;
             }
         }
@@ -127,13 +127,13 @@ public class MealPlanBackendService : IMealPlanBackendService
     {
         var users = await _db.Users.Where(u => dto.UsersId.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
         if (!users.Any()) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "At least one user from the group has to be selected." };
-        
+
         var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).Distinct().ToList();
         var unitIds = dto.Ingredients.Select(i => i.Unit.Id).Distinct().ToList();
 
         var existingIngredients = await _db.Ingredients.Where(i => ingredientIds.Contains(i.Id)).Include(i => i.IngredientUnits).ToListAsync();
         if (existingIngredients.Count != ingredientIds.Count) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Some ingredients do not exist." };
-        
+
         var existingUnits = await _db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
         if (!unitIds.All(unitId => existingUnits.Any(eu => eu.Id == unitId))) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Some units do not exist." };
 
@@ -159,12 +159,12 @@ public class MealPlanBackendService : IMealPlanBackendService
         };
 
         _db.MealPlans.Add(mealPlan);
-        
+
         foreach (var ingredient in mealPlan.MealPlanIngredients)
         {
             var dbIngredient = existingIngredients.First(i => i.Id == ingredient.IngredientId);
             var dbConversionFactor = dbIngredient.IngredientUnits.Where(u => u.UnitId == ingredient.UnitId).Select(u => u.AmountInGrams).FirstOrDefault();
-            
+
             var inventoryItems = await _db.InventoryItems
                 .Include(ii => ii.Allocations)
                 .Where(ii => ii.GroupId == groupId && (ii.IngredientId == ingredient.IngredientId || ii.Ingredient.BaseIngredientId == ingredient.IngredientId))
@@ -208,7 +208,7 @@ public class MealPlanBackendService : IMealPlanBackendService
                     break;
                 }
             }
-            
+
             if (quantityToAllocate > 0)
             {
                 _db.ShoppingListItems.Add(new ShoppingListItem
@@ -235,21 +235,21 @@ public class MealPlanBackendService : IMealPlanBackendService
         var mealPlan = await _db.MealPlans.Include(mp => mp.MealPlanIngredients).FirstOrDefaultAsync(mp => mp.Id == id);
         if (mealPlan is null) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Meal plan not found" };
         if (mealPlan.GroupId != groupId) return new GeneralResponse { Successful = false, StatusCode = 403, Message = "Unauthorized" };
-        
+
         var mpiIds = mealPlan.MealPlanIngredients.Select(mpi => mpi.Id).ToList();
 
         if (mpiIds.Any())
         {
             var allocations = await _db.InventoryMealPlanAllocations.Where(a => mpiIds.Contains(a.MealPlanIngredientId)).ToListAsync();
             if (allocations.Any()) _db.InventoryMealPlanAllocations.RemoveRange(allocations);
-            
+
             var shoppingListItems = await _db.ShoppingListItems
                 .Where(si => si.MealPlanIngredientId.HasValue && mpiIds.Contains(si.MealPlanIngredientId.Value) && !si.IsPurchased)
                 .ToListAsync();
 
             if (shoppingListItems.Any()) _db.ShoppingListItems.RemoveRange(shoppingListItems);
         }
-        
+
         _db.MealPlans.Remove(mealPlan);
         await _db.SaveChangesAsync();
 
@@ -269,7 +269,7 @@ public class MealPlanBackendService : IMealPlanBackendService
         var newUsers = await _db.Users.Where(u => dto.UsersIds.Contains(u.Id) && u.GroupId == groupId).ToListAsync();
         if (!newUsers.Any()) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "At least one user must be selected." };
         if (!dto.Ingredients.Any()) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "At least one ingredient must be selected." };
-        
+
         var ingredientIds = dto.Ingredients.Select(i => i.Ingredient.Id).Distinct().ToList();
         var unitIds = dto.Ingredients.Select(i => i.Unit.Id).Distinct().ToList();
 
@@ -278,9 +278,9 @@ public class MealPlanBackendService : IMealPlanBackendService
 
         var existingUnits = await _db.Units.Where(u => unitIds.Contains(u.Id)).ToListAsync();
         if (!unitIds.All(unitId => existingUnits.Any(eu => eu.Id == unitId))) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Some units do not exist." };
-        
+
         var mpiToAllocate = new List<MealPlanIngredient>();
-        
+
         foreach (var mpi in mealPlan.MealPlanIngredients.ToList())
         {
             var dtoIngredient = dto.Ingredients.FirstOrDefault(i => i.Ingredient.Id == mpi.IngredientId);
@@ -307,16 +307,16 @@ public class MealPlanBackendService : IMealPlanBackendService
 
                     var shoppingItems = await _db.ShoppingListItems.Where(s => s.MealPlanIngredientId == mpi.Id && !s.IsPurchased).ToListAsync();
                     _db.ShoppingListItems.RemoveRange(shoppingItems);
-                    
+
                     mpi.ConversionFactor = dtoIngredient.ConversionFactor;
                     mpi.Quantity = dtoIngredient.Quantity;
                     mpi.UnitId = dtoIngredient.Unit.Id;
-                    
+
                     mpiToAllocate.Add(mpi);
                 }
             }
         }
-        
+
         foreach (var ingredientDto in dto.Ingredients)
         {
             if (!mealPlan.MealPlanIngredients.Any(mpi => mpi.IngredientId == ingredientDto.Ingredient.Id))
@@ -334,12 +334,12 @@ public class MealPlanBackendService : IMealPlanBackendService
                 mpiToAllocate.Add(newMPI);
             }
         }
-        
+
         mealPlan.Date = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
         mealPlan.MealType = dto.MealType;
         mealPlan.Servings = dto.Servings;
         mealPlan.Users = newUsers;
-        
+
         foreach (var ingredient in mpiToAllocate)
         {
             var dbIngredient = existingIngredients.First(i => i.Id == ingredient.IngredientId);
@@ -356,7 +356,7 @@ public class MealPlanBackendService : IMealPlanBackendService
                 if (quantityToAllocate <= 0) break;
                 var activeAllocations = sortedItem.Allocations.Where(a => _db.Entry(a).State != EntityState.Deleted);
                 var currentAllocatedGrams = activeAllocations.Sum(a => a.AllocatedQuantityInGrams);
-                
+
                 var itemAvailableQuantity = sortedItem.QuantityInGrams - currentAllocatedGrams;
 
                 if (itemAvailableQuantity <= 0) continue;
@@ -387,7 +387,7 @@ public class MealPlanBackendService : IMealPlanBackendService
                     break;
                 }
             }
-            
+
             if (quantityToAllocate > 0)
             {
                 _db.ShoppingListItems.Add(new ShoppingListItem
@@ -412,7 +412,7 @@ public class MealPlanBackendService : IMealPlanBackendService
     public async Task<GeneralResponse> MarkAsCookedAsync(Guid groupId, Guid id)
     {
         var mealPlan = await _db.MealPlans.Include(mp => mp.MealPlanIngredients).FirstOrDefaultAsync(mp => mp.Id == id && mp.GroupId == groupId);
-        
+
         if (mealPlan is null) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Meal plan not found" };
         if (mealPlan.IsCooked) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Meal plan already marked as cooked." };
 
@@ -441,16 +441,16 @@ public class MealPlanBackendService : IMealPlanBackendService
                     }
 
                     item.QuantityInGrams -= allocation.AllocatedQuantityInGrams;
-                    
+
                     if (item.QuantityInGrams <= 0.001m || item.Quantity <= 0.001m)
                     {
                         _db.InventoryItems.Remove(item);
                     }
                 }
-                
+
                 _db.InventoryMealPlanAllocations.Remove(allocation);
             }
-            
+
             var oldShoppingListItems = await _db.ShoppingListItems
                 .Where(i => i.MealPlanIngredientId.HasValue && ingredientIds.Contains(i.MealPlanIngredientId.Value))
                 .ToListAsync();
@@ -516,7 +516,7 @@ public class MealPlanBackendService : IMealPlanBackendService
     {
         var userDb = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (userDb is null) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "User not found" };
-        
+
         var groupId = userDb.GroupId;
         if (groupId is null) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "User is not in a group" };
 
@@ -555,7 +555,7 @@ public class MealPlanBackendService : IMealPlanBackendService
     public async Task<GeneralResponse> RenameGroupAsync(Guid groupId, string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return new GeneralResponse { Successful = false, StatusCode = 400, Message = "Invalid group name" };
-        
+
         var groupDb = await _db.Groups.FirstOrDefaultAsync(g => g.Id == groupId);
         if (groupDb is null) return new GeneralResponse { Successful = false, StatusCode = 404, Message = "Group not found" };
 

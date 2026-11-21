@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
+
 using Pinula.Shared.Interface;
+
 using System.Security.Claims;
 using System.Text.Json;
 

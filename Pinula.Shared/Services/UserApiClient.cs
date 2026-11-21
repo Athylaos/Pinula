@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Pinula.Shared.Interface;
 using Pinula.Shared.DTOs;
 using System.Net;
@@ -96,7 +96,7 @@ namespace Pinula.Shared.Services
                     await _tokenStorage.SaveTokenAsync(authResult.Token);
                     return authResult;
                 }
-                
+
                 return authResult ?? new LoginResponse { Successful = false, Message = "Empty response from server" };
             }
             catch (Exception ex)
@@ -160,7 +160,7 @@ namespace Pinula.Shared.Services
                 var response = await _httpClient.GetFromJsonAsync<List<AdminUserDisplayDto>>($"{BaseUrl}/admin/all");
                 return response ?? new List<AdminUserDisplayDto>();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting users");
                 return new List<AdminUserDisplayDto>();
@@ -212,7 +212,7 @@ namespace Pinula.Shared.Services
                 return new ToggleBoolResponse { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
-        
+
         public async Task<GeneralResponse> SendCodeRequest(VerificationCodeRequestDto requestDto)
         {
             try
@@ -242,7 +242,7 @@ namespace Pinula.Shared.Services
                 return new VerificationCodeResponseDto { Successful = false, Message = $"Client error: {ex.Message}" };
             }
         }
-        
+
         public async Task<bool> IsEmailAvailable(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) return false;
@@ -255,7 +255,7 @@ namespace Pinula.Shared.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "IsEmailRegistered Error");
-                return false; 
+                return false;
             }
         }
     }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using Pinula.API.Context;
 using Pinula.API.Interface;
 using Pinula.API.Models;
@@ -12,7 +13,7 @@ public static class ScriptEndpoint
     public static void MapScriptEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/script");
-        
+
         group.MapPut("/batch-update-ingredients-ai", async (List<DGIngredientUpdateDto> dtos, PinulaDbContext db) =>
         {
             if (dtos == null || !dtos.Any())
@@ -21,7 +22,7 @@ public static class ScriptEndpoint
             }
 
             var ingredientIds = dtos.Select(d => d.Id).ToList();
-            
+
             var ingredients = await db.Ingredients
                 .Include(i => i.IngredientUnits)
                 .Where(i => ingredientIds.Contains(i.Id))
@@ -37,13 +38,13 @@ public static class ScriptEndpoint
                 {
                     continue;
                 }
-                
+
                 if (dto.DefaultUnitId != Guid.Empty)
                     ingredient.DefaultUnitId = dto.DefaultUnitId;
 
                 if (dto.ShoppingCategoryId != Guid.Empty)
                     ingredient.ShoppingCategoryId = dto.ShoppingCategoryId;
-                
+
                 ingredient.IsVegan = dto.IsVegan;
                 ingredient.IsVegetarian = dto.IsVegetarian;
                 ingredient.IsGlutenFree = dto.IsGlutenFree;
@@ -54,7 +55,7 @@ public static class ScriptEndpoint
 
                 ingredient.NutriScore = dto.NutriScore;
                 ingredient.NovaClassification = dto.NovaClassification;
-                
+
                 db.IngredientUnits.RemoveRange(ingredient.IngredientUnits);
 
                 if (dto.AdditionalUnits != null && dto.AdditionalUnits.Any())
@@ -88,8 +89,8 @@ public static class ScriptEndpoint
             return Results.Ok(new { Message = $"Successfully updated {updatedCount} ingredients." });
 
         }).RequireAuthorization("AdminOnly");
-        
-        
+
+
         group.MapPost("/upload-ingredient-image", async ([FromForm] Guid ingredientId, IFormFile image, PinulaDbContext db, IImageProcessingService imageService) =>
         {
             if (image == null || image.Length == 0)
@@ -121,8 +122,8 @@ public static class ScriptEndpoint
             return Results.Ok(new { Message = "Image uploaded successfully", ImageUrl = uploadResult.FileName });
 
         }).RequireAuthorization("AdminOnly").DisableAntiforgery();
-        
-        
+
+
         // POST /script/fix-ingredient-image-urls
         group.MapPost("/fix-ingredient-image-urls", async (PinulaDbContext db, IWebHostEnvironment env) =>
         {
@@ -142,7 +143,7 @@ public static class ScriptEndpoint
                 if (Guid.TryParse(idStr, out var ingredientId))
                 {
                     var ingredient = await db.Ingredients.FirstOrDefaultAsync(i => i.Id == ingredientId);
-            
+
                     // Pokud surovina existuje a má výchozí/prázdnou fotku, opravíme ji
                     if (ingredient != null && (string.IsNullOrEmpty(ingredient.ImageUrl) || ingredient.ImageUrl.Contains("default")))
                     {
@@ -156,7 +157,7 @@ public static class ScriptEndpoint
             return Results.Ok(new { Message = $"Successfully fixed image URLs for {updatedCount} ingredients." });
 
         }).RequireAuthorization("AdminOnly").DisableAntiforgery();
-        
+
     }
-    
+
 }

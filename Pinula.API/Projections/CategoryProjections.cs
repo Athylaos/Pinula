@@ -14,12 +14,12 @@ public static class CategoryProjections
         {
             Id = c.Id,
             ParentCategoryId = c.ParentCategoryId,
-            Name = c.Names.ContainsKey(lang) 
+            Name = c.Names.ContainsKey(lang)
                 ? (string.IsNullOrWhiteSpace(c.Names[lang]) ? (c.Names.ContainsKey("en") ? c.Names["en"] : "Category") : c.Names[lang])
                 : (c.Names.ContainsKey("en") ? c.Names["en"] : "Category"),
             PictureUrl = baseUrl + (string.IsNullOrWhiteSpace(c.PictureUrl) ? ImageConstants.DefaultCategory : c.PictureUrl),
             SortOrder = c.SortOrder
         };
     }
-    
+
 }

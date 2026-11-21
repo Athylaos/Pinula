@@ -13,6 +13,6 @@ public class VerificationCode
     public DateTime ExpiresAt { get; set; }
     public bool IsUsed { get; set; } = false;
     public int AttemptCount { get; set; } = 0;
-    
+
     public User? User { get; set; }
 }

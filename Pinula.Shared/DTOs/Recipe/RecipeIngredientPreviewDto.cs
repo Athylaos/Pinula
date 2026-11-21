@@ -1,4 +1,4 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
     public class RecipeIngredientPreviewDto
     {
@@ -10,7 +10,7 @@
 
         public Guid IngredientId { get; set; }
         public Guid UnitId { get; set; }
-        
+
         public decimal? QuantityInInventory { get; set; }
     }
 }

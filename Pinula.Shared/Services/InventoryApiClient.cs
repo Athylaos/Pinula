@@ -46,10 +46,10 @@ public class InventoryApiClient : IInventoryApiClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create",dto);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", dto);
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to create inventory items. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -65,10 +65,10 @@ public class InventoryApiClient : IInventoryApiClient
     {
         try
         {
-            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/update",dto);
+            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/update", dto);
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to update inventory items. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -87,7 +87,7 @@ public class InventoryApiClient : IInventoryApiClient
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/delete/{id}");
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to delete inventory item. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -127,10 +127,10 @@ public class InventoryApiClient : IInventoryApiClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/shoppingListItems/create",dto);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/shoppingListItems/create", dto);
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to create shopping list item. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -149,7 +149,7 @@ public class InventoryApiClient : IInventoryApiClient
             var response = await _httpClient.DeleteAsync($"{BaseUrl}/shoppingListItems/delete/{id}");
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to delete shopping list item. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -168,7 +168,7 @@ public class InventoryApiClient : IInventoryApiClient
             var response = await _httpClient.PutAsync($"{BaseUrl}/shoppingListItems/changePurchased/{id}", null);
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to change purchased status for shopping list item. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;
@@ -184,10 +184,10 @@ public class InventoryApiClient : IInventoryApiClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/shoppingListItemsToPantry",dtos);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/shoppingListItemsToPantry", dtos);
 
             if (response.IsSuccessStatusCode) return true;
-            
+
             var errorBody = await response.Content.ReadAsStringAsync();
             _logger.LogError("Failed to create inventory items. Status: {StatusCode}, Error: {Error}", response.StatusCode, errorBody);
             return false;

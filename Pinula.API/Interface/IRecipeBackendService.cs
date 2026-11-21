@@ -1,6 +1,7 @@
 using Pinula.Shared.DTOs;
 
 namespace Pinula.API.Interface;
+
 public interface IRecipeBackendService
 {
     Task<List<RecipePreviewDto>> GetFilteredPreviewsAsync(RecipeFilterParameters filter, Guid? currentUserId, string baseUrl, string lang);
@@ -10,7 +11,7 @@ public interface IRecipeBackendService
     Task<GeneralResponse> DeleteRecipeAsync(Guid id, Guid userId);
 
     Task<ToggleFavoriteResponse> ToggleFavoriteAsync(Guid recipeId, Guid userId);
-    
+
     Task<CommentPostResponse> PostCommentAsync(Guid userId, CommentCreateDto dto, string lang);
     Task<CommentDeleteResponse> DeleteCommentAsync(Guid commentId, Guid userId);
     Task<CommentDeleteResponse> UpdateCommentAsync(Guid commentId, Guid userId, CommentCreateDto dto);

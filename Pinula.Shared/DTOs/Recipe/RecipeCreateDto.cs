@@ -1,8 +1,8 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
     public class RecipeCreateDto
     {
-        public string Title {  get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
 
         public string PhotoUrl { get; set; } = "default_recipe_picture.png";
         public short CookingTime { get; set; }

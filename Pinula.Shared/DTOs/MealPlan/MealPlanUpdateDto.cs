@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.Enums;
+using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.DTOs
 {

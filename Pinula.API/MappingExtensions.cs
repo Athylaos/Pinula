@@ -1,4 +1,5 @@
 using System.Globalization;
+
 using Mapster;
 
 namespace Pinula.API;
@@ -13,7 +14,7 @@ public static class MappingExtensions
 
         return source.AdaptWithLangAndBaseUrl<TDestination>(baseUrl, lang);
     }
-    
+
     public static TDestination AdaptWithLangAndBaseUrl<TDestination>(this object source, string baseUrl, string lang)
     {
         return source.BuildAdapter()
@@ -21,5 +22,5 @@ public static class MappingExtensions
             .AddParameters("lang", lang)
             .AdaptToType<TDestination>();
     }
-    
+
 }

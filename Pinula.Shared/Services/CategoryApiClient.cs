@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Interface;
+
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -53,7 +55,7 @@ namespace Pinula.Shared.Services
             }
             return null;
         }
-        
+
         public async Task<Guid?> SaveCategoryAsync(CategoryCreateDto dto, Stream? photoStream, string? photoName, string? contentType)
         {
             try
@@ -77,7 +79,7 @@ namespace Pinula.Shared.Services
                     var result = await response.Content.ReadFromJsonAsync<CreateCategoryResponse>();
                     return result?.CreatedCategoryId;
                 }
-                
+
                 try
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<CreateCategoryResponse>();
@@ -108,7 +110,7 @@ namespace Pinula.Shared.Services
                 {
                     return true;
                 }
-                
+
                 try
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<GeneralResponse>();

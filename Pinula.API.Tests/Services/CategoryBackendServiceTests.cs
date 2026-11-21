@@ -26,7 +26,7 @@ public class CategoryBackendServiceTests : IDisposable
     public CategoryBackendServiceTests()
     {
         (_db, _connection) = TestDbContextFactory.CreateInMemoryDbContext();
-        
+
         _tempFolderPath = Path.Combine(Path.GetTempPath(), "PinulaTestUploads_" + Guid.NewGuid());
         Directory.CreateDirectory(_tempFolderPath);
 
@@ -34,12 +34,12 @@ public class CategoryBackendServiceTests : IDisposable
         _envMock.Setup(e => e.WebRootPath).Returns(_tempFolderPath);
 
         var imageService = new ImageProcessingService(
-            _envMock.Object, 
+            _envMock.Object,
             new Mock<ILogger<ImageProcessingService>>().Object);
 
         _service = new CategoryBackendService(
-            _db, 
-            new Mock<ILogger<CategoryBackendService>>().Object, 
+            _db,
+            new Mock<ILogger<CategoryBackendService>>().Object,
             imageService);
     }
 
@@ -50,7 +50,7 @@ public class CategoryBackendServiceTests : IDisposable
         {
             Directory.Delete(_tempFolderPath, recursive: true);
         }
-        
+
         _connection.Close();
         _connection.Dispose();
     }
@@ -148,10 +148,10 @@ public class CategoryBackendServiceTests : IDisposable
     public async Task GetCategoryWithChildren_ShouldReturnNull_WhenCategoryDoesNotExist()
     {
         var result = await _service.GetCategoryWithChildren("https://pinula.app/", "cs", Guid.NewGuid());
-        
+
         result.Should().BeNull("Should return null without existing categoryId");
     }
-    
+
     [Fact]
     public async Task GetCategoryWithChildren_ShouldReturnCategoryWithSortedChildrenAndCorrectLocalization()
     {
@@ -169,7 +169,7 @@ public class CategoryBackendServiceTests : IDisposable
                 { "en", "Main Courses" }
             }
         };
-        
+
         var child2 = new Category
         {
             Id = Guid.NewGuid(),
@@ -192,20 +192,20 @@ public class CategoryBackendServiceTests : IDisposable
         await _db.SaveChangesAsync();
 
         const string baseUrl = "https://pinula.app/images/categories/";
-        
+
         var result = await _service.GetCategoryWithChildren(baseUrl, "en", parentId);
-        
+
         result.Should().NotBeNull();
         result!.Id.Should().Be(parentId);
         result.Name.Should().Be("Main Courses");
         result.PictureUrl.Should().Be("https://pinula.app/images/categories/parent.png");
-        
+
         result.ChildCategories.Should().HaveCount(2);
         result.ChildCategories.ElementAt(0).Name.Should().Be("Soups", "Category with lowest sort order should be first");
         result.ChildCategories.ElementAt(1).Name.Should().Be("Sauces");
         result.ChildCategories.ElementAt(0).ChildCategories.Should().BeEmpty("Subcategories doesn't load theirs subcategories");
     }
-    
+
     [Theory]
     [InlineData("es")]
     [InlineData("cs")]
@@ -225,9 +225,9 @@ public class CategoryBackendServiceTests : IDisposable
 
         _db.Categories.Add(category);
         await _db.SaveChangesAsync();
-        
+
         var result = await _service.GetCategoryWithChildren("https://pinula.app/images/categories/", requestedLang, categoryId);
-        
+
         result.Should().NotBeNull();
         result.Name.Should().Be("Desserts",
             "language should fallback to english if demanded language is not available or empty");
@@ -246,9 +246,9 @@ public class CategoryBackendServiceTests : IDisposable
             SortOrder = 5,
             ParentCategory = null
         };
-        
+
         var result = await _service.CreateCategory(createDto, imageFile: null, _envMock.Object);
-        
+
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(201);
         result.Message.Should().Be("Category created");
@@ -260,7 +260,7 @@ public class CategoryBackendServiceTests : IDisposable
         savedCategory.SortOrder.Should().Be(5);
         savedCategory.PictureUrl.Should().Be("default_category.png", "Should use default image, when non is provided");
     }
-    
+
     [Theory]
     [InlineData("script.exe")]
     [InlineData("document.pdf")]
@@ -268,41 +268,41 @@ public class CategoryBackendServiceTests : IDisposable
     public async Task CreateCategory_ShouldReturn400_WhenImageExtensionIsUnsupported(string fileName)
     {
         var createDto = new CategoryCreateDto { Names = new Dictionary<string, string> { { "en", "Test" } }, SortOrder = 1 };
-        
+
         var fileMock = new Mock<IFormFile>();
         fileMock.Setup(f => f.FileName).Returns(fileName);
         fileMock.Setup(f => f.Length).Returns(1024);
-        
+
         var result = await _service.CreateCategory(createDto, fileMock.Object, _envMock.Object);
-        
+
         result.StatusCode.Should().Be(400);
         result.Message.Should().Be("Unsupported image format.");
-        
+
         var categoryCount = await _db.Categories.CountAsync();
         categoryCount.Should().Be(0, "Category shouldn't be saved when wrong image type is provided");
     }
-    
+
     [Fact]
     public async Task CreateCategory_ShouldReturn400_WhenImageStreamIsCorrupted()
     {
         var createDto = new CategoryCreateDto { Names = new Dictionary<string, string> { { "en", "Test" } } };
-        
+
         var invalidStream = new MemoryStream(Encoding.UTF8.GetBytes("This is not image"));
 
         var fileMock = new Mock<IFormFile>();
         fileMock.Setup(f => f.FileName).Returns("test.png");
         fileMock.Setup(f => f.Length).Returns(invalidStream.Length);
         fileMock.Setup(f => f.OpenReadStream()).Returns(invalidStream);
-        
+
         var result = await _service.CreateCategory(createDto, fileMock.Object, _envMock.Object);
-        
+
         result.StatusCode.Should().Be(400);
         result.Message.Should().Be("Invalid or corrupted image file.");
 
         var categoryCount = await _db.Categories.CountAsync();
         categoryCount.Should().Be(0, "Category shouldn't be saved when processing image fails");
     }
-    
+
     [Fact]
     public async Task CreateCategory_ShouldProcessImageAndSaveCategory_WhenValidImageIsProvided()
     {
@@ -311,7 +311,7 @@ public class CategoryBackendServiceTests : IDisposable
             Names = new Dictionary<string, string> { { "cs", "Dezerty" }, { "en", "Desserts" } },
             SortOrder = 2
         };
-        
+
         using var imageStream = new MemoryStream();
         using (var bitmap = new SKBitmap(10, 10))
         using (var skImage = SKImage.FromBitmap(bitmap))
@@ -325,9 +325,9 @@ public class CategoryBackendServiceTests : IDisposable
         fileMock.Setup(f => f.FileName).Returns("dessert.png");
         fileMock.Setup(f => f.Length).Returns(imageStream.Length);
         fileMock.Setup(f => f.OpenReadStream()).Returns(imageStream);
-        
+
         var result = await _service.CreateCategory(createDto, fileMock.Object, _envMock.Object);
-        
+
         result.StatusCode.Should().Be(201);
         result.CreatedCategoryId.Should().NotBeNull();
 
@@ -335,11 +335,11 @@ public class CategoryBackendServiceTests : IDisposable
         savedCategory.Should().NotBeNull();
         savedCategory!.PictureUrl.Should().EndWith(".webp", "Image should be converted to .webp");
         savedCategory.PictureUrl.Should().NotBe("default_category.png");
-        
+
         var expectedFilePath = Path.Combine(_tempFolderPath, "images", "categories", savedCategory.PictureUrl);
         File.Exists(expectedFilePath).Should().BeTrue("Image file should be on drive");
     }
     #endregion
-    
+
 
 }

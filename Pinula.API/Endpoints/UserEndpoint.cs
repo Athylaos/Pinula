@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Globalization;
@@ -11,14 +11,14 @@ namespace Pinula.API.Endpoints
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/users").RequireRateLimiting("GeneralApiPolicy");
-            
+
             //---------------------------------------------------------------Verify token
             group.MapGet("/verifyToken", async (ClaimsPrincipal user, IUserBackendService service) =>
             {
                 var exists = await service.VerifyTokenAsync(user.GetUserId());
                 return exists ? Results.Ok() : Results.NotFound();
             }).RequireAuthorization();
-            
+
             //---------------------------------------------------------------Check email availability
             group.MapGet("/checkEmail", async (string email, IUserBackendService service) =>
             {
@@ -55,7 +55,7 @@ namespace Pinula.API.Endpoints
                 var userData = await service.GetUserDisplayAsync(userId, baseUrl);
                 return userData != null ? Results.Ok(userData) : Results.NotFound();
             });
-            
+
             //---------------------------------------------------------------Update user
             group.MapPut("/update", async (HttpRequest request, ClaimsPrincipal user, IUserBackendService service) =>
             {
@@ -76,7 +76,7 @@ namespace Pinula.API.Endpoints
             {
                 if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 6)
                     return Results.BadRequest("Invalid email or password.");
-                
+
                 var result = await service.ChangePasswordAsync(dto);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).AllowAnonymous().RequireRateLimiting("AuthStrictPolicy");
@@ -108,14 +108,14 @@ namespace Pinula.API.Endpoints
                 var result = await service.AdminToggleRecipePermissionAsync(userId);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
-            
-            
+
+
             // --------------------------------------------------------------- Send verification code
             group.MapPost("/sendVerificationCode", async (VerificationCodeRequestDto dto, IUserBackendService service) =>
             {
                 if (string.IsNullOrWhiteSpace(dto.Email)) return Results.BadRequest("Email is required.");
                 string lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-                    
+
                 var result = await service.SendVerificationCodeAsync(dto, lang);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireRateLimiting("AuthStrictPolicy");

@@ -1,4 +1,4 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
     public enum SortBy
     {
@@ -26,7 +26,7 @@
 
         public bool IncludeUnapproved { get; set; } = false;
         public bool IncludeAdminData { get; set; } = false;
-    
+
         public RecipeFilterParameters Clone()
         {
             return (RecipeFilterParameters)this.MemberwiseClone();

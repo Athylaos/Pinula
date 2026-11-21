@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.Enums;
+using Pinula.Shared.Enums;
 
 namespace Pinula.Shared.DTOs
 {
@@ -10,7 +10,7 @@ namespace Pinula.Shared.DTOs
         public string OriginalLanguage { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string PhotoUrl { get; set; } = string.Empty;
-        
+
         public short CookingTime { get; set; }
         public short ServingsAmount { get; set; }
         public DifficultyLevel Difficulty { get; set; }
@@ -23,11 +23,11 @@ namespace Pinula.Shared.DTOs
         public decimal Sugars { get; set; }
         public decimal Fiber { get; set; }
         public decimal Salt { get; set; }
-        
+
         public DateTime RecipeCreated { get; set; }
         public decimal? Rating { get; set; }
         public int? UsersRated { get; set; }
-        
+
         public bool IsVegan { get; set; }
         public bool IsVegetarian { get; set; }
         public bool IsGlutenFree { get; set; }

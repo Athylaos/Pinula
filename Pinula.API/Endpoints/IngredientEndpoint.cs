@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
@@ -27,8 +27,8 @@ namespace Pinula.API.Endpoints
 
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
-        
-        
+
+
         public static void MapIngredientEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/ingredients").RequireRateLimiting("GeneralApiPolicy");
@@ -42,10 +42,10 @@ namespace Pinula.API.Endpoints
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
 
                 var result = await ingredientService.GetFilteredPreviews(filter, imageBaseUrl, languageCode);
-                    
+
                 return Results.Ok(result);
             });
-            
+
             //---------------------------------------------------------------Create ingredient
             group.MapPost("/create", async (HttpRequest request, ClaimsPrincipal user, IIngredientBackendService ingredientService, IWebHostEnvironment env) =>
             {
@@ -54,12 +54,12 @@ namespace Pinula.API.Endpoints
 
                 var form = await request.ReadFormAsync();
                 var dtoStr = form["ingredientData"];
-    
-                if (string.IsNullOrEmpty(dtoStr)) 
+
+                if (string.IsNullOrEmpty(dtoStr))
                     return Results.BadRequest(new CreateIngredientResponse { StatusCode = 400, Message = "Missing ingredient data." });
 
                 var dto = JsonSerializer.Deserialize<IngredientCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (dto == null) 
+                if (dto == null)
                     return Results.BadRequest(new CreateIngredientResponse { StatusCode = 400, Message = "Invalid ingredient data payload." });
 
                 var file = form.Files.GetFile("image");
@@ -75,7 +75,7 @@ namespace Pinula.API.Endpoints
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
 
                 var list = await ingredientService.AdminGetPreviews(amount, skip, imageBaseUrl);
-                
+
                 return Results.Ok(list);
             }).RequireAuthorization("AdminOnly");
 
@@ -84,10 +84,10 @@ namespace Pinula.API.Endpoints
             {
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/ingredients/";
-                
+
                 var dto = await ingredientService.AdminGetDetails(ingredientId, imageBaseUrl, languageCode);
                 if (dto is null) return Results.NotFound("Ingredient not found");
-                
+
                 return Results.Ok(dto);
             }).RequireAuthorization("AdminOnly");
 
@@ -95,7 +95,7 @@ namespace Pinula.API.Endpoints
             group.MapDelete("/deleteAdmin/{ingredientId:guid}", async (Guid ingredientId, IIngredientBackendService ingredientService) =>
             {
                 var result = await ingredientService.AdminDelete(ingredientId);
-                
+
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
 
@@ -108,25 +108,25 @@ namespace Pinula.API.Endpoints
                 var form = await request.ReadFormAsync();
                 var dtoStr = form["ingredientData"];
 
-                if (string.IsNullOrEmpty(dtoStr)) 
+                if (string.IsNullOrEmpty(dtoStr))
                 {
-                    return Results.BadRequest(new GeneralResponse 
-                    { 
-                        Successful = false, 
-                        StatusCode = 400, 
-                        Message = "Missing ingredient data." 
+                    return Results.BadRequest(new GeneralResponse
+                    {
+                        Successful = false,
+                        StatusCode = 400,
+                        Message = "Missing ingredient data."
                     });
                 }
 
                 var dto = JsonSerializer.Deserialize<IngredientCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-    
-                if (dto == null) 
+
+                if (dto == null)
                 {
-                    return Results.BadRequest(new GeneralResponse 
-                    { 
-                        Successful = false, 
-                        StatusCode = 400, 
-                        Message = "Invalid ingredient data payload." 
+                    return Results.BadRequest(new GeneralResponse
+                    {
+                        Successful = false,
+                        StatusCode = 400,
+                        Message = "Invalid ingredient data payload."
                     });
                 }
 
@@ -151,7 +151,7 @@ namespace Pinula.API.Endpoints
                 var result = await ingredientService.AdminToggleChecked(ingredientId);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization("AdminOnly");
-            
+
             //---------------------------------------------------------------Get shopping categories
             group.MapGet("/shoppingCategories/getAll", async (HttpRequest request, IIngredientBackendService ingredientService) =>
             {

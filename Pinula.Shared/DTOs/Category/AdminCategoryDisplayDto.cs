@@ -1,10 +1,10 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
     public class AdminCategoryDisplayDto
     {
         public Guid Id { get; set; }
 
-        public Dictionary<string,string> Names { get; set; } = new();
+        public Dictionary<string, string> Names { get; set; } = new();
 
         public required string PictureUrl { get; set; } = "default_category_picture.png";
 

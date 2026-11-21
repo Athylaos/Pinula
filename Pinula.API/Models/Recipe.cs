@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Pinula.API.Models;
@@ -10,7 +10,7 @@ public partial class Recipe
     public string OriginalLanguage { get; set; } = "en";
     public Dictionary<string, string> Titles { get; set; } = new();
     public required string PhotoUrl { get; set; } = null!;
-    
+
     public short CookingTime { get; set; }
     public short ServingsAmount { get; set; }
     public Guid ServingUnitId { get; set; }

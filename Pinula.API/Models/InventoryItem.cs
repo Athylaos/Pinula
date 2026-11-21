@@ -6,15 +6,15 @@ public class InventoryItem
     public Guid GroupId { get; set; }
     public Guid IngredientId { get; set; }
     public Guid UnitId { get; set; }
-    
+
     public decimal Quantity { get; set; }
     public decimal QuantityInGrams { get; set; }
     public DateTime? ExpirationDate { get; set; }
-    
+
     public virtual ICollection<InventoryMealPlanAllocation> Allocations { get; set; } = new List<InventoryMealPlanAllocation>();
 
     public virtual Group Group { get; set; } = null!;
     public virtual Ingredient Ingredient { get; set; } = null!;
     public virtual Unit Unit { get; set; } = null!;
-    
+
 }

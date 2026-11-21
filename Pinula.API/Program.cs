@@ -40,19 +40,21 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-var allowedOrigins = new[] 
-    { 
-        "https://stage.pinula.app", 
-        "https://pinula.app", 
-        "http://localhost:5119" 
+var allowedOrigins = new[]
+    {
+        "https://stage.pinula.app",
+        "https://pinula.app",
+        "http://localhost:5119"
     };
 
-builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(policy => {
-    policy.WithOrigins(allowedOrigins)
-          .AllowAnyHeader()
-          .AllowAnyMethod()
-          .AllowCredentials();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -91,7 +93,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    
+
     options.AddPolicy("AuthStrictPolicy", httpContext =>
     {
         var clientIp = httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
@@ -105,7 +107,7 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
-    
+
     options.AddPolicy("GeneralApiPolicy", httpContext =>
     {
         var clientIp = httpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()

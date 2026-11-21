@@ -14,25 +14,25 @@ public class CategoryBackendService : ICategoryBackendService
     private readonly PinulaDbContext _db;
     private readonly ILogger<CategoryBackendService> _logger;
     private readonly IImageProcessingService _imageService;
-    
+
     public CategoryBackendService(PinulaDbContext db, ILogger<CategoryBackendService> logger, IImageProcessingService imageProcessingService)
     {
         _db = db;
         _logger = logger;
         _imageService = imageProcessingService;
     }
-    
+
     public async Task<List<CategoryDisplayDto>> GetCategoriesTree(string baseUrl, string lang)
     {
         var allCategories = await _db.Categories
             .AsNoTracking()
             .Select(CategoryProjections.ToDisplayDto(baseUrl, lang))
             .ToListAsync();
-        
+
         var categoriesByParent = allCategories
             .Where(c => c.ParentCategoryId != null)
             .ToLookup(c => c.ParentCategoryId!.Value);
-        
+
         var rootCategories = allCategories
             .Where(c => c.ParentCategoryId == null)
             .OrderBy(c => c.SortOrder)
@@ -91,7 +91,7 @@ public class CategoryBackendService : ICategoryBackendService
     public async Task<CreateCategoryResponse> CreateCategory(CategoryCreateDto createDto, IFormFile? imageFile, IWebHostEnvironment webHostEnvironment)
     {
         var finalPhotoUrl = ImageConstants.DefaultCategory;
-        
+
         if (imageFile is { Length: > 0 })
         {
             var uploadResult = await _imageService.SaveImageAsync(
@@ -113,7 +113,7 @@ public class CategoryBackendService : ICategoryBackendService
 
             finalPhotoUrl = uploadResult.FileName!;
         }
-        
+
         var newCategory = new Category
         {
             Id = Guid.NewGuid(),
@@ -122,12 +122,12 @@ public class CategoryBackendService : ICategoryBackendService
             ParentCategoryId = createDto.ParentCategory,
             PictureUrl = finalPhotoUrl
         };
-        
+
         _db.Categories.Add(newCategory);
         await _db.SaveChangesAsync();
-        
+
         return new CreateCategoryResponse()
-            { StatusCode = 201, Message = "Category created", CreatedCategoryId = newCategory.Id};
+        { StatusCode = 201, Message = "Category created", CreatedCategoryId = newCategory.Id };
     }
 
     public async Task<GeneralResponse> DeleteCategory(Guid id, IWebHostEnvironment webHostEnvironment)
@@ -140,19 +140,19 @@ public class CategoryBackendService : ICategoryBackendService
         if (category is null) return new() { StatusCode = 404, Message = "Category not found", Successful = false };
         if (category.ChildCategories.Any()) return new() { StatusCode = 400, Message = "Category has subcategories", Successful = false };
         if (category.Recipes.Any()) return new() { StatusCode = 400, Message = "Category is linked to recipes", Successful = false };
-        
+
         if (category.PictureUrl != ImageConstants.DefaultCategory)
         {
             var filePath = Path.Combine(webHostEnvironment.WebRootPath, "images", "categories", category.PictureUrl);
             if (File.Exists(filePath)) File.Delete(filePath);
         }
-        
+
         _db.Categories.Remove(category);
         await _db.SaveChangesAsync();
 
         return new() { StatusCode = 204, Message = "Category deleted", Successful = true };
     }
-    
+
     public async Task<List<AdminCategoryDisplayDto>> GetAllAdminCategoriesFlattened(string baseUrl)
     {
         var allCategories = await _db.Categories

@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
+
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Interface;
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -54,9 +56,9 @@ namespace Pinula.Shared.Services
                 {
                     return new GeneralResponse { Successful = false, Message = "No ingredient data provided." };
                 }
-                
+
                 using var content = new MultipartFormDataContent();
-                
+
                 var dtoOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var recipeJson = JsonSerializer.Serialize(ingredientDto, dtoOptions);
                 content.Add(new StringContent(recipeJson, Encoding.UTF8, "application/json"), "ingredientData");
@@ -67,28 +69,28 @@ namespace Pinula.Shared.Services
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
                     content.Add(fileContent, "image", photoName);
                 }
-                
+
                 var response = await _httpClient.PostAsync($"{BaseUrl}/create", content);
-                
+
                 try
                 {
                     var apiResponse = await response.Content.ReadFromJsonAsync<CreateIngredientResponse>(dtoOptions);
 
                     if (response.IsSuccessStatusCode && apiResponse != null)
                     {
-                        return new GeneralResponse 
-                        { 
-                            Successful = true, 
+                        return new GeneralResponse
+                        {
+                            Successful = true,
                             Message = apiResponse.Message,
                             StatusCode = apiResponse.StatusCode
                         };
                     }
 
-                    return new GeneralResponse 
-                    { 
-                        Successful = false, 
-                        Message = apiResponse?.Message ?? "Ingredient creation failed.", 
-                        StatusCode = apiResponse?.StatusCode ?? (int)response.StatusCode 
+                    return new GeneralResponse
+                    {
+                        Successful = false,
+                        Message = apiResponse?.Message ?? "Ingredient creation failed.",
+                        StatusCode = apiResponse?.StatusCode ?? (int)response.StatusCode
                     };
                 }
                 catch
@@ -96,11 +98,11 @@ namespace Pinula.Shared.Services
                     var rawError = await response.Content.ReadAsStringAsync();
                     _logger.LogWarning($"Ingredient creation failed ({response.StatusCode}): {rawError}");
 
-                    return new GeneralResponse 
-                    { 
-                        Successful = false, 
-                        Message = $"Server error ({response.StatusCode})", 
-                        StatusCode = (int)response.StatusCode 
+                    return new GeneralResponse
+                    {
+                        Successful = false,
+                        Message = $"Server error ({response.StatusCode})",
+                        StatusCode = (int)response.StatusCode
                     };
                 }
             }
@@ -172,7 +174,7 @@ namespace Pinula.Shared.Services
                 }
             }
             */
-            
+
             // Taking ingredients from Open food facts is now disabled, might be reimplemented in the future (mostly for barcode scanning)
             return finalResults.Take(filter.Amount).ToList();
         }
@@ -201,7 +203,7 @@ namespace Pinula.Shared.Services
             {
                 var url = $"{BaseUrl}/getAdmin/{id}";
                 var response = await _httpClient.GetFromJsonAsync<AdminIngredientDisplayDto>(url);
-                if(response is null) return null;
+                if (response is null) return null;
                 return response;
 
             }
@@ -256,7 +258,7 @@ namespace Pinula.Shared.Services
 
                 if (response is null)
                 {
-                    return new GeneralResponse() { StatusCode = (int)HttpStatusCode.NotFound, Successful = false, Message="Api endpoint not found" };
+                    return new GeneralResponse() { StatusCode = (int)HttpStatusCode.NotFound, Successful = false, Message = "Api endpoint not found" };
                 }
                 else
                 {
@@ -288,7 +290,7 @@ namespace Pinula.Shared.Services
             {
                 var url = $"{BaseUrl}/shoppingCategories/getAll";
                 var response = await _httpClient.GetFromJsonAsync<List<ShoppingCategoryDisplayDto>>(url);
-                if(response is null) return new();
+                if (response is null) return new();
                 return response;
 
             }

@@ -1,4 +1,4 @@
-﻿namespace Pinula.Shared.DTOs
+namespace Pinula.Shared.DTOs
 {
     public class RecipeIngredientDisplayDto
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Pinula.API.Models;
@@ -47,13 +47,13 @@ public partial class PinulaDbContext : DbContext
     public virtual DbSet<MealPlan> MealPlans { get; set; }
 
     public virtual DbSet<MealPlanIngredient> MealPlanIngredients { get; set; }
-    
+
     public virtual DbSet<InventoryItem> InventoryItems { get; set; }
-    
+
     public virtual DbSet<ShoppingListItem> ShoppingListItems { get; set; }
-    
+
     public virtual DbSet<InventoryMealPlanAllocation> InventoryMealPlanAllocations { get; set; }
-    
+
     public virtual DbSet<VerificationCode> VerificationCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -144,7 +144,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(e => e.IsVegetarian).HasDefaultValue(false);
             entity.Property(e => e.IsGlutenFree).HasDefaultValue(false);
             entity.Property(e => e.IsLactoseFree).HasDefaultValue(false);
-            
+
             entity.HasOne(d => d.ServingUnit).WithMany(p => p.Recipes).HasForeignKey(d => d.ServingUnitId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.User).WithMany(p => p.Recipes).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);
 
@@ -172,7 +172,7 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<RecipeUser>(entity =>
         {
-            entity.HasKey(e => new { e.RecipeId, e.UserId }); 
+            entity.HasKey(e => new { e.RecipeId, e.UserId });
 
             entity.HasOne(d => d.Recipes).WithMany(p => p.RecipeUsers).HasForeignKey(d => d.RecipeId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.Users).WithMany(p => p.RecipeUsers).HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.ClientSetNull);
@@ -214,7 +214,7 @@ public partial class PinulaDbContext : DbContext
 
             entity.HasMany(mp => mp.Users).WithMany(u => u.MealPlans);
         });
-        
+
         modelBuilder.Entity<MealPlanIngredient>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -228,9 +228,9 @@ public partial class PinulaDbContext : DbContext
 
         modelBuilder.Entity<InventoryItem>(entity =>
         {
-            entity.Property(e => e.Quantity).HasPrecision(10,3).IsRequired();
-            entity.Property(e => e.QuantityInGrams).HasPrecision(10,3).IsRequired();
-            
+            entity.Property(e => e.Quantity).HasPrecision(10, 3).IsRequired();
+            entity.Property(e => e.QuantityInGrams).HasPrecision(10, 3).IsRequired();
+
             entity.HasOne(e => e.Group).WithMany(g => g.InventoryItems).HasForeignKey(e => e.GroupId);
             entity.HasOne(e => e.Ingredient).WithMany(i => i.InventoryItems).HasForeignKey(e => e.IngredientId);
             entity.HasOne(e => e.Unit).WithMany(u => u.InventoryItems).HasForeignKey(e => e.UnitId);
@@ -241,7 +241,7 @@ public partial class PinulaDbContext : DbContext
             entity.Property(e => e.Quantity).IsRequired();
             entity.Property(e => e.QuantityInGrams).IsRequired();
             entity.Property(e => e.IsPurchased).HasDefaultValue(false);
-            
+
             entity.HasOne(e => e.Group).WithMany(g => g.ShoppingListItems).HasForeignKey(e => e.GroupId);
             entity.HasOne(e => e.Ingredient).WithMany(i => i.ShoppingListItems).HasForeignKey(e => e.IngredientId);
             entity.HasOne(e => e.Unit).WithMany(u => u.ShoppingListItems).HasForeignKey(e => e.UnitId);
@@ -256,7 +256,7 @@ public partial class PinulaDbContext : DbContext
 
             entity.HasOne(e => e.InventoryItem).WithMany(i => i.Allocations).HasForeignKey(e => e.InventoryItemId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.MealPlanIngredient).WithMany(mp => mp.Allocations).HasForeignKey(e => e.MealPlanIngredientId).OnDelete(DeleteBehavior.Cascade);
-            
+
         });
 
         modelBuilder.Entity<VerificationCode>(entity =>
@@ -268,12 +268,12 @@ public partial class PinulaDbContext : DbContext
             entity.HasOne(e => e.User).WithMany(u => u.VerificationCodes).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasIndex(e => new { e.Email, e.Code, e.Type, e.IsUsed });
         });
-        
+
         var dictionaryJsonConverter = new ValueConverter<Dictionary<string, string>, string>(
             v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
             v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, string>()
         );
-        
+
         if (Database.ProviderName != "Npgsql.EntityFrameworkCore.PostgreSQL")
         {
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
@@ -288,7 +288,7 @@ public partial class PinulaDbContext : DbContext
                 }
             }
         }
-        
+
 
         OnModelCreatingPartial(modelBuilder);
     }

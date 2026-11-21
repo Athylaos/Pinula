@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.DTOs;
+using Pinula.Shared.DTOs;
 using System.Globalization;
 using System.Text.Json;
 using Pinula.API.Interface;
@@ -10,14 +10,14 @@ namespace Pinula.API.Endpoints
         public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/categories").RequireRateLimiting("GeneralApiPolicy");
-            
+
             group.MapGet("/getAll", async (HttpRequest request, ICategoryBackendService categoryService) =>
             {
                 var imageBaseUrl = $"{request.Scheme}://{request.Host}/images/categories/";
                 string languageCode = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
                 var categoriesTree = await categoryService.GetCategoriesTree(imageBaseUrl, languageCode);
-                
+
                 return Results.Ok(categoriesTree);
             });
 
@@ -42,7 +42,7 @@ namespace Pinula.API.Endpoints
 
                 var dto = JsonSerializer.Deserialize<CategoryCreateDto>(dtoStr!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (dto == null) return Results.BadRequest("Unvalid category data.");
-                
+
                 var file = form.Files.GetFile("image");
 
                 var response = await categoryService.CreateCategory(dto, file, env);
@@ -52,9 +52,9 @@ namespace Pinula.API.Endpoints
                     201 => Results.Created($"/categories/get/{response.CreatedCategoryId}", response),
                     400 => Results.BadRequest(response),
                     500 => Results.InternalServerError(response),
-                    _   => Results.Json(response, statusCode: response.StatusCode)
+                    _ => Results.Json(response, statusCode: response.StatusCode)
                 };
-                
+
             }).RequireAuthorization("AdminOnly");
 
             //---------------------------------------------------------------Delete category
@@ -67,7 +67,7 @@ namespace Pinula.API.Endpoints
                     204 => Results.NoContent(),
                     400 => Results.BadRequest(response),
                     404 => Results.NotFound(response),
-                    _   => Results.Json(response, statusCode: response.StatusCode)
+                    _ => Results.Json(response, statusCode: response.StatusCode)
                 };
             }).RequireAuthorization("AdminOnly");
 

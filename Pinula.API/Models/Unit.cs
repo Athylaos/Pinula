@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -10,7 +10,7 @@ public partial class Unit
     public string Code { get; set; } = string.Empty;
     public Dictionary<string, string> Names { get; set; } = new();
     public bool IsServingUnit { get; set; }
-    
+
     public virtual ICollection<IngredientUnit> IngredientUnits { get; set; } = new List<IngredientUnit>();
     public virtual ICollection<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
     public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();

@@ -1,4 +1,5 @@
 using Mapster;
+
 using Pinula.API.Models;
 using Pinula.Shared.DTOs;
 using Pinula.Shared.Enums;
@@ -18,7 +19,7 @@ public class MappingConfig : IRegister
 
         return string.Empty;
     }
-    
+
     public static string GetLanguageCode()
     {
         if (MapContext.Current != null &&
@@ -30,7 +31,7 @@ public class MappingConfig : IRegister
 
         return "en";
     }
-    
+
     public void Register(TypeAdapterConfig config)
     {
         config.NewConfig<DateTime, DateOnly>()
@@ -38,14 +39,14 @@ public class MappingConfig : IRegister
 
         config.NewConfig<DateTime?, DateOnly?>()
             .MapWith(src => src.HasValue ? DateOnly.FromDateTime(src.Value) : null);
-        
+
         config.NewConfig<DateOnly, DateTime>()
             .MapWith(src => src.ToDateTime(TimeOnly.MinValue));
 
         config.NewConfig<DateOnly?, DateTime?>()
             .MapWith(src => src.HasValue ? src.Value.ToDateTime(TimeOnly.MinValue) : null);
-        
-        
+
+
         #region Category
 
         config.NewConfig<Category, CategoryDisplayDto>()
@@ -58,7 +59,7 @@ public class MappingConfig : IRegister
             .MaxDepth(20);
 
         #endregion
-        
+
         #region Comment
 
         config.NewConfig<Comment, CommentDisplayDto>()
@@ -68,7 +69,7 @@ public class MappingConfig : IRegister
                 src => src.User.Surname);
 
         #endregion
-        
+
         #region Ingredient
 
         config.NewConfig<ShoppingCategory, ShoppingCategoryDisplayDto>()
@@ -105,12 +106,12 @@ public class MappingConfig : IRegister
             .Map(d => d.Unit,
                 src => src.Unit)
             .MaxDepth(2);
-            
-            
+
+
         #endregion
-        
+
         #region Inventory
-        
+
         config.NewConfig<InventoryItem, InventoryItemDisplayDto>()
             .Map(d => d.ShoppingCategory,
                 src => src.Ingredient != null ? src.Ingredient.ShoppingCategory : null)
@@ -145,19 +146,19 @@ public class MappingConfig : IRegister
             .Map(d => d.RecipeName,
                 src => HelperFunctions.GetLocalizedName(src.Recipe.Titles, GetLanguageCode()))
             .Map(d => d.RecipePhotoUrl,
-                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Recipes,src.Recipe.PhotoUrl))
+                src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Recipes, src.Recipe.PhotoUrl))
             .Map(d => d.Ingredients,
                 src => src.MealPlanIngredients)
             .Map(d => d.UsersPreviews,
                 src => src.Users)
             .MaxDepth(2);
-        
+
         config.NewConfig<MealPlanIngredient, RecipeIngredientPreviewDto>()
-            .Map(d => d.IngredientName, src => 
-                src.Ingredient != null && src.Ingredient.Names != null  ? HelperFunctions.GetLocalizedName(src.Ingredient.Names, GetLanguageCode()) : string.Empty)
-            .Map(d => d.UnitName, src => 
+            .Map(d => d.IngredientName, src =>
+                src.Ingredient != null && src.Ingredient.Names != null ? HelperFunctions.GetLocalizedName(src.Ingredient.Names, GetLanguageCode()) : string.Empty)
+            .Map(d => d.UnitName, src =>
                 src.Unit != null && src.Unit.Names != null ? HelperFunctions.GetLocalizedName(src.Unit.Names, GetLanguageCode()) : string.Empty)
-            .Map(d => d.UnitCode, src => 
+            .Map(d => d.UnitCode, src =>
                 src.Unit != null ? src.Unit.Code : string.Empty);
 
         #endregion
@@ -199,7 +200,7 @@ public class MappingConfig : IRegister
                 src => HelperFunctions.GetLocalizedName(src.Descriptions, GetLanguageCode()));
 
         #endregion
-        
+
         #region Unit
 
         config.NewConfig<Unit, UnitPreviewDto>()
@@ -223,12 +224,12 @@ public class MappingConfig : IRegister
         config.NewConfig<User, AdminUserDisplayDto>()
             .Map(d => d.AvatarUrl,
                 src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
-        
+
         config.NewConfig<User, UserDisplayDto>()
             .Map(d => d.AvatarUrl,
                 src => HelperFunctions.GetImageUrl(GetBaseUrl(), HelperFunctions.ImageCategory.Users, src.AvatarUrl));
 
         #endregion
-        
+
     }
 }

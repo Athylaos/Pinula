@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+
 using Pinula.API.Models;
 using Pinula.Shared.Constants;
 using Pinula.Shared.DTOs;
@@ -14,7 +15,7 @@ public class IngredientProjections
             Id = i.Id,
             Name = (i.Names.ContainsKey(lang) && !string.IsNullOrEmpty(i.Names[lang]))
                 ? i.Names[lang]
-                : (i.Names.ContainsKey("en") && !string.IsNullOrEmpty(i.Names["en"])) ? i.Names["en"]: "Ingredient",
+                : (i.Names.ContainsKey("en") && !string.IsNullOrEmpty(i.Names["en"])) ? i.Names["en"] : "Ingredient",
             ImageUrl = $"{baseUrl}{(string.IsNullOrWhiteSpace(i.ImageUrl) ? ImageConstants.DefaultIngredient : i.ImageUrl)}",
             DefaultUnit = new UnitPreviewDto
             {

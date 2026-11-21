@@ -33,7 +33,7 @@ public class EmailService : IEmailService
         var cultureInfo = new CultureInfo(culture);
         CultureInfo.CurrentCulture = cultureInfo;
         CultureInfo.CurrentUICulture = cultureInfo;
-        
+
         var subject = GetSubjectForType(type);
         var htmlContent = GetEmailTemplate(code, type, cultureInfo);
         var fromEmail = _configuration["Resend:FromEmail"] ?? "Pinula <noreply@pinula.app>";
@@ -78,7 +78,7 @@ public class EmailService : IEmailService
         _ => _localizer["EmailSubject_Default"]
     };
 
-   private static string GetEmailTemplate(string code, VerificationCodeType type, CultureInfo culture)
+    private static string GetEmailTemplate(string code, VerificationCodeType type, CultureInfo culture)
     {
         var actionName = type switch
         {
@@ -90,7 +90,7 @@ public class EmailService : IEmailService
 
         var title = App.ResourceManager.GetString("EmailTemplate_Title", culture);
         var bodyPrefix = string.Format(App.ResourceManager.GetString("EmailTemplate_BodyPrefix", culture) ?? "Use the following code for {0}:", actionName);
-        
+
         var rawValidity = App.ResourceManager.GetString("EmailTemplate_Validity", culture) ?? "";
         var validity = rawValidity.Replace("&lt;", "<").Replace("&gt;", ">");
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Pinula.API.Context;
 using Pinula.Shared.DTOs;
@@ -14,7 +14,7 @@ namespace Pinula.API.Endpoints
         public static void MapMealPlanEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/mealplan").RequireRateLimiting("GeneralApiPolicy");
-            
+
             //---------------------------------------------------------------Get meal plan 
             group.MapGet("/get/{id:guid}", async (HttpRequest request, Guid id, ClaimsPrincipal user, IMealPlanBackendService mealPlanService) =>
             {
@@ -25,9 +25,9 @@ namespace Pinula.API.Endpoints
                 string baseUrl = $"{request.Scheme}://{request.Host}";
 
                 var mealplan = await mealPlanService.GetMealPlanAsync(groupId, id, baseUrl, lang);
-            
-                return mealplan is not null 
-                    ? Results.Ok(mealplan) 
+
+                return mealplan is not null
+                    ? Results.Ok(mealplan)
                     : Results.NotFound("MealPlan not found");
             }).RequireAuthorization();
 
@@ -51,9 +51,9 @@ namespace Pinula.API.Endpoints
                 if (authResult != Results.Ok()) return authResult;
 
                 var result = await mealPlanService.CreateMealPlanAsync(groupId, dto);
-            
-                return result.StatusCode == 201 
-                    ? Results.Created($"/mealplan/get/{result.Id}", result) 
+
+                return result.StatusCode == 201
+                    ? Results.Created($"/mealplan/get/{result.Id}", result)
                     : Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
 
@@ -76,7 +76,7 @@ namespace Pinula.API.Endpoints
                 var result = await mealPlanService.UpdateMealPlanAsync(groupId, id, dto);
                 return Results.Json(result, statusCode: result.StatusCode);
             }).RequireAuthorization();
-            
+
             //---------------------------------------------------------------Toggle as cooked
             group.MapPost("/markAsCooked/{id:guid}", async (Guid id, ClaimsPrincipal user, IMealPlanBackendService mealPlanService) =>
             {
@@ -92,7 +92,7 @@ namespace Pinula.API.Endpoints
             {
                 var userId = user.GetUserId();
                 var result = await mealPlanService.CreateGroupAsync(userId, dto);
-            
+
                 if (result.StatusCode == 201) return Results.Ok(result.Group);
                 return Results.Json(new { message = result.Message }, statusCode: result.StatusCode);
             }).RequireAuthorization();
@@ -110,9 +110,9 @@ namespace Pinula.API.Endpoints
             {
                 var userId = user.GetUserId();
                 var groupDetail = await mealPlanService.GetMyGroupAsync(userId);
-            
-                return groupDetail is not null 
-                    ? Results.Ok(groupDetail) 
+
+                return groupDetail is not null
+                    ? Results.Ok(groupDetail)
                     : Results.BadRequest("User is not in group or group not found");
             }).RequireAuthorization();
 

@@ -6,7 +6,7 @@ public interface IIngredientBackendService
 {
     public Task<List<IngredientPreviewDto>> GetFilteredPreviews(IngredientFilterParameters filter, string baseUrl, string lang);
     public Task<CreateIngredientResponse> Create(IngredientCreateDto createDto, IFormFile? imageFile, IWebHostEnvironment webHostEnvironment, string lang, Guid userId);
-    
+
 
     public Task<List<AdminIngredientPreviewDto>> AdminGetPreviews(int amount, int skip, string baseUrl);
     public Task<AdminIngredientDisplayDto?> AdminGetDetails(Guid id, string baseUrl, string lang);

@@ -1,4 +1,4 @@
-﻿using Pinula.Shared.Interface;
+using Pinula.Shared.Interface;
 
 using System.Net.Http.Headers;
 
