@@ -120,7 +120,10 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 });
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
+builder.Services.AddHealthChecks();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<ITranslationService, TranslationService>();
 builder.Services.AddHttpClient<IEmailService, EmailService>();
@@ -134,6 +137,8 @@ builder.Services.AddScoped<IUnitBackendService, UnitBackendService>();
 builder.Services.AddScoped<IUserBackendService, UserBackendService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(_ => { });
 
 if (app.Environment.IsDevelopment())
 {
@@ -168,53 +173,8 @@ app.MapMealPlanEndpoints();
 app.MapInventoryEndpoints();
 app.MapScriptEndpoints();
 
+app.MapHealthChecks("/healthz");
 
-/*
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<PinulaDbContext>();
-
-        await NutriDbSeeder.MakeDefaultUnitsAsync(context);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
-    }
-}
-*/
-
-
-/*
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var emailService = services.GetRequiredService<IEmailService>();
-        
-        var testEmail = "davidhykys88@gmail.com"; 
-        
-        await emailService.SendVerificationCodeAsync(
-            testEmail, 
-            "123456", 
-            Pinula.Shared.Enums.VerificationCodeType.Registration,
-            "en"
-        );
-
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("Test email successfully sent to email: {Email}", testEmail);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error while sending test email");
-    }
-}
-*/
 app.Run();
 
 
