@@ -12,7 +12,7 @@
         <header class="planner-header-panel" style="margin-bottom: 15px">
             <div class="header-brand">
                 <div class="header-icon-box">
-                    <img src="images/icons/shopping-list.png" class="header-icon-box p-2" alt="fridge"/>
+                    <img src="images/icons/shopping-list.png" class="p-2" alt="fridge"/>
                 </div>
                 <div>
                     <h1 class="page-title">@Localizer["ShoppingList"]</h1>
@@ -32,8 +32,8 @@
                 </button>
             </div>
         </header>
-            
-        
+
+
         @if (!ShoppingItems.Any())
         {
             <div class="pin-empty-state">
@@ -63,10 +63,10 @@
                             {
                                 <li class="shopping-item-card @(item.IsPurchased ? "purchased" : "") @(!string.IsNullOrWhiteSpace(item.RecipeAllocationName) ? "allocated" : "")">
                                     <div class="item-left">
-                                        <input class="custom-checkbox" 
-                                               type="checkbox" 
-                                               @bind="@item.IsPurchased" 
-                                               @bind:after="() => ChangePurchasedStatus(item)" 
+                                        <input class="custom-checkbox"
+                                               type="checkbox"
+                                               @bind="@item.IsPurchased"
+                                               @bind:after="() => ChangePurchasedStatus(item)"
                                                disabled="@_pendingItems.Contains(item.Id)" />
                                         <div class="item-details">
                                             <span class="item-name">
@@ -76,7 +76,7 @@
                                                     <small class="base-name">(@item.BaseIngredient.Name)</small>
                                                 }
                                             </span>
-            
+
                                             @if (item.RecipeAllocationName != null && item.MealPlanDate != null)
                                             {
                                                 <span class="allocation-badge" title="Vyžadováno pro recept">
@@ -125,7 +125,7 @@
     private bool isLoading = true;
     private bool addToShoppingListVisible = false;
     private readonly HashSet<Guid> _pendingItems = new();
-    
+
     protected override async Task OnInitializedAsync()
     {
         await LoadShoppingList();
@@ -162,7 +162,7 @@
         try
         {
             var success = await InventoryApiClient.ChangeShoppingItemPurchasedAsync(item.Id);
-        
+
             if (!success)
             {
                 item.IsPurchased = !item.IsPurchased;
@@ -178,7 +178,7 @@
     private void OpenShoppingListItemsToPantryPopup()
     {
         var itemsToConvert = ShoppingItems.Where(si => si.IsPurchased).ToList();
-        
+
         if (!itemsToConvert.Any())
         {
             return;
@@ -193,7 +193,7 @@
         if (success)
         {
             ShoppingItems.RemoveAll(si => si.IsPurchased);
-            
+
             _popupRef?.Close();
         }
     }

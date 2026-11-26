@@ -1,11 +1,7 @@
 using Pinula.API.Interface;
-using Microsoft.Extensions.Configuration;
 using DeepL;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Pinula.Shared.Services
+namespace Pinula.API.Services
 {
     public class TranslationService : ITranslationService
     {
